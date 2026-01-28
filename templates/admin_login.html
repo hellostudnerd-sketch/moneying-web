@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 로그인 - MONEYING</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-black text-white min-h-screen flex items-center justify-center">
+
+<div class="w-full max-w-sm mx-auto p-6">
+  
+  <div class="text-center mb-8">
+    <h1 class="text-2xl font-black mb-2">🔐 관리자 로그인</h1>
+    <p class="text-zinc-500 text-sm">MONEYING Admin</p>
+  </div>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm">
+          {{ msg }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" class="space-y-5">
+    <div>
+      <label class="block text-sm font-bold text-zinc-400 mb-2">아이디</label>
+      <input type="text" name="username" required
+             class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none transition">
+    </div>
+
+    <div>
+      <label class="block text-sm font-bold text-zinc-400 mb-2">비밀번호</label>
+      <input type="password" name="password" required
+             class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none transition">
+    </div>
+
+    <button type="submit"
+            class="w-full bg-[#a3e635] text-black font-black py-4 rounded-xl hover:bg-white transition">
+      로그인
+    </button>
+  </form>
+
+  <div class="mt-8 text-center">
+    <a href="/" class="text-zinc-500 text-sm hover:text-white">← 메인으로</a>
+  </div>
+
+</div>
+
+</body>
+</html>

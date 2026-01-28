@@ -1,0 +1,78 @@
+{% extends "admin_base.html" %}
+{% block title %}수익 인증 관리 - MONEYING{% endblock %}
+{% block page_title %}수익 인증 관리{% endblock %}
+{% block page_desc %}승인 시 해당 유저에게 7일 구독 연장{% endblock %}
+
+{% block content_admin %}
+
+<div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
+  <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+    <div class="font-black">수익 인증 신청 목록</div>
+  </div>
+  
+  {% if proofs|length == 0 %}
+    <div class="p-10 text-center text-zinc-500">
+      아직 수익 인증 신청이 없습니다.
+    </div>
+  {% else %}
+    <table class="w-full">
+      <thead class="bg-zinc-800/50">
+        <tr>
+          <th class="text-left p-4 text-zinc-400 text-sm font-bold">ID</th>
+          <th class="text-left p-4 text-zinc-400 text-sm font-bold">유저</th>
+          <th class="text-left p-4 text-zinc-400 text-sm font-bold">게시글</th>
+          <th class="text-left p-4 text-zinc-400 text-sm font-bold">상태</th>
+          <th class="text-left p-4 text-zinc-400 text-sm font-bold">신청일</th>
+          <th class="text-left p-4 text-zinc-400 text-sm font-bold">액션</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-zinc-800">
+        {% for proof in proofs %}
+          {% set user = proof.user_id %}
+          {% set post = proof.post_id %}
+          <tr class="hover:bg-zinc-800/30">
+            <td class="p-4 text-zinc-500">{{ proof.id }}</td>
+            <td class="p-4">
+              <span class="text-white font-bold">User #{{ proof.user_id }}</span>
+            </td>
+            <td class="p-4">
+              <a href="/community/{{ proof.post_id }}" target="_blank" class="text-[#a3e635] hover:underline font-bold">
+                게시글 #{{ proof.post_id }} 보기 →
+              </a>
+            </td>
+            <td class="p-4">
+              {% if proof.status == 'pending' %}
+                <span class="px-2 py-1 rounded bg-yellow-500/20 text-yellow-400 text-xs font-bold">대기중</span>
+              {% elif proof.status == 'approved' %}
+                <span class="px-2 py-1 rounded bg-green-500/20 text-green-400 text-xs font-bold">승인됨</span>
+              {% else %}
+                <span class="px-2 py-1 rounded bg-red-500/20 text-red-400 text-xs font-bold">거절됨</span>
+              {% endif %}
+            </td>
+            <td class="p-4 text-zinc-500 text-sm">{{ proof.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td class="p-4">
+              {% if proof.status == 'pending' %}
+                <div class="flex gap-2">
+                  <form method="POST" action="/admin/revenue-proofs/{{ proof.id }}/approve" class="inline">
+                    <button type="submit" class="px-3 py-1 bg-green-500 hover:bg-green-400 text-black text-sm font-bold rounded transition">
+                      승인
+                    </button>
+                  </form>
+                  <form method="POST" action="/admin/revenue-proofs/{{ proof.id }}/reject" class="inline">
+                    <button type="submit" class="px-3 py-1 bg-red-500 hover:bg-red-400 text-white text-sm font-bold rounded transition">
+                      거절
+                    </button>
+                  </form>
+                </div>
+              {% else %}
+                <span class="text-zinc-600 text-sm">처리완료</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</div>
+
+{% endblock %}

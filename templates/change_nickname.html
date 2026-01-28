@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}닉네임 변경 - MONEYING{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+
+  <div class="text-center mb-8">
+    <h1 class="text-3xl font-black">닉네임 변경</h1>
+    <p class="text-zinc-400 mt-2">커뮤니티에서 사용할 닉네임을 설정하세요</p>
+  </div>
+
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 md:p-8">
+    <form method="POST" class="space-y-4">
+      
+      <div>
+        <label class="block text-sm font-bold text-zinc-400 mb-2">현재 닉네임</label>
+        <div class="w-full p-4 rounded-xl bg-zinc-800/50 border border-zinc-700 text-zinc-400">
+          {{ user.nickname or '없음' }}
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-bold text-zinc-400 mb-2">새 닉네임</label>
+        <input type="text" name="nickname" required placeholder="2~20자" maxlength="20"
+               class="w-full p-4 rounded-xl bg-zinc-800 border border-zinc-700 text-white focus:border-zinc-500 focus:outline-none">
+        <p class="text-zinc-500 text-xs mt-2">한글, 영문, 숫자 사용 가능 (2~20자)</p>
+      </div>
+
+      <button type="submit" class="w-full bg-[#c4ff00] text-black font-black py-4 rounded-xl hover:bg-white transition">
+        변경하기
+      </button>
+
+    </form>
+
+    <div class="mt-6 text-center">
+      <a href="/my" class="text-zinc-500 hover:text-white transition text-sm">← 내정보로 돌아가기</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

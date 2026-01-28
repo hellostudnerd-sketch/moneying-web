@@ -1,0 +1,56 @@
+{% extends "admin_base.html" %}
+{% block title %}링크요청 관리 - MONEYING Admin{% endblock %}
+{% block page_title %}링크요청 관리{% endblock %}
+{% block page_desc %}총 {{ items|length }}건{% endblock %}
+
+{% block content_admin %}
+<div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
+  <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+    <div class="font-black">링크요청 목록</div>
+  </div>
+
+  {% if items|length == 0 %}
+    <div class="p-10 text-center">
+      <div class="text-4xl mb-4">🔗</div>
+      <div class="text-zinc-500 font-bold">링크요청이 없습니다</div>
+    </div>
+  {% else %}
+    <table class="w-full">
+      <thead class="bg-zinc-800/50">
+        <tr>
+          <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">ID</th>
+          <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">요청자</th>
+          <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">원본 URL</th>
+          <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">상태</th>
+          <th class="px-6 py-4 text-right text-xs font-bold text-zinc-500 uppercase">액션</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-zinc-800/70">
+        {% for it in items %}
+          <tr class="hover:bg-zinc-800/30 transition">
+            <td class="px-6 py-4 text-zinc-400">#{{ it.id }}</td>
+            <td class="px-6 py-4 text-white font-bold">{{ it.requester_email }}</td>
+            <td class="px-6 py-4">
+              <a href="{{ it.original_url }}" target="_blank" class="text-zinc-400 hover:text-[#a3e635] truncate block max-w-xs">
+                {{ it.original_url[:50] }}{% if it.original_url|length > 50 %}...{% endif %}
+              </a>
+            </td>
+            <td class="px-6 py-4">
+              {% if it.coupang_url %}
+                <span class="px-3 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 text-xs font-bold">완료</span>
+              {% else %}
+                <span class="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 text-xs font-bold">대기중</span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-4 text-right">
+              <a href="/link-requests/{{ it.id }}" class="text-[#a3e635] hover:underline text-sm font-bold">
+                {% if it.coupang_url %}보기{% else %}입력{% endif %}
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</div>
+{% endblock %}

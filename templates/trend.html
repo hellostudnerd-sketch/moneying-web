@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+{% block title %}트렌드 센터 - MONEYING{% endblock %}
+
+{% block head_extra %}
+<style>
+.video-card {
+  background: rgba(24,24,27,0.8);
+  border: 1px solid rgba(63,63,70,0.5);
+  transition: all 0.3s;
+}
+.video-card:hover {
+  border-color: rgba(255,255,255,0.3);
+  transform: translateY(-2px);
+}
+.video-card:hover img {
+  filter: brightness(0.7);
+}
+.category-btn {
+  background: rgba(39, 39, 42, 0.5);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #a1a1aa;
+  transition: all 0.2s;
+}
+.category-btn:hover {
+  background: rgba(63, 63, 70, 0.6);
+  color: #fff;
+}
+.category-btn.active {
+  background: #fff;
+  border-color: #fff;
+  color: #000;
+  font-weight: 700;
+}
+.views-badge {
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+  
+  <!-- 헤더 -->
+  <div class="mb-8">
+    <h1 class="text-3xl md:text-4xl font-black">
+  트렌드 <span class="text-white">Center</span>
+</h1>
+    <p class="text-zinc-400 mt-2">지금 뭐가 터지고 있는지 한눈에 확인하세요</p>
+  </div>
+
+  <!-- 검색 -->
+  <div class="mb-8">
+    <div class="flex gap-3">
+      <input type="text" id="searchInput" placeholder="키워드로 검색 (예: 다이소, 쿠팡, 리뷰)" 
+             class="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-zinc-500 focus:outline-none">
+      <button onclick="searchVideos()" class="bg-[#c4ff00] text-black font-bold px-6 py-3 rounded-xl hover:bg-white transition">
+        <i class="fas fa-search mr-2"></i>검색
+      </button>
+    </div>
+  </div>
+
+  <!-- 카테고리 필터 -->
+  <div class="mb-8 flex flex-wrap gap-2">
+    <button onclick="loadTrending()" class="category-btn active px-4 py-2 rounded-full text-sm" data-category="trending">
+      🔥 급상승
+    </button>
+    <button onclick="loadCategory('10')" class="category-btn px-4 py-2 rounded-full text-sm text-zinc-300" data-category="10">
+      🎵 음악
+    </button>
+    <button onclick="loadCategory('20')" class="category-btn px-4 py-2 rounded-full text-sm text-zinc-300" data-category="20">
+      🎮 게임
+    </button>
+    <button onclick="loadCategory('22')" class="category-btn px-4 py-2 rounded-full text-sm text-zinc-300" data-category="22">
+      👥 사람/블로그
+    </button>
+    <button onclick="loadCategory('23')" class="category-btn px-4 py-2 rounded-full text-sm text-zinc-300" data-category="23">
+      🎬 코미디
+    </button>
+    <button onclick="loadCategory('24')" class="category-btn px-4 py-2 rounded-full text-sm text-zinc-300" data-category="24">
+      🎭 엔터테인먼트
+    </button>
+    <button onclick="loadCategory('25')" class="category-btn px-4 py-2 rounded-full text-sm text-zinc-300" data-category="25">
+      📰 뉴스
+    </button>
+    <button onclick="loadCategory('26')" class="category-btn px-4 py-2 rounded-full text-sm text-zinc-300" data-category="26">
+      🎨 노하우/스타일
+    </button>
+    <button onclick="loadCategory('28')" class="category-btn px-4 py-2 rounded-full text-sm text-zinc-300" data-category="28">
+      🔬 과학기술
+    </button>
+  </div>
+
+  <!-- 로딩 -->
+  <div id="loading" class="hidden text-center py-20">
+    <div class="inline-block w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+    <p class="text-zinc-400 mt-4">영상 불러오는 중...</p>
+  </div>
+
+  <!-- 결과 헤더 -->
+  <div id="resultHeader" class="mb-6 flex items-center justify-between">
+    <h2 class="text-xl font-bold"><span id="resultTitle">🔥 급상승 영상</span></h2>
+    <span id="resultCount" class="text-zinc-500 text-sm"></span>
+  </div>
+
+  <!-- 영상 그리드 -->
+  <div id="videoGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <!-- 영상 카드들이 여기에 들어감 -->
+  </div>
+
+  <!-- 더 보기 버튼 -->
+  <div id="loadMoreWrapper" class="hidden text-center mt-8">
+    <button id="loadMoreBtn" onclick="loadMore()" class="bg-zinc-800 hover:bg-zinc-700 text-white font-bold px-8 py-4 rounded-xl border border-zinc-700 transition">
+      <i class="fas fa-plus mr-2"></i>더 보기
+    </button>
+  </div>
+
+  <!-- 에러 메시지 -->
+  <div id="errorMsg" class="hidden text-center py-20">
+    <div class="text-5xl mb-4">😢</div>
+    <p class="text-zinc-400">영상을 불러오지 못했습니다</p>
+  </div>
+
+</div>
+
+<script>
+let nextPageToken = '';
+let currentMode = 'trending'; // trending, category, search
+let currentCategory = '';
+let currentQuery = '';
+let totalVideos = [];
+
+function formatViews(num) {
+  if (num >= 100000000) return (num / 100000000).toFixed(1) + '억';
+  if (num >= 10000) return (num / 10000).toFixed(1) + '만';
+  if (num >= 1000) return (num / 1000).toFixed(1) + '천';
+  return num.toString();
+}
+
+function renderVideos(videos, append = false) {
+  const grid = document.getElementById('videoGrid');
+  const html = videos.map(v => `
+    <a href="https://www.youtube.com/watch?v=${v.id}" target="_blank" class="video-card rounded-xl overflow-hidden">
+      <div class="relative">
+        <img src="${v.thumbnail}" alt="${v.title}" class="w-full aspect-video object-cover">
+        <div class="views-badge absolute bottom-2 right-2 px-2 py-1 rounded text-sm text-white flex items-center gap-1">
+          👁 ${formatViews(v.views)}
+        </div>
+      </div>
+      <div class="p-4">
+        <h3 class="text-base font-bold text-white line-clamp-2 mb-2">${v.title}</h3>
+        <div class="flex items-center justify-between text-sm text-zinc-400">
+          <span class="truncate">${v.channel}</span>
+          <span>${v.published}</span>
+        </div>
+      </div>
+    </a>
+  `).join('');
+  
+  if (append) {
+    grid.innerHTML += html;
+  } else {
+    grid.innerHTML = html;
+  }
+  
+  document.getElementById('resultCount').textContent = `${totalVideos.length}개 영상`;
+}
+
+function setActiveCategory(category) {
+  document.querySelectorAll('.category-btn').forEach(btn => {
+    btn.classList.remove('active');
+    btn.classList.add('text-zinc-300');
+  });
+  const activeBtn = document.querySelector(`[data-category="${category}"]`);
+  if (activeBtn) {
+    activeBtn.classList.add('active');
+    activeBtn.classList.remove('text-zinc-300');
+  }
+}
+
+function showLoading() {
+  document.getElementById('loading').classList.remove('hidden');
+  document.getElementById('videoGrid').innerHTML = '';
+  document.getElementById('errorMsg').classList.add('hidden');
+  document.getElementById('loadMoreWrapper').classList.add('hidden');
+}
+
+function hideLoading() {
+  document.getElementById('loading').classList.add('hidden');
+}
+
+function showLoadMore(show) {
+  if (show && nextPageToken) {
+    document.getElementById('loadMoreWrapper').classList.remove('hidden');
+  } else {
+    document.getElementById('loadMoreWrapper').classList.add('hidden');
+  }
+}
+
+async function loadTrending() {
+  currentMode = 'trending';
+  currentCategory = '';
+  currentQuery = '';
+  nextPageToken = '';
+  totalVideos = [];
+  
+  setActiveCategory('trending');
+  document.getElementById('resultTitle').textContent = '🔥 급상승 영상';
+  showLoading();
+  
+  try {
+    const res = await fetch('/api/youtube/trending');
+    const data = await res.json();
+    hideLoading();
+    
+    if (data.ok) {
+      totalVideos = data.videos;
+      nextPageToken = data.nextPageToken || '';
+      renderVideos(data.videos);
+      showLoadMore(true);
+    } else {
+      document.getElementById('errorMsg').classList.remove('hidden');
+    }
+  } catch (e) {
+    hideLoading();
+    document.getElementById('errorMsg').classList.remove('hidden');
+  }
+}
+
+async function loadCategory(categoryId) {
+  currentMode = 'category';
+  currentCategory = categoryId;
+  currentQuery = '';
+  nextPageToken = '';
+  totalVideos = [];
+  
+  setActiveCategory(categoryId);
+  
+  const categoryNames = {
+    '10': '🎵 음악',
+    '20': '🎮 게임',
+    '22': '👥 사람/블로그',
+    '23': '🎬 코미디',
+    '24': '🎭 엔터테인먼트',
+    '25': '📰 뉴스',
+    '26': '🎨 노하우/스타일',
+    '28': '🔬 과학기술'
+  };
+  
+  document.getElementById('resultTitle').textContent = categoryNames[categoryId] || '카테고리';
+  showLoading();
+  
+  try {
+    const res = await fetch(`/api/youtube/category/${categoryId}`);
+    const data = await res.json();
+    hideLoading();
+    
+    if (data.ok) {
+      totalVideos = data.videos;
+      nextPageToken = data.nextPageToken || '';
+      renderVideos(data.videos);
+      showLoadMore(true);
+    } else {
+      document.getElementById('errorMsg').classList.remove('hidden');
+    }
+  } catch (e) {
+    hideLoading();
+    document.getElementById('errorMsg').classList.remove('hidden');
+  }
+}
+
+async function searchVideos() {
+  const query = document.getElementById('searchInput').value.trim();
+  if (!query) {
+    alert('검색어를 입력하세요');
+    return;
+  }
+  
+  currentMode = 'search';
+  currentCategory = '';
+  currentQuery = query;
+  nextPageToken = '';
+  totalVideos = [];
+  
+  setActiveCategory('');
+  document.getElementById('resultTitle').textContent = `🔍 "${query}" 검색 결과`;
+  showLoading();
+  
+  try {
+    const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`);
+    const data = await res.json();
+    hideLoading();
+    
+    if (data.ok) {
+      totalVideos = data.videos;
+      nextPageToken = data.nextPageToken || '';
+      renderVideos(data.videos);
+      showLoadMore(true);
+    } else {
+      document.getElementById('errorMsg').classList.remove('hidden');
+    }
+  } catch (e) {
+    hideLoading();
+    document.getElementById('errorMsg').classList.remove('hidden');
+  }
+}
+
+async function loadMore() {
+  if (!nextPageToken) return;
+  
+  const btn = document.getElementById('loadMoreBtn');
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>불러오는 중...';
+  btn.disabled = true;
+  
+  let url = '';
+  if (currentMode === 'trending') {
+    url = `/api/youtube/trending?pageToken=${nextPageToken}`;
+  } else if (currentMode === 'category') {
+    url = `/api/youtube/category/${currentCategory}?pageToken=${nextPageToken}`;
+  } else if (currentMode === 'search') {
+    url = `/api/youtube/search?q=${encodeURIComponent(currentQuery)}&pageToken=${nextPageToken}`;
+  }
+  
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    
+    if (data.ok) {
+      totalVideos = [...totalVideos, ...data.videos];
+      nextPageToken = data.nextPageToken || '';
+      renderVideos(data.videos, true);
+      showLoadMore(true);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  
+  btn.innerHTML = '<i class="fas fa-plus mr-2"></i>더 보기';
+  btn.disabled = false;
+}
+
+// 엔터키 검색
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') searchVideos();
+});
+
+// 페이지 로드 시 급상승 영상 표시
+loadTrending();
+</script>
+{% endblock %}

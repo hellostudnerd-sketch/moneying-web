@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}MONEYING{% endblock %}</title>
+  
+  <!-- SEO 메타태그 -->
+  <meta name="description" content="{% block meta_description %}숏폼 부업의 모든 것, 머닝. 영상 소스부터 쿠팡 링크까지 3분 만에 시작하세요.{% endblock %}">
+  <meta name="keywords" content="숏폼, 부업, 쿠팡파트너스, 틱톡, 인스타그램, 릴스, 영상편집, 수익화">
+  <meta name="author" content="MONEYING">
+  
+  <!-- Open Graph (SNS 공유용) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{% block og_title %}MONEYING - 숏폼 부업의 모든 것{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}영상 소스부터 쿠팡 링크까지 3분 만에 시작하세요.{% endblock %}">
+  <meta property="og:image" content="{% block og_image %}/static/og-image.png{% endblock %}">
+  <meta property="og:url" content="https://moneying.co.kr">
+  <meta property="og:site_name" content="MONEYING">
+  
+  <!-- 파비콘 -->
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root { --lime: #c4ff00; }
+    body { font-family: 'Inter', 'Noto Sans KR', sans-serif; background-color: #000; color: #fff; -webkit-font-smoothing: antialiased; }
+    .text-highlight { color: var(--lime); }
+    .bg-highlight { background-color: var(--lime); }
+    .glass-nav {
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    html { scrollbar-gutter: stable; }
+    body { overflow-y: scroll; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--lime); }
+  </style>
+
+  {% block head_extra %}{% endblock %}
+</head>
+
+<body class="pb-24">
+  {% include "partials/nav.html" %}
+
+  <main class="{% block main_class %}max-w-7xl mx-auto px-4 pt-20 md:pt-28{% endblock %}">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- 푸터 -->
+  <footer class="py-16 border-t border-white/5 bg-black text-center">
+    <div class="max-w-4xl mx-auto px-4">
+      <h2 class="text-2xl font-black text-white mb-6">MONEY<span class="text-highlight">ING</span></h2>
+      <p class="text-white/30 text-sm mb-8">지금도 누군가는 영상을 찾느라 3시간을 쓰고,<br>누군가는 머닝에서 3분 만에 소스를 받아 편집을 시작합니다.</p>
+      <div class="text-white/20 text-xs space-y-2">
+        <p>(주)스터드앤너드 | 대표: 정훈 | 사업자등록번호: 783-81-03800</p>
+        <p>통신판매업신고: 제2024-서울강남-0000호</p>
+        <div class="flex justify-center gap-4 mt-4">
+          <a href="/terms" class="hover:text-white/40 transition">이용약관</a>
+          <a href="/privacy" class="hover:text-white/40 transition">개인정보처리방침</a>
+          <a href="/refund" class="hover:text-white/40 transition">환불정책</a>
+        </div>
+        <p class="mt-4">Copyright © 2025 MONEYING. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 위로가기 버튼 -->
+  <button id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" 
+          class="fixed bottom-6 right-6 w-12 h-12 bg-[#c4ff00] text-black rounded-full shadow-lg hover:bg-white transition opacity-0 invisible z-50 flex items-center justify-center">
+    <i class="fas fa-chevron-up text-lg"></i>
+  </button>
+  
+  <script>
+    const scrollBtn = document.getElementById('scrollTopBtn');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 300) {
+        scrollBtn.classList.remove('opacity-0', 'invisible');
+        scrollBtn.classList.add('opacity-100', 'visible');
+      } else {
+        scrollBtn.classList.remove('opacity-100', 'visible');
+        scrollBtn.classList.add('opacity-0', 'invisible');
+      }
+    });
+  </script>
+
+  {% block footer_extra %}{% endblock %}
+
+<!-- 공통 토스트 알림 -->
+<div id="toastContainer" class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] pointer-events-none"></div>
+
+<!-- 공통 알림 모달 -->
+<div id="alertModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden items-center justify-center">
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm mx-4 text-center">
+    <div id="alertIcon" class="text-4xl mb-4">✅</div>
+    <h3 id="alertTitle" class="text-xl font-black text-white mb-2">완료</h3>
+    <p id="alertMessage" class="text-zinc-400 text-sm mb-6"></p>
+    <button onclick="closeAlertModal()" class="w-full py-3 rounded-xl font-bold bg-[#c4ff00] text-black hover:bg-white transition">확인</button>
+  </div>
+</div>
+
+<script>
+// 토스트 알림
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `px-4 py-3 rounded-xl mb-2 text-sm font-bold pointer-events-auto transform transition-all duration-300 ${
+    type === 'success' ? 'bg-[#c4ff00] text-black' : 
+    type === 'error' ? 'bg-red-500 text-white' : 
+    'bg-zinc-700 text-white'
+  }`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(-10px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// 모달 알림
+function showAlert(title, message, icon = '✅') {
+  document.getElementById('alertIcon').textContent = icon;
+  document.getElementById('alertTitle').textContent = title;
+  document.getElementById('alertMessage').textContent = message;
+  document.getElementById('alertModal').classList.remove('hidden');
+  document.getElementById('alertModal').classList.add('flex');
+}
+
+function closeAlertModal() {
+  document.getElementById('alertModal').classList.add('hidden');
+  document.getElementById('alertModal').classList.remove('flex');
+}
+
+document.getElementById('alertModal')?.addEventListener('click', function(e) {
+  if (e.target === this) closeAlertModal();
+});
+</script>
+
+</body>
+</html>

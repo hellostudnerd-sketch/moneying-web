@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}내 공구/협찬 관리 - MONEYING{% endblock %}
+
+{% block content %}
+
+<div class="max-w-4xl mx-auto">
+
+  <div class="mb-8">
+    <a href="/my" class="text-zinc-500 hover:text-white transition text-sm">← 내정보로 돌아가기</a>
+    <h1 class="text-2xl md:text-3xl font-black mt-4">내 공구/협찬 <span class="text-[#c4ff00]">관리</span></h1>
+    <p class="text-zinc-400 mt-2">내가 등록한 공구/협찬 글과 신청 현황</p>
+  </div>
+
+  {% if posts|length == 0 %}
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-10 text-center">
+    <div class="text-5xl mb-4">🛍️</div>
+    <div class="text-zinc-400 font-bold mb-4">등록한 공구/협찬이 없습니다</div>
+    <a href="/community/write?category=deal" class="inline-block bg-[#c4ff00] text-black font-bold px-6 py-3 rounded-xl hover:bg-white transition">
+      공구/협찬 등록하기
+    </a>
+  </div>
+  {% else %}
+  
+  <div class="space-y-4">
+    {% for post in posts %}
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 hover:border-zinc-700 transition">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-2">
+            {% if post.deal_closed %}
+              <span class="px-2 py-1 rounded text-xs font-bold bg-zinc-700 text-zinc-400">마감</span>
+            {% elif post.deal_deadline and post.deal_deadline < now %}
+              <span class="px-2 py-1 rounded text-xs font-bold bg-red-500/20 text-red-400">기간 만료</span>
+            {% else %}
+              <span class="px-2 py-1 rounded text-xs font-bold bg-green-500/20 text-green-400">진행중</span>
+            {% endif %}
+            
+            {% if post.deal_subscribers_only %}
+              <span class="px-2 py-1 rounded text-xs font-bold bg-purple-500/20 text-purple-400">구독자 전용</span>
+            {% endif %}
+          </div>
+          
+          <h3 class="text-lg font-bold text-white truncate">{{ post.title }}</h3>
+          
+          <div class="flex items-center gap-4 mt-2 text-sm text-zinc-500">
+            <span>{{ post.created_at.strftime('%Y-%m-%d') }}</span>
+            {% if post.deal_deadline %}
+              <span>마감: {{ post.deal_deadline.strftime('%m/%d %H:%M') }}</span>
+            {% endif %}
+            {% if post.deal_max_people %}
+              <span>정원: {{ post.deal_max_people }}명</span>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <div class="text-center px-4">
+            <div class="text-2xl font-black text-[#c4ff00]">{{ post.applications|length }}</div>
+            <div class="text-xs text-zinc-500">신청</div>
+          </div>
+          
+          <a href="/my/deals/{{ post.id }}" class="px-4 py-2 bg-[#c4ff00] text-black font-bold rounded-lg hover:bg-white transition text-sm">
+            관리하기
+          </a>
+        </div>
+        
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  
+  {% endif %}
+
+</div>
+
+{% endblock %}

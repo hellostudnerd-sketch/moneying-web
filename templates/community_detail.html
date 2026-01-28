@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% block title %}{{ post.title }} - 커뮤니티{% endblock %}
+
+{% block content %}
+
+<div class="max-w-3xl mx-auto">
+
+  <div class="mb-6"><a href="/community" class="text-zinc-500 hover:text-white transition">← 목록으로</a></div>
+
+  <article class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 md:p-8">
+    
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-xs bg-zinc-800 text-gray-200 px-2 py-1 rounded border border-zinc-700 font-bold">
+        {% if post.category == 'notice' %}📢 공지{% elif post.category == 'deal' %}🛍️ 공구{% elif post.category == 'revenue' %}💸 수익{% elif post.category == 'tips' %}💡 꿀팁{% elif post.category == 'qna' %}❓ 질문{% else %}🗣 자유{% endif %}
+      </span>
+      {% if post.category == 'deal' and post.deal_subscribers_only %}
+        <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded border border-purple-500/30 font-bold">👑 구독자 전용</span>
+      {% endif %}
+    </div>
+
+    <h1 class="text-2xl md:text-3xl font-black mb-4">{{ post.title }}</h1>
+
+    <div class="flex items-center justify-between text-sm text-zinc-500 mb-6 pb-6 border-b border-zinc-800">
+      <span>{{ get_nickname(post.author_email) }}</span>
+      <span>{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+    </div>
+
+    <div class="prose prose-invert max-w-none mb-6">
+      <p class="whitespace-pre-wrap text-zinc-300 leading-relaxed">{{ post.content }}</p>
+    </div>
+
+    {% if post.images() and post.images()|length > 0 %}
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+        {% for img in post.images() %}<a href="{{ img }}" target="_blank"><img src="{{ img }}" class="rounded-lg border border-zinc-700 hover:border-zinc-500 transition w-full aspect-square object-cover"></a>{% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- 공구/협찬 신청 섹션 -->
+    {% if post.category == 'deal' %}
+      <div class="bg-purple-500/10 border border-purple-500/30 rounded-xl p-5 mb-6">
+        
+        <!-- 공구/협찬 정보 -->
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-xl">🛍️</span>
+          <span class="font-bold text-purple-400">공구/협찬 정보</span>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4 text-sm">
+          <div>
+            <div class="text-zinc-500">마감일</div>
+            <div class="text-white font-bold">
+              {% if post.deal_deadline %}
+                {{ post.deal_deadline.strftime('%Y-%m-%d %H:%M') }}
+              {% else %}
+                수동 마감
+              {% endif %}
+            </div>
+          </div>
+          <div>
+            <div class="text-zinc-500">모집 인원</div>
+            <div class="text-white font-bold">
+              {% if post.deal_max_people %}
+                {{ deal_apply_count }}/{{ post.deal_max_people }}명
+              {% else %}
+                제한 없음
+              {% endif %}
+            </div>
+          </div>
+          <div>
+            <div class="text-zinc-500">상태</div>
+            <div class="font-bold {% if post.is_deal_available %}text-green-400{% else %}text-red-400{% endif %}">
+              {% if post.deal_closed %}
+                마감됨
+              {% elif post.deal_deadline and post.deal_deadline < now %}
+                기간 만료
+              {% elif post.deal_max_people and deal_apply_count >= post.deal_max_people %}
+                인원 마감
+              {% else %}
+                신청 가능
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-purple-500/20 pt-4">
+          
+          <!-- 이미 신청한 경우 -->
+          {% if user_applied %}
+            <div class="text-center py-4">
+              <div class="text-2xl mb-2">✅</div>
+              <div class="text-green-400 font-bold">신청 완료!</div>
+              <div class="text-zinc-400 text-sm mt-1">판매자가 확인 후 연락드릴 예정입니다.</div>
+            </div>
+          
+          <!-- 마감된 경우 -->
+          {% elif not post.is_deal_available %}
+            <div class="text-center py-4">
+              <div class="text-2xl mb-2">⏰</div>
+              <div class="text-red-400 font-bold">신청이 마감되었습니다</div>
+            </div>
+          
+          <!-- 비로그인 -->
+          {% elif not session.get('user_id') %}
+            <div class="text-center py-4">
+              <div class="text-zinc-400 mb-3">신청하려면 로그인이 필요합니다</div>
+              <a href="/login?next=/community/{{ post.id }}" class="inline-block bg-[#c4ff00] text-black font-bold px-6 py-3 rounded-xl hover:bg-white transition">로그인하기</a>
+            </div>
+          
+          <!-- 구독자 전용인데 비구독자 -->
+          {% elif post.deal_subscribers_only and not session.get('subscriber') and not session.get('is_trial') and not session.get('admin') %}
+            <div class="text-center py-4">
+              <div class="text-2xl mb-2">👑</div>
+              <div class="text-purple-400 font-bold mb-2">구독자 전용 공구/협찬</div>
+              <div class="text-zinc-400 text-sm mb-4">이 공구/협찬은 구독자만 신청할 수 있습니다.</div>
+              <a href="/pricing" class="inline-block bg-[#c4ff00] text-black font-bold px-6 py-3 rounded-xl hover:bg-white transition">구독하기</a>
+            </div>
+          
+          <!-- 신청 폼 -->
+          {% else %}
+            <form id="dealApplyForm" class="space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-bold text-zinc-400 mb-1">이름 *</label>
+                  <input type="text" name="name" required class="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white focus:border-purple-400 focus:outline-none" placeholder="실명 입력">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-zinc-400 mb-1">연락처 *</label>
+                  <input type="tel" name="phone" required class="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white focus:border-purple-400 focus:outline-none" placeholder="010-0000-0000">
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-zinc-400 mb-1">SNS 계정 (선택)</label>
+                <input type="url" name="sns_url" class="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white focus:border-purple-400 focus:outline-none" placeholder="https://instagram.com/...">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-zinc-400 mb-1">메시지 (선택)</label>
+                <textarea name="message" rows="2" class="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white focus:border-purple-400 focus:outline-none resize-none" placeholder="판매자에게 전할 메시지"></textarea>
+              </div>
+              <button type="submit" id="dealApplyBtn" class="w-full py-3 bg-purple-500 hover:bg-purple-400 text-white font-bold rounded-xl transition">
+                신청하기
+              </button>
+            </form>
+          {% endif %}
+          
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- 수익 인증 리워드 섹션 -->
+    {% if post.category == 'revenue' and post.author_email == session.get('user_email') %}
+      <div id="revenueProofSection" class="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="font-bold text-green-400 mb-1">💸 수익 인증 리워드</div>
+            <p class="text-zinc-400 text-sm">승인되면 7일 구독 연장!</p>
+          </div>
+          {% if session.get('subscriber') or session.get('is_trial') or session.get('admin') %}
+            {% if post.reward_requested %}
+              <span class="px-4 py-2 bg-zinc-700 text-zinc-400 font-bold rounded-lg">✓ 신청 완료</span>
+            {% else %}
+              <button id="applyRewardBtn" onclick="applyRevenueProof({{ post.id }})" class="px-4 py-2 bg-green-500 hover:bg-green-400 text-black font-bold rounded-lg transition">리워드 신청</button>
+            {% endif %}
+          {% else %}
+            <button onclick="showSubscribeModal()" class="px-4 py-2 bg-green-500 hover:bg-green-400 text-black font-bold rounded-lg transition">리워드 신청</button>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="flex items-center justify-between pt-6 border-t border-zinc-800">
+      <form method="POST" action="/community/{{ post.id }}/like">
+        <button type="submit" class="flex items-center gap-2 px-4 py-2 rounded-lg transition {% if user_liked %}bg-red-500/20 text-red-400 border border-red-500/30{% else %}bg-zinc-800 text-zinc-400 hover:text-red-400 border border-zinc-700{% endif %}">
+          <i class="fas fa-heart"></i><span>{{ like_count }}</span>
+        </button>
+      </form>
+      {% if post.author_email == session.get('user_email') or session.get('admin') %}
+  <div class="flex items-center gap-3">
+    <a href="/community/{{ post.id }}/edit" class="text-zinc-500 hover:text-[#c4ff00] text-sm transition">수정</a>
+    <form method="POST" action="/community/{{ post.id }}/delete" onsubmit="return confirm('정말 삭제하시겠습니까?');" class="inline"><button type="submit" class="text-zinc-600 hover:text-red-500 text-sm transition">삭제</button></form>
+  </div>
+{% endif %}
+    </div>
+
+  </article>
+
+  <section class="mt-8">
+    <h3 class="text-lg font-bold mb-4">💬 댓글 {{ comments|length }}개</h3>
+
+    {% if session.get('user_id') %}
+      <form method="POST" action="/community/{{ post.id }}/comment" class="mb-6">
+        <div class="flex gap-3">
+          <input type="text" name="content" required placeholder="댓글을 입력하세요..." class="flex-1 p-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white focus:border-[#a3e635] focus:outline-none">
+          <button type="submit" class="px-6 bg-[#a3e635] text-black font-bold rounded-lg hover:bg-white transition">등록</button>
+        </div>
+      </form>
+    {% else %}
+      <div class="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4 mb-6 text-center">
+        <a href="/login?next=/community/{{ post.id }}" class="text-[#a3e635] font-bold hover:underline">로그인</a>하고 댓글을 남겨보세요!
+      </div>
+    {% endif %}
+
+    <div class="space-y-4">
+      {% for c in comments %}
+        <div class="bg-zinc-900/40 border border-zinc-800/50 rounded-xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-bold text-zinc-300">{{ get_nickname(c.author_email) }}</span>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-zinc-600">{{ c.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+              {% if c.author_email == session.get('user_email') or session.get('admin') %}
+                <form method="POST" action="/community/comment/{{ c.id }}/delete" class="inline"><button type="submit" class="text-zinc-600 hover:text-red-500 text-xs">삭제</button></form>
+              {% endif %}
+            </div>
+          </div>
+          <p class="text-zinc-400 text-sm">{{ c.content }}</p>
+        </div>
+      {% endfor %}
+      {% if comments|length == 0 %}<div class="text-center text-zinc-600 py-8">아직 댓글이 없습니다.</div>{% endif %}
+    </div>
+  </section>
+
+</div>
+
+<!-- 구독 필요 모달 -->
+<div id="subscribeModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center">
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm mx-4 text-center">
+    <div class="text-4xl mb-4">👑</div>
+    <h3 class="text-xl font-black text-white mb-2">구독자 전용 기능</h3>
+    <p class="text-zinc-400 text-sm mb-6">수익 인증 리워드는 구독자만 신청할 수 있습니다.</p>
+    <div class="flex gap-3">
+      <button onclick="closeSubscribeModal()" class="flex-1 py-3 rounded-xl font-bold border border-zinc-600 text-white hover:bg-zinc-800 transition">닫기</button>
+      <a href="/pricing" class="flex-1 py-3 rounded-xl font-bold bg-[#c4ff00] text-black hover:bg-white transition text-center">구독하기</a>
+    </div>
+  </div>
+</div>
+
+<script>
+function showSubscribeModal() {
+  document.getElementById('subscribeModal').classList.remove('hidden');
+  document.getElementById('subscribeModal').classList.add('flex');
+}
+
+function closeSubscribeModal() {
+  document.getElementById('subscribeModal').classList.add('hidden');
+  document.getElementById('subscribeModal').classList.remove('flex');
+}
+
+async function applyRevenueProof(postId) {
+  const btn = document.getElementById('applyRewardBtn');
+  btn.disabled = true; btn.textContent = '신청 중...';
+  try {
+    const res = await fetch(`/revenue-proof/apply/${postId}`, { method: 'POST' });
+    if (res.ok) {
+      btn.textContent = '✓ 신청 완료';
+      btn.classList.remove('bg-green-500', 'hover:bg-green-400');
+      btn.classList.add('bg-zinc-700', 'text-zinc-400', 'cursor-not-allowed');
+      showAlert('신청 완료! 🎉', '관리자 승인 후 7일이 연장됩니다.', '✅');
+    } else {
+      alert('신청 실패');
+      btn.disabled = false; btn.textContent = '리워드 신청';
+    }
+  } catch (e) { 
+    alert('오류가 발생했습니다.'); 
+    btn.disabled = false; btn.textContent = '리워드 신청'; 
+  }
+}
+
+// 공구/협찬 신청
+const dealForm = document.getElementById('dealApplyForm');
+if (dealForm) {
+  dealForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const btn = document.getElementById('dealApplyBtn');
+    btn.disabled = true;
+    btn.textContent = '신청 중...';
+    
+    const formData = new FormData(this);
+    
+    try {
+      const res = await fetch('/community/{{ post.id }}/apply', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      
+      if (data.ok) {
+        showAlert('신청 완료! 🎉', '판매자가 확인 후 연락드릴 예정입니다.', '✅');
+        setTimeout(() => location.reload(), 2000);
+      } else {
+  if (data.error === 'already_applied') {
+    showAlert('알림', '이미 신청하셨습니다.', '⚠️');
+  } else if (data.error === 'subscribers_only') {
+    showAlert('구독자 전용', '구독자만 신청할 수 있습니다.', '👑');
+  } else if (data.error === 'closed') {
+    showAlert('마감', '신청이 마감되었습니다.', '⏰');
+  } else {
+    showAlert('오류', '신청 실패: ' + data.error, '❌');
+  }
+        btn.disabled = false;
+        btn.textContent = '신청하기';
+      }
+    } catch (e) {
+      alert('오류가 발생했습니다.');
+      btn.disabled = false;
+      btn.textContent = '신청하기';
+    }
+  });
+}
+</script>
+
+{% endblock %}

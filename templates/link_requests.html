@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block title %}링크요청 - MONEYING{% endblock %}
+
+{% block main_class %}max-w-7xl mx-auto px-4 pt-20 md:pt-24{% endblock %}
+
+{% block content %}
+
+<!-- 히어로 섹션 -->
+<section class="text-center pt-10 pb-16 md:pt-16 md:pb-20">
+  <h1 class="text-3xl md:text-4xl lg:text-5xl font-black mb-4 leading-tight">
+    쿠팡에 없는 상품도<br>
+    <span class="text-[#c4ff00]">수익화</span>하세요
+  </h1>
+  <p class="text-zinc-400 text-lg max-w-xl mx-auto mb-8 leading-relaxed">
+    업체 계약 없이도 쿠팡 링크를 받을 수 있어요.<br class="hidden md:block">
+    원본 링크만 남겨주시면, 저희가 등록해드립니다.
+  </p>
+  
+  <div class="flex flex-col sm:flex-row gap-3 justify-center">
+    <button onclick="checkLinkRequestAccess()"
+       class="bg-[#c4ff00] text-black font-black px-8 py-4 rounded-xl hover:bg-white transition text-lg">
+      링크요청 하기 →
+    </button>
+    <a href="#how-it-works"
+       class="bg-zinc-800 text-white font-bold px-8 py-4 rounded-xl border border-zinc-700 hover:bg-zinc-700 transition text-lg">
+      이용 방법 보기
+    </a>
+  </div>
+  
+  <!-- 이용 횟수 안내 (작게) -->
+  <div class="flex justify-center gap-4 mt-8 text-sm text-zinc-500">
+    <span>무료 <strong class="text-zinc-300">월 3회</strong></span>
+    <span class="text-zinc-700">|</span>
+    <span>구독자 <strong class="text-zinc-300">월 10회</strong></span>
+    <span class="text-zinc-700">|</span>
+    <span>올인원 <strong class="text-[#c4ff00]">월 20회</strong></span>
+  </div>
+</section>
+
+<!-- 이런 분들을 위한 서비스 -->
+<section class="py-16 border-t border-zinc-800">
+  <h2 class="text-2xl md:text-3xl font-black text-center mb-4">이런 고민 있으셨나요?</h2>
+  <p class="text-zinc-500 text-center mb-12">링크요청 서비스로 해결하세요</p>
+  
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-8 text-center hover:border-zinc-700 transition">
+      <div class="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+        <span class="text-3xl">🌏</span>
+      </div>
+      <h3 class="font-bold text-lg mb-2">해외 영상 찾았는데...</h3>
+      <p class="text-zinc-500 text-sm">좋은 영상 발굴했는데<br>쿠팡에 상품이 없어요</p>
+    </div>
+    
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-8 text-center hover:border-zinc-700 transition">
+      <div class="w-16 h-16 bg-purple-500/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+        <span class="text-3xl">🤝</span>
+      </div>
+      <h3 class="font-bold text-lg mb-2">업체 계약이 어려워요</h3>
+      <p class="text-zinc-500 text-sm">팔로워가 적어서<br>직접 계약이 안 돼요</p>
+    </div>
+    
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-8 text-center hover:border-zinc-700 transition">
+      <div class="w-16 h-16 bg-green-500/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+        <span class="text-3xl">⏰</span>
+      </div>
+      <h3 class="font-bold text-lg mb-2">등록할 시간이 없어요</h3>
+      <p class="text-zinc-500 text-sm">영상 만들기도 바쁜데<br>상품 등록까지 해야 해요</p>
+    </div>
+  </div>
+</section>
+
+<!-- 이용 방법 -->
+<section id="how-it-works" class="py-16 border-t border-zinc-800">
+  <h2 class="text-2xl md:text-3xl font-black text-center mb-4">간단한 이용 방법</h2>
+  <p class="text-zinc-500 text-center mb-12">3단계면 끝!</p>
+  
+  <div class="max-w-3xl mx-auto">
+    <div class="flex flex-col md:flex-row items-center gap-6 md:gap-4">
+      
+      <!-- Step 1 -->
+      <div class="flex-1 text-center">
+        <div class="w-12 h-12 bg-[#c4ff00] text-black font-black text-xl rounded-full flex items-center justify-center mx-auto mb-4">1</div>
+        <h3 class="font-bold mb-2">링크 요청</h3>
+        <p class="text-zinc-500 text-sm">원본 링크를<br>남겨주세요</p>
+      </div>
+      
+      <!-- Arrow -->
+      <div class="hidden md:block text-zinc-600 text-2xl">→</div>
+      <div class="md:hidden text-zinc-600 text-2xl rotate-90">→</div>
+      
+      <!-- Step 2 -->
+      <div class="flex-1 text-center">
+        <div class="w-12 h-12 bg-[#c4ff00] text-black font-black text-xl rounded-full flex items-center justify-center mx-auto mb-4">2</div>
+        <h3 class="font-bold mb-2">상품 등록</h3>
+        <p class="text-zinc-500 text-sm">저희가 쿠팡에<br>등록해드려요</p>
+        <p class="text-zinc-600 text-xs mt-1">(1~3일 소요)</p>
+      </div>
+      
+      <!-- Arrow -->
+      <div class="hidden md:block text-zinc-600 text-2xl">→</div>
+      <div class="md:hidden text-zinc-600 text-2xl rotate-90">→</div>
+      
+      <!-- Step 3 -->
+      <div class="flex-1 text-center">
+        <div class="w-12 h-12 bg-[#c4ff00] text-black font-black text-xl rounded-full flex items-center justify-center mx-auto mb-4">3</div>
+        <h3 class="font-bold mb-2">링크 전달</h3>
+        <p class="text-zinc-500 text-sm">쿠팡 링크를<br>받아가세요</p>
+      </div>
+      
+    </div>
+  </div>
+</section>
+
+<!-- 내 요청 목록 -->
+<section class="py-16 border-t border-zinc-800">
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div>
+      <h2 class="text-2xl font-black">내 요청 목록</h2>
+      <p class="text-zinc-500 text-sm mt-1">요청하신 링크의 처리 현황을 확인하세요</p>
+    </div>
+    
+    <!-- 이번 달 사용량 + 새 요청 버튼 -->
+    <div class="flex items-center gap-4">
+      {% if session.get("user_id") and not session.get("admin") %}
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2">
+          <div class="flex items-center gap-3">
+            <span class="text-zinc-500 text-sm">이번 달</span>
+            <span class="font-black 
+              {% if (monthly_used or 0) >= (monthly_limit or 3) %}text-red-400{% else %}text-white{% endif %}">
+              {{ monthly_used or 0 }}/{{ monthly_limit or 3 }}회
+            </span>
+            {% if (monthly_used or 0) >= (monthly_limit or 3) %}
+              <span class="text-xs text-red-400">한도 초과</span>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+      
+      <button onclick="checkLinkRequestAccess()"
+         class="bg-[#c4ff00] text-black font-black px-5 py-2 rounded-lg hover:bg-white transition">
+        + 새 요청
+      </button>
+    </div>
+  </div>
+  
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
+    {% if not session.get("user_id") %}
+      <div class="p-10 text-center">
+        <div class="text-4xl mb-4">🔒</div>
+        <div class="text-zinc-500 font-bold mb-2">로그인하면 요청 목록을 볼 수 있어요</div>
+        <p class="text-zinc-600 text-sm">내 요청 현황을 확인하려면 로그인해주세요</p>
+      </div>
+    {% elif items|length == 0 %}
+      <div class="p-10 text-center">
+        <div class="text-4xl mb-4">📭</div>
+        <div class="text-zinc-500 font-bold mb-2">아직 요청한 링크가 없습니다</div>
+        <p class="text-zinc-600 text-sm">첫 번째 링크를 요청해보세요!</p>
+      </div>
+    {% else %}
+      <div class="divide-y divide-zinc-800/70">
+        {% for it in items %}
+          <a href="/link-requests/{{ it.id }}" class="block px-6 py-5 hover:bg-zinc-800/50 transition">
+            <div class="flex items-center justify-between gap-4">
+              <div class="min-w-0 flex-1">
+                <div class="font-bold truncate mb-1">{{ it.title }}</div>
+                <div class="text-zinc-500 text-sm truncate">{{ it.original_url[:50] }}...</div>
+              </div>
+              <div class="shrink-0 flex items-center gap-4">
+                <span class="text-zinc-600 text-xs hidden sm:block">{{ (it.created_at|string)[:10] }}</span>
+                {% if it.coupang_url %}
+                  <span class="px-3 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 text-xs font-bold">완료</span>
+                {% else %}
+                  <span class="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 text-xs font-bold">대기중</span>
+                {% endif %}
+              </div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- 모달 스크립트 -->
+<script>
+  function checkLinkRequestAccess() {
+    const userStatus = {
+      isLoggedIn: {{ 'true' if session.get('user_id') else 'false' }},
+      isSubscriber: {{ 'true' if session.get('subscriber') or session.get('is_trial') else 'false' }},
+      isSeller: {{ 'true' if session.get('is_seller') else 'false' }},
+      isAdmin: {{ 'true' if session.get('admin') else 'false' }},
+      monthlyUsed: {{ monthly_used or 0 }},
+      monthlyLimit: {{ monthly_limit or 3 }}
+    };
+    
+    // 관리자는 바로 이동
+    if (userStatus.isAdmin) {
+      location.href = '/link-requests/new';
+      return;
+    }
+    
+    // 구독자 + 한도 내면 바로 이동
+    if (userStatus.isLoggedIn && userStatus.isSubscriber) {
+      if (userStatus.monthlyUsed < userStatus.monthlyLimit) {
+        location.href = '/link-requests/new';
+        return;
+      }
+    }
+    
+    // 모달 표시
+    showLinkRequestModal(userStatus);
+  }
+
+  function showLinkRequestModal(status) {
+    let title, message, buttons;
+    
+    if (status.isSeller) {
+      // 판매자
+      title = '🚫 이용 불가';
+      message = '링크요청은 크리에이터 전용 서비스예요.<br>판매자 계정은 이용할 수 없습니다.';
+      buttons = '<button onclick="closeLinkModal()" class="w-full py-3 bg-zinc-700 text-white rounded-xl font-bold hover:bg-zinc-600 transition">확인</button>';
+    } else if (!status.isLoggedIn) {
+      // 미가입자
+      title = '🔒 회원 전용 서비스';
+      message = '링크요청을 이용하려면<br>먼저 로그인해주세요!';
+      buttons = `
+        <div class="flex gap-3">
+          <a href="/login" class="flex-1 py-3 bg-[#c4ff00] text-black rounded-xl font-bold text-center hover:bg-white transition">로그인</a>
+          <a href="/signup" class="flex-1 py-3 border border-zinc-600 text-white rounded-xl font-bold text-center hover:bg-zinc-800 transition">회원가입</a>
+        </div>
+      `;
+    } else if (!status.isSubscriber) {
+      // 가입자 (비구독)
+      title = '🔗 링크요청 이용 안내';
+      message = '<strong class="text-white">구독자</strong>는 월 10~20회 이용 가능<br><strong class="text-white">오픈채팅 멤버</strong>는 월 3회 무료!';
+      buttons = `
+        <div class="space-y-3">
+          <a href="/pricing" class="w-full py-3 bg-[#c4ff00] text-black rounded-xl font-bold text-center hover:bg-white transition block">구독하기</a>
+          <div class="relative flex items-center gap-2 my-4">
+            <div class="flex-1 h-px bg-zinc-700"></div>
+            <span class="text-zinc-500 text-xs">또는 오픈채팅 멤버라면</span>
+            <div class="flex-1 h-px bg-zinc-700"></div>
+          </div>
+          <a href="#" onclick="alert('오픈채팅 링크를 설정해주세요'); return false;" class="w-full py-3 bg-[#FEE500] text-[#3C1E1E] rounded-xl font-bold text-center hover:bg-yellow-300 transition flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.8 1.8 5.27 4.5 6.7-.2.74-.7 2.68-.8 3.1-.13.5.18.5.38.36.16-.1 2.46-1.66 3.46-2.33.48.07.97.1 1.46.1 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/></svg>
+            오픈채팅 입장하기
+          </a>
+          <div class="relative">
+            <input type="text" id="accessCodeInput" placeholder="공지 코드 입력" class="w-full py-3 px-4 bg-zinc-800 border border-zinc-700 rounded-xl text-white text-center font-bold uppercase tracking-wider focus:border-[#c4ff00] focus:outline-none">
+          </div>
+          <button onclick="verifyAccessCode()" class="w-full py-3 border border-zinc-600 text-white rounded-xl font-bold hover:bg-zinc-800 transition">코드 확인</button>
+        </div>
+      `;
+    } else if (status.monthlyUsed >= status.monthlyLimit) {
+      // 한도 초과
+      title = '⚠️ 이번 달 한도 초과';
+      message = `이번 달 링크요청 <strong>${status.monthlyLimit}회</strong>를 모두 사용했어요.<br>다음 달 1일에 초기화됩니다.`;
+      buttons = '<button onclick="closeLinkModal()" class="w-full py-3 bg-zinc-700 text-white rounded-xl font-bold hover:bg-zinc-600 transition">확인</button>';
+    }
+    
+    const modalHtml = `
+      <div id="linkRequestModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm" onclick="if(event.target === this) closeLinkModal()">
+        <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl">
+          <h3 class="text-xl font-bold text-white text-center mb-3">${title}</h3>
+          <p class="text-zinc-400 text-center mb-6 leading-relaxed">${message}</p>
+          ${buttons}
+        </div>
+      </div>
+    `;
+    
+    closeLinkModal();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  }
+
+  function closeLinkModal() {
+    const modal = document.getElementById('linkRequestModal');
+    if (modal) modal.remove();
+  }
+
+  function verifyAccessCode() {
+    const code = document.getElementById('accessCodeInput').value.trim().toUpperCase();
+    if (!code) {
+      alert('코드를 입력해주세요');
+      return;
+    }
+    
+    // TODO: 실제 코드는 관리자 페이지에서 설정
+    const validCode = 'MONEYING';  // 임시 코드
+    
+    if (code === validCode) {
+      closeLinkModal();
+      location.href = '/link-requests/new';
+    } else {
+      alert('코드가 일치하지 않습니다.\n오픈채팅방 공지를 확인해주세요!');
+    }
+  }
+</script>
+
+{% endblock %}

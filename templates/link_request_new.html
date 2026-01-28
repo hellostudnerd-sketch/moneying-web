@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}링크요청 하기 - MONEYING{% endblock %}
+
+{% block content %}
+
+<div class="max-w-2xl mx-auto">
+
+  <!-- 헤더 -->
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
+    <div>
+      <h1 class="text-3xl font-black">링크요청 하기</h1>
+      <p class="text-zinc-400 mt-2">오픈방 인증 후 원본 링크를 남겨주세요.</p>
+    </div>
+    <div class="shrink-0">
+      <a href="/link-requests" class="px-4 py-2 rounded-lg bg-zinc-800 text-gray-200 hover:bg-zinc-700 transition font-bold">
+        ← 목록으로
+      </a>
+    </div>
+  </div>
+
+  <!-- 이번 달 사용량 표시 -->
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 mb-6">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-sm font-bold text-zinc-400">이번 달 요청</span>
+      <span class="font-black 
+        {% if (monthly_used or 0) >= (monthly_limit or 3) %}text-red-400{% else %}text-white{% endif %}">
+        {{ monthly_used or 0 }} / {{ monthly_limit or 3 }}회
+      </span>
+    </div>
+    <div class="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
+      {% set percent = ((monthly_used or 0) / (monthly_limit or 3) * 100)|int %}
+      <div class="h-full rounded-full 
+        {% if percent >= 100 %}bg-red-500{% elif percent >= 70 %}bg-yellow-500{% else %}bg-[#a3e635]{% endif %}"
+        style="width: {{ percent if percent <= 100 else 100 }}%">
+      </div>
+    </div>
+  </div>
+
+  {% if (monthly_used or 0) >= (monthly_limit or 3) %}
+    <!-- 한도 초과 -->
+    <div class="bg-red-500/10 border border-red-500/30 rounded-2xl p-8 text-center">
+      <div class="text-4xl mb-4">⚠️</div>
+      <h2 class="text-xl font-black text-red-400 mb-2">이번 달 한도 초과</h2>
+      <p class="text-zinc-400 mb-6">
+        이번 달 링크요청 한도({{ monthly_limit }}회)를 모두 사용했어요.<br>
+        다음 달 1일에 초기화됩니다.
+      </p>
+      
+      {% if not (session.get("subscriber") or session.get("is_trial")) %}
+        <div class="bg-zinc-800/50 rounded-xl p-4 mb-6">
+          <p class="text-sm text-zinc-400">
+            💡 <strong class="text-[#a3e635]">구독하면 월 10회</strong>까지 요청할 수 있어요!
+          </p>
+        </div>
+        <a href="/pricing" class="inline-block bg-[#a3e635] text-black font-black px-6 py-3 rounded-lg hover:bg-white transition">
+          요금제 보기 →
+        </a>
+      {% endif %}
+      
+      <a href="/link-requests" class="block mt-4 text-zinc-500 hover:text-white text-sm">
+        ← 목록으로 돌아가기
+      </a>
+    </div>
+    
+  {% else %}
+    <!-- 폼 -->
+    <form method="POST" class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 space-y-6">
+
+      <!-- 오픈방 인증 섹션 -->
+      <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-2">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-yellow-400">⚠️</span>
+          <span class="font-bold text-yellow-200">오픈채팅방 멤버 인증</span>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm text-yellow-200/70 font-bold mb-2">오픈방 닉네임 *</label>
+            <input type="text" name="kakao_nickname" required
+                   placeholder="오픈채팅방에서 사용하는 닉네임"
+                   class="w-full p-3 rounded-lg bg-black/50 border border-yellow-500/30 text-white focus:border-yellow-400 focus:outline-none transition"/>
+          </div>
+          <div>
+            <label class="block text-sm text-yellow-200/70 font-bold mb-2">인증 암호 *</label>
+            <input type="text" name="kakao_password" required
+                   placeholder="공지사항에서 확인"
+                   class="w-full p-3 rounded-lg bg-black/50 border border-yellow-500/30 text-white focus:border-yellow-400 focus:outline-none transition"/>
+          </div>
+        </div>
+        <p class="text-yellow-200/50 text-xs mt-2">💡 인증 암호는 오픈채팅방 공지사항에서 확인하세요.</p>
+      </div>
+
+      <!-- 요청 정보 -->
+      <div>
+        <label class="block text-sm text-zinc-400 font-bold mb-2">요청 제목 *</label>
+        <input type="text" name="title" required
+               placeholder="예: 미국 주방용품 리뷰 영상"
+               class="w-full p-4 rounded-lg bg-black border border-zinc-700 text-white focus:border-[#a3e635] focus:outline-none transition"/>
+        <p class="text-zinc-500 text-xs mt-2">어떤 영상/상품인지 간단히 적어주세요.</p>
+      </div>
+
+      <div>
+        <label class="block text-sm text-zinc-400 font-bold mb-2">원본 링크 *</label>
+        <input type="url" name="original_url" required
+               placeholder="https://..."
+               class="w-full p-4 rounded-lg bg-black border border-zinc-700 text-white focus:border-[#a3e635] focus:outline-none transition"/>
+        <p class="text-zinc-500 text-xs mt-2">해외 영상 링크, 상품 링크 등을 입력해주세요.</p>
+      </div>
+
+      <!-- 안내 -->
+      <div class="bg-zinc-800/50 rounded-xl p-4">
+        <div class="text-sm text-zinc-400 space-y-2">
+          <div class="flex items-start gap-2">
+            <span class="text-[#a3e635]">✓</span>
+            <span>요청하신 링크는 확인 후 쿠팡에 상품을 등록해드려요.</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="text-[#a3e635]">✓</span>
+            <span>완료되면 "내 요청 목록"에서 쿠팡 링크를 확인하실 수 있어요.</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="text-[#a3e635]">✓</span>
+            <span>처리 시간은 1~3일 정도 소요될 수 있습니다.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 버튼 -->
+      <div class="flex gap-3 pt-2">
+        <button type="submit"
+                class="flex-1 bg-[#a3e635] text-black font-black py-4 rounded-lg hover:bg-white transition">
+          요청하기 ({{ (monthly_limit or 3) - (monthly_used or 0) }}회 남음)
+        </button>
+        <a href="/link-requests"
+           class="flex-1 bg-zinc-800 text-white font-bold py-4 rounded-lg hover:bg-zinc-700 transition text-center">
+          취소
+        </a>
+      </div>
+
+    </form>
+  {% endif %}
+
+</div>
+
+{% endblock %}

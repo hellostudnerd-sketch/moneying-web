@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block title %}글쓰기 - 커뮤니티{% endblock %}
+
+{% block head_extra %}
+<!-- Flatpickr 달력 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+{% endblock %}
+
+{% block content %}
+
+<div class="max-w-2xl mx-auto">
+
+  <div class="mb-6 md:mb-8">
+    <h1 class="text-2xl md:text-3xl font-black">글쓰기</h1>
+    <p class="text-zinc-400 mt-1 md:mt-2 text-sm md:text-base">원하는 카테고리를 선택 후 작성해주세요.</p>
+  </div>
+
+  <form method="POST" class="space-y-4 md:space-y-6" onsubmit="return validateForm()">
+
+    <div>
+      <label class="block text-sm font-bold text-zinc-400 mb-2">카테고리</label>
+      <select name="category" id="categorySelect" class="w-full p-3 md:p-4 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-base focus:border-[#a3e635] focus:outline-none">
+        <option value="free">🗣 자유게시판</option>
+        <option value="tips">💡 꿀팁공유</option>
+        <option value="qna">❓ 질문답변</option>
+        <option value="revenue">💸 수익인증</option>
+        {% if session.get("is_seller") or session.get("admin") %}<option value="deal">🛍️ 공구/협찬</option>{% endif %}
+        {% if session.get("admin") %}<option value="notice">📢 공지사항</option>{% endif %}
+      </select>
+      {% if not session.get("is_seller") and not session.get("admin") %}
+      <p class="text-xs text-zinc-500 mt-2">💡 공구/협찬 글은 <a href="/seller/apply" class="text-[#a3e635] hover:underline">판매자 등록</a> 후 작성 가능합니다.</p>
+      {% endif %}
+    </div>
+
+    <!-- 수익인증 안내 -->
+    <div id="revenueGuide" class="hidden bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xl">💸</span>
+        <span class="font-bold text-green-400 text-sm md:text-base">수익 인증 리워드 안내</span>
+      </div>
+      <div class="text-zinc-400 text-xs md:text-sm space-y-1">
+        <p>✓ 머닝 갤러리 영상으로 발생한 수익을 인증해주세요</p>
+        <p>✓ 수익 캡처 이미지를 첨부해주세요 (금액 일부 가림 OK)</p>
+        <p>✓ 관리자 승인 시 <strong class="text-[#a3e635]">7일 구독 연장!</strong></p>
+        <p class="text-yellow-400">⚠ 월 1회만 인정됩니다</p>
+      </div>
+    </div>
+
+    <!-- 공구/협찬 설정 -->
+    <div id="dealOptions" class="hidden bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 space-y-4">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xl">🛍️</span>
+        <span class="font-bold text-purple-400 text-sm md:text-base">공구/협찬 설정</span>
+      </div>
+
+      <div>
+        <label class="block text-sm font-bold text-zinc-400 mb-2">유형 선택 *</label>
+        <div class="flex gap-3">
+          <label class="flex-1 cursor-pointer">
+            <input type="radio" name="deal_type" value="groupbuy" checked class="hidden peer">
+            <div class="p-4 rounded-xl border-2 border-zinc-700 peer-checked:border-[#c4ff00] peer-checked:bg-[#c4ff00]/10 text-center transition">
+              <div class="text-2xl mb-1">🛒</div>
+              <div class="font-bold text-white">공구</div>
+              <div class="text-xs text-zinc-500">공동구매</div>
+            </div>
+          </label>
+          <label class="flex-1 cursor-pointer">
+            <input type="radio" name="deal_type" value="sponsor" class="hidden peer">
+            <div class="p-4 rounded-xl border-2 border-zinc-700 peer-checked:border-purple-400 peer-checked:bg-purple-500/10 text-center transition">
+              <div class="text-2xl mb-1">🎁</div>
+              <div class="font-bold text-white">협찬</div>
+              <div class="text-xs text-zinc-500">무료 제품 제공</div>
+            </div>
+          </label>
+        </div>
+      </div>
+      
+      <div>
+        <label class="block text-sm font-bold text-zinc-400 mb-2">마감일 (선택)</label>
+        <input type="text" name="deal_deadline" id="deadlinePicker" class="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white focus:border-purple-400 focus:outline-none cursor-pointer" placeholder="📅 클릭하여 마감일 선택" readonly>
+        <p class="text-xs text-zinc-500 mt-1">미입력 시 수동 마감</p>
+      </div>
+      
+      <div>
+        <label class="block text-sm font-bold text-zinc-400 mb-2">최대 인원 (선택)</label>
+        <input type="number" name="deal_max_people" min="1" placeholder="예: 10" class="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white focus:border-purple-400 focus:outline-none">
+        <p class="text-xs text-zinc-500 mt-1">미입력 시 인원 제한 없음</p>
+      </div>
+      
+      <div class="flex items-center gap-3">
+        <input type="checkbox" name="deal_subscribers_only" id="subscribersOnly" class="w-5 h-5 rounded bg-zinc-800 border-zinc-600 text-purple-500 focus:ring-purple-500">
+        <label for="subscribersOnly" class="text-sm text-zinc-300">구독자만 신청 가능</label>
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm font-bold text-zinc-400 mb-2">제목</label>
+      <input type="text" name="title" required placeholder="제목을 입력하세요" class="w-full p-3 md:p-4 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-base focus:border-[#a3e635] focus:outline-none">
+    </div>
+
+    <div>
+      <label class="block text-sm font-bold text-zinc-400 mb-2">내용</label>
+      <textarea name="content" required rows="6" placeholder="내용을 입력하세요" class="w-full p-3 md:p-4 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-base focus:border-[#a3e635] focus:outline-none resize-none"></textarea>
+    </div>
+
+    <div>
+      <label class="block text-sm font-bold text-zinc-400 mb-2">이미지 첨부 <span id="imageRequired" class="hidden text-red-400">*필수</span></label>
+      <div id="imagePreview" class="flex flex-wrap gap-2 mb-3"></div>
+      <label class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg border border-zinc-700 transition text-sm">
+        <i class="fas fa-image"></i><span>이미지 추가</span>
+        <input type="file" accept="image/*" multiple class="hidden" onchange="uploadImages(this)">
+      </label>
+      <input type="hidden" name="images_json" id="imagesJson" value="[]">
+    </div>
+
+    <div class="flex gap-3 pt-2 md:pt-4">
+      <button type="submit" class="flex-1 bg-[#a3e635] text-black font-black py-3 md:py-4 rounded-lg hover:bg-white transition text-sm md:text-base">등록하기</button>
+      <a href="/community" class="flex-1 bg-zinc-800 text-white font-bold py-3 md:py-4 rounded-lg hover:bg-zinc-700 transition text-center text-sm md:text-base">취소</a>
+    </div>
+
+  </form>
+
+</div>
+
+<script>
+let uploadedImages = [];
+
+const urlParams = new URLSearchParams(window.location.search);
+const category = urlParams.get('category');
+if (category) { document.getElementById('categorySelect').value = category; toggleGuides(); }
+
+document.getElementById('categorySelect').addEventListener('change', toggleGuides);
+
+function toggleGuides() {
+  const selected = document.getElementById('categorySelect').value;
+  document.getElementById('revenueGuide').classList.toggle('hidden', selected !== 'revenue');
+  document.getElementById('dealOptions').classList.toggle('hidden', selected !== 'deal');
+}
+
+async function uploadImages(input) {
+  for (let file of input.files) {
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch('/api/upload_public', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.ok) { uploadedImages.push(data.url); updateImagePreview(); }
+    } catch (e) { console.error('Upload error:', e); }
+  }
+  input.value = '';
+}
+
+function updateImagePreview() {
+  const preview = document.getElementById('imagePreview');
+  preview.innerHTML = uploadedImages.map((url, i) => `
+    <div class="relative">
+      <img src="${url}" class="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg border border-zinc-700">
+      <button type="button" onclick="removeImage(${i})" class="absolute -top-2 -right-2 w-5 h-5 md:w-6 md:h-6 bg-red-500 rounded-full text-white text-xs font-bold">×</button>
+    </div>
+  `).join('');
+  document.getElementById('imagesJson').value = JSON.stringify(uploadedImages);
+}
+
+function removeImage(index) { uploadedImages.splice(index, 1); updateImagePreview(); }
+
+// Flatpickr 달력 초기화
+flatpickr("#deadlinePicker", {
+  locale: "ko",
+  enableTime: true,
+  dateFormat: "Y-m-d H:i",
+  minDate: "today",
+  disableMobile: true
+});
+
+// 카테고리 바뀔 때 이미지 필수 표시
+function updateImageRequired() {
+  const category = document.getElementById('categorySelect').value;
+  const requiredBadge = document.getElementById('imageRequired');
+  if (category === 'revenue' || category === 'deal') {
+    requiredBadge.classList.remove('hidden');
+  } else {
+    requiredBadge.classList.add('hidden');
+  }
+}
+
+// 초기 실행 + 카테고리 변경 시 실행
+updateImageRequired();
+document.getElementById('categorySelect').addEventListener('change', updateImageRequired);
+
+// 폼 제출 전 검증
+function validateForm() {
+  const category = document.getElementById('categorySelect').value;
+  
+  if ((category === 'revenue' || category === 'deal') && uploadedImages.length === 0) {
+    showAlert('이미지 필수', '수익인증/공구/협찬 글은 이미지를 첨부해야 합니다.', '📸');
+    return false;
+  }
+  return true;
+}
+
+</script>
+
+{% endblock %}

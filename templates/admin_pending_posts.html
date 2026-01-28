@@ -1,0 +1,250 @@
+{% extends "admin_base.html" %}
+{% block title %}판매자 게시물 승인 - MONEYING Admin{% endblock %}
+
+{% block page_title %}📸 판매자 게시물 승인{% endblock %}
+{% block page_desc %}판매자가 등록한 게시물을 검토하고 승인해주세요.{% endblock %}
+
+{% block content_admin %}
+
+{% if posts %}
+<div class="space-y-4">
+  {% for post in posts %}
+  <div id="post-{{ post.id }}" class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5">
+    <div class="flex flex-col md:flex-row gap-5">
+      
+      <!-- 이미지 미리보기 -->
+      <div class="shrink-0">
+        <div class="grid grid-cols-3 gap-2 w-48">
+          {% for img in post.to_dict().images[:3] %}
+          <div class="aspect-[9/16] rounded-lg overflow-hidden bg-zinc-800">
+            <img src="/static/uploads/{{ img }}" class="w-full h-full object-cover" alt="">
+          </div>
+          {% else %}
+          <div class="aspect-[9/16] rounded-lg bg-zinc-800 flex items-center justify-center col-span-3">
+            <i class="fas fa-image text-zinc-600 text-2xl"></i>
+          </div>
+          {% endfor %}
+        </div>
+        {% if post.to_dict().images | length > 3 %}
+        <p class="text-zinc-500 text-xs text-center mt-1">+{{ post.to_dict().images | length - 3 }}장 더</p>
+        {% endif %}
+      </div>
+      
+      <!-- 정보 -->
+      <div class="flex-1">
+        <div class="flex items-start justify-between mb-3">
+          <div>
+            <h3 class="font-black text-white text-lg">{{ post.title }}</h3>
+            <p class="text-zinc-500 text-sm mt-1">
+              판매자 ID: {{ post.seller_id }} · 
+              {{ post.created_at.strftime('%Y-%m-%d %H:%M') if post.created_at else '' }}
+            </p>
+          </div>
+          <span class="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs font-bold rounded-full">승인대기</span>
+        </div>
+        
+        <!-- 쿠팡 링크 -->
+        <div class="mb-3">
+          <p class="text-xs text-zinc-500 mb-1">쿠팡 링크</p>
+          {% if post.coupang_link %}
+          <a href="{{ post.coupang_link }}" target="_blank" class="text-blue-400 text-sm hover:underline break-all">
+            {{ post.coupang_link[:60] }}{% if post.coupang_link|length > 60 %}...{% endif %}
+          </a>
+          {% else %}
+          <span class="text-red-400 text-sm">없음</span>
+          {% endif %}
+        </div>
+        
+        <!-- 영상 링크 -->
+        <div class="mb-4">
+          <p class="text-xs text-zinc-500 mb-1">영상 링크</p>
+          <div class="flex flex-wrap gap-2">
+            {% if post.video_url %}
+            <a href="{{ post.video_url }}" target="_blank" class="px-2 py-1 bg-zinc-800 text-zinc-300 text-xs rounded hover:bg-zinc-700">
+              <i class="fas fa-external-link-alt mr-1"></i>링크 1
+            </a>
+            {% endif %}
+            {% if post.video_url2 %}
+            <a href="{{ post.video_url2 }}" target="_blank" class="px-2 py-1 bg-zinc-800 text-zinc-300 text-xs rounded hover:bg-zinc-700">
+              <i class="fas fa-external-link-alt mr-1"></i>링크 2
+            </a>
+            {% endif %}
+            {% if post.video_url3 %}
+            <a href="{{ post.video_url3 }}" target="_blank" class="px-2 py-1 bg-zinc-800 text-zinc-300 text-xs rounded hover:bg-zinc-700">
+              <i class="fas fa-external-link-alt mr-1"></i>링크 3
+            </a>
+            {% endif %}
+            {% if not post.video_url and not post.video_url2 and not post.video_url3 %}
+            <span class="text-zinc-500 text-xs">없음</span>
+            {% endif %}
+          </div>
+        </div>
+        
+        <!-- 액션 버튼 -->
+        <div class="flex gap-2">
+          <button onclick="openModal('approve', {{ post.id }}, '{{ post.title | e }}')" 
+                  class="px-4 py-2 bg-green-600 text-white font-bold rounded-xl hover:bg-green-500 transition text-sm">
+            <i class="fas fa-check mr-1"></i>승인
+          </button>
+          <button onclick="openModal('reject', {{ post.id }}, '{{ post.title | e }}')" 
+                  class="px-4 py-2 bg-red-600 text-white font-bold rounded-xl hover:bg-red-500 transition text-sm">
+            <i class="fas fa-times mr-1"></i>반려
+          </button>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-12 text-center">
+  <div class="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
+    <i class="fas fa-check-circle text-2xl text-green-500"></i>
+  </div>
+  <p class="text-zinc-400">승인 대기중인 게시물이 없습니다.</p>
+</div>
+{% endif %}
+
+<!-- 확인 모달 -->
+<div id="confirmModal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4">
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-md">
+    <div id="modalIcon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"></div>
+    <h3 id="modalTitle" class="text-xl font-black text-center mb-2"></h3>
+    <p id="modalDesc" class="text-zinc-400 text-center mb-6"></p>
+    
+    <div class="flex gap-3">
+      <button onclick="closeModal()" class="flex-1 py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition">
+        취소
+      </button>
+      <button id="modalConfirmBtn" class="flex-1 py-3 font-black rounded-xl transition">
+        확인
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 결과 모달 -->
+<div id="resultModal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4">
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-md text-center">
+    <div id="resultIcon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"></div>
+    <h3 id="resultTitle" class="text-xl font-black mb-2"></h3>
+    <p id="resultDesc" class="text-zinc-400 mb-6"></p>
+    <button onclick="closeResultModal()" class="w-full py-3 bg-[#c4ff00] text-black font-black rounded-xl hover:bg-white transition">
+      확인
+    </button>
+  </div>
+</div>
+
+<script>
+let currentAction = '';
+let currentPostId = null;
+
+function openModal(action, postId, title) {
+  currentAction = action;
+  currentPostId = postId;
+  
+  const modal = document.getElementById('confirmModal');
+  const icon = document.getElementById('modalIcon');
+  const titleEl = document.getElementById('modalTitle');
+  const desc = document.getElementById('modalDesc');
+  const confirmBtn = document.getElementById('modalConfirmBtn');
+  
+  if (action === 'approve') {
+    icon.className = 'w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-500/20';
+    icon.innerHTML = '<i class="fas fa-check text-3xl text-green-400"></i>';
+    titleEl.textContent = '게시물 승인';
+    desc.innerHTML = '<strong class="text-white">"' + title + '"</strong><br>이 게시물을 승인하시겠습니까?<br><span class="text-green-400">승인 시 갤러리에 바로 노출됩니다.</span>';
+    confirmBtn.className = 'flex-1 py-3 font-black rounded-xl transition bg-green-600 text-white hover:bg-green-500';
+    confirmBtn.textContent = '승인하기';
+  } else {
+    icon.className = 'w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-red-500/20';
+    icon.innerHTML = '<i class="fas fa-times text-3xl text-red-400"></i>';
+    titleEl.textContent = '게시물 반려';
+    desc.innerHTML = '<strong class="text-white">"' + title + '"</strong><br>이 게시물을 반려하시겠습니까?<br><span class="text-red-400">판매자에게 반려 알림이 전송됩니다.</span>';
+    confirmBtn.className = 'flex-1 py-3 font-black rounded-xl transition bg-red-600 text-white hover:bg-red-500';
+    confirmBtn.textContent = '반려하기';
+  }
+  
+  confirmBtn.onclick = handleConfirm;
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeModal() {
+  const modal = document.getElementById('confirmModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+  currentAction = '';
+  currentPostId = null;
+}
+
+function showResult(success, action) {
+  closeModal();
+  
+  const modal = document.getElementById('resultModal');
+  const icon = document.getElementById('resultIcon');
+  const title = document.getElementById('resultTitle');
+  const desc = document.getElementById('resultDesc');
+  
+  if (success) {
+    icon.className = 'w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-500/20';
+    icon.innerHTML = '<i class="fas fa-check text-3xl text-green-400"></i>';
+    title.textContent = action === 'approve' ? '승인 완료' : '반려 완료';
+    desc.textContent = action === 'approve' ? '게시물이 갤러리에 노출됩니다.' : '판매자에게 알림이 전송되었습니다.';
+  } else {
+    icon.className = 'w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-red-500/20';
+    icon.innerHTML = '<i class="fas fa-exclamation text-3xl text-red-400"></i>';
+    title.textContent = '오류 발생';
+    desc.textContent = '처리 중 문제가 발생했습니다. 다시 시도해주세요.';
+  }
+  
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeResultModal() {
+  const modal = document.getElementById('resultModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+async function handleConfirm() {
+  const action = currentAction;
+  const postId = currentPostId;
+  
+  const confirmBtn = document.getElementById('modalConfirmBtn');
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = '처리 중...';
+  
+  try {
+    const endpoint = action === 'approve' 
+      ? '/admin/pending-posts/' + postId + '/approve'
+      : '/admin/pending-posts/' + postId + '/reject';
+    
+    const res = await fetch(endpoint, { method: 'POST' });
+    const data = await res.json();
+    
+    if (data.ok) {
+      document.getElementById('post-' + postId).remove();
+      showResult(true, action);
+      
+      // 남은 게시물 없으면 새로고침
+      setTimeout(function() {
+        if (!document.querySelector('[id^="post-"]')) {
+          location.reload();
+        }
+      }, 1500);
+    } else {
+      showResult(false, action);
+    }
+  } catch (e) {
+    showResult(false, action);
+  }
+  
+  confirmBtn.disabled = false;
+}
+</script>
+
+{% endblock %}

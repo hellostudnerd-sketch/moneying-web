@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}오류가 발생했습니다 - MONEYING{% endblock %}
+
+{% block content %}
+<div class="min-h-[60vh] flex items-center justify-center">
+  <div class="text-center">
+    <div class="text-8xl font-black text-red-500 mb-4">500</div>
+    <h1 class="text-2xl md:text-3xl font-black mb-4">오류가 발생했습니다</h1>
+    <p class="text-zinc-400 mb-8">잠시 후 다시 시도해주세요. 문제가 계속되면 관리자에게 문의해주세요.</p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="/" class="bg-[#a3e635] text-black font-black px-6 py-3 rounded-xl hover:bg-white transition">
+        홈으로 가기
+      </a>
+      <button onclick="location.reload()" class="bg-zinc-800 text-white font-bold px-6 py-3 rounded-xl border border-zinc-700 hover:bg-zinc-700 transition">
+        다시 시도
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}

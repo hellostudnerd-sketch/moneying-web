@@ -1,0 +1,79 @@
+{% extends "admin_base.html" %}
+{% block title %}지식 스토어 관리 - MONEYING Admin{% endblock %}
+{% block page_title %}지식 스토어 관리{% endblock %}
+{% block page_desc %}상품 {{ products|length }}개{% endblock %}
+
+{% block page_actions %}
+<a href="/admin/store/new" class="px-4 py-2 rounded-xl bg-[#a3e635] text-black font-black hover:bg-white transition">
+  + 상품 추가
+</a>
+{% endblock %}
+
+{% block content_admin %}
+<div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
+  <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+    <div class="font-black">상품 목록</div>
+  </div>
+  
+  {% if products|length == 0 %}
+    <div class="p-10 text-center">
+      <div class="text-4xl mb-4">📦</div>
+      <div class="text-zinc-500 font-bold">등록된 상품이 없습니다</div>
+    </div>
+  {% else %}
+    <table class="w-full">
+      <thead class="bg-zinc-800/50">
+        <tr>
+          <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">상품</th>
+          <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">카테고리</th>
+          <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">가격</th>
+          <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">상태</th>
+          <th class="px-6 py-4 text-right text-xs font-bold text-zinc-500 uppercase">액션</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-zinc-800/70">
+        {% for p in products %}
+          <tr class="hover:bg-zinc-800/30 transition">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-4">
+                {% if p.image %}
+                  <img src="{{ p.image }}" class="w-12 h-12 rounded-lg object-cover">
+                {% else %}
+                  <div class="w-12 h-12 rounded-lg bg-zinc-800 flex items-center justify-center text-xl">📦</div>
+                {% endif %}
+                <div>
+                  <div class="font-bold text-white">{{ p.title }}</div>
+                  {% if p.badge %}<span class="text-xs text-[#a3e635]">{{ p.badge }}</span>{% endif %}
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 text-zinc-400">
+              {{ {'ebook':'전자책','vod':'VOD 강의','program':'프로그램','template':'템플릿'}.get(p.category, p.category) }}
+            </td>
+            <td class="px-6 py-4 text-white font-bold">{{ "{:,}".format(p.price) }}원</td>
+            <td class="px-6 py-4">
+              {% if p.is_active %}
+                <span class="px-3 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 text-xs font-bold">판매중</span>
+              {% else %}
+                <span class="px-3 py-1 rounded-full bg-zinc-500/10 text-zinc-400 border border-zinc-500/20 text-xs font-bold">비공개</span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-4 text-right">
+              <a href="/admin/store/{{ p.id }}/edit" class="text-[#a3e635] hover:underline text-sm font-bold mr-3">수정</a>
+              <button onclick="deleteProduct({{ p.id }})" class="text-red-400 hover:underline text-sm font-bold">삭제</button>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</div>
+
+<script>
+function deleteProduct(id) {
+  if (!confirm('정말 삭제하시겠습니까?')) return;
+  fetch(`/admin/store/${id}/delete`, { method: 'POST' })
+    .then(() => location.reload());
+}
+</script>
+{% endblock %}

@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block title %}쿠팡 파트너스 링크 변환기 - MONEYING{% endblock %}
+
+{% block main_class %}max-w-5xl mx-auto px-4 md:px-6 pt-24 md:pt-28 pb-20{% endblock %}
+
+{% block head_extra %}
+<style>
+  .feature-card {
+    background: linear-gradient(135deg, rgba(196,255,0,0.05) 0%, rgba(0,0,0,0) 100%);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<a href="/store" class="text-zinc-500 hover:text-white text-sm mb-6 inline-block">← 지식 스토어</a>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  
+  <!-- 왼쪽: 상품 정보 -->
+  <div class="lg:col-span-2">
+    
+    <!-- 제목 & 뱃지 -->
+    <div class="mb-6">
+      <div class="flex flex-wrap gap-2 mb-3">
+        <span class="inline-block px-3 py-1 bg-[#c4ff00]/10 text-[#c4ff00] text-sm font-bold rounded-full">무료</span>
+        <span class="inline-block px-3 py-1 bg-blue-500/10 text-blue-400 text-sm font-bold rounded-full">Chrome 확장</span>
+      </div>
+      <h1 class="text-3xl md:text-4xl font-black">쿠팡 파트너스 링크 변환기</h1>
+      <p class="text-zinc-400 mt-3">쿠팡 상품 페이지에서 1초 만에 파트너스 링크 생성 & 복사</p>
+    </div>
+    
+    <!-- 핵심 기능 카드 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div class="feature-card border border-zinc-800 rounded-2xl p-5 text-center">
+        <div class="text-4xl mb-3">⚡</div>
+        <div class="font-bold text-white mb-1">1초 변환</div>
+        <div class="text-zinc-500 text-sm">클릭 한 번으로 즉시 변환</div>
+      </div>
+      <div class="feature-card border border-zinc-800 rounded-2xl p-5 text-center">
+        <div class="text-4xl mb-3">🔐</div>
+        <div class="font-bold text-white mb-1">로그인 불필요</div>
+        <div class="text-zinc-500 text-sm">API 키만 한 번 등록</div>
+      </div>
+      <div class="feature-card border border-zinc-800 rounded-2xl p-5 text-center">
+        <div class="text-4xl mb-3">📋</div>
+        <div class="font-bold text-white mb-1">자동 복사</div>
+        <div class="text-zinc-500 text-sm">바로 붙여넣기 가능</div>
+      </div>
+    </div>
+    
+    <!-- 상세 설명 -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 md:p-8 mb-6">
+      <h2 class="text-xl font-bold mb-6 pb-4 border-b border-zinc-800">😤 이런 불편함, 겪어보셨죠?</h2>
+      <div class="space-y-4 text-zinc-300">
+        <div class="flex items-start gap-3">
+          <span class="text-red-400 mt-1">✗</span>
+          <p>쿠팡 파트너스 사이트에 <strong class="text-white">매번 로그인</strong>해야 하는 번거로움</p>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="text-red-400 mt-1">✗</span>
+          <p>상품 URL 복사 → 사이트 이동 → 붙여넣기 → 변환 → 다시 복사... <strong class="text-white">5단계 과정</strong></p>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="text-red-400 mt-1">✗</span>
+          <p>계정이 여러 개면 <strong class="text-white">매번 로그아웃/로그인</strong> 반복</p>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="text-red-400 mt-1">✗</span>
+          <p>하루에 영상 여러 개 만들면 <strong class="text-white">시간 낭비가 심각</strong></p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 md:p-8 mb-6">
+      <h2 class="text-xl font-bold mb-6 pb-4 border-b border-zinc-800">✨ 이제 1초면 끝납니다</h2>
+      <div class="space-y-4 text-zinc-300">
+        <div class="flex items-start gap-3">
+          <span class="text-[#c4ff00] mt-1">✓</span>
+          <p><strong class="text-white">쿠팡 상품 페이지에서 바로</strong> 파트너스 링크 생성</p>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="text-[#c4ff00] mt-1">✓</span>
+          <p>API 키 <strong class="text-white">한 번만 등록</strong>하면 로그인 필요 없음</p>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="text-[#c4ff00] mt-1">✓</span>
+          <p>변환과 동시에 <strong class="text-white">클립보드 자동 복사</strong></p>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="text-[#c4ff00] mt-1">✓</span>
+          <p>계정 여러 개? <strong class="text-white">API 키만 바꾸면 끝</strong></p>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="text-[#c4ff00] mt-1">✓</span>
+          <p>프로필 링크에 <strong class="text-white">바로 붙여넣기</strong>해서 사용</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 스크린샷 -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 md:p-8 mb-6">
+      <h2 class="text-xl font-bold mb-6 pb-4 border-b border-zinc-800">📸 스크린샷</h2>
+      <div class="flex flex-col items-center gap-4">
+        <img src="https://image2url.com/r2/default/images/1769523323667-1c8e6e17-d01e-44ec-ae5f-141e8f3942a6.png" 
+             alt="쿠팡 파트너스 링크 변환기 스크린샷 1" 
+             class="w-2/3 rounded-xl border border-zinc-700">
+        <img src="https://image2url.com/r2/default/images/1769523338076-ff9aad43-c381-4364-92b4-60a2de3116fa.png" 
+             alt="쿠팡 파트너스 링크 변환기 스크린샷 2" 
+             class="w-2/3 rounded-xl border border-zinc-700">
+      </div>
+    </div>
+    
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 md:p-8 mb-6">
+      <h2 class="text-xl font-bold mb-6 pb-4 border-b border-zinc-800">📖 사용 방법</h2>
+      <div class="space-y-6">
+        <div class="flex items-start gap-4">
+          <div class="w-8 h-8 bg-[#c4ff00] text-black font-black rounded-full flex items-center justify-center shrink-0">1</div>
+          <div>
+            <p class="font-bold text-white mb-1">Chrome 웹 스토어에서 확장 프로그램 설치</p>
+            <p class="text-zinc-400 text-sm">무료로 다운로드 후 Chrome에 추가</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div class="w-8 h-8 bg-[#c4ff00] text-black font-black rounded-full flex items-center justify-center shrink-0">2</div>
+          <div>
+            <p class="font-bold text-white mb-1">쿠팡 파트너스 API 키 등록</p>
+            <p class="text-zinc-400 text-sm">확장 프로그램 설정에서 API 키 한 번만 입력</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div class="w-8 h-8 bg-[#c4ff00] text-black font-black rounded-full flex items-center justify-center shrink-0">3</div>
+          <div>
+            <p class="font-bold text-white mb-1">쿠팡 상품 페이지에서 버튼 클릭</p>
+            <p class="text-zinc-400 text-sm">1초 만에 파트너스 링크 생성 & 자동 복사 완료!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="bg-gradient-to-r from-[#c4ff00]/10 to-transparent border border-[#c4ff00]/20 rounded-2xl p-6 md:p-8">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="text-3xl">💡</span>
+        <h2 class="text-xl font-bold">숏폼 크리에이터 필수 도구</h2>
+      </div>
+      <p class="text-zinc-300 leading-relaxed">
+        하루에 영상 3개만 올려도 링크 변환에 쓰는 시간이 상당합니다.<br>
+        이 확장 프로그램 하나로 <strong class="text-[#c4ff00]">연간 수십 시간을 절약</strong>할 수 있어요.<br>
+        머닝 크루들의 작업 효율을 위해 <strong class="text-white">무료로 제공</strong>합니다.
+      </p>
+    </div>
+    
+  </div>
+  
+  <!-- 오른쪽: 다운로드 박스 (sticky) -->
+  <div class="lg:col-span-1">
+    <div class="sticky top-24">
+      <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+        
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-3xl font-black text-[#c4ff00]">무료</span>
+          <span class="text-zinc-500 line-through text-lg">19,000원</span>
+        </div>
+        <p class="text-zinc-400 text-sm mb-6">머닝 크루 전용 무료 배포</p>
+        
+        <div class="space-y-3">
+          <a href="https://chromewebstore.google.com/search/%EC%BF%A0%ED%8C%A1%20%ED%8C%8C%ED%8A%B8%EB%84%88%EC%8A%A4%20%EB%A7%81%ED%81%AC" 
+             target="_blank"
+             class="flex items-center justify-center gap-2 w-full bg-[#c4ff00] text-black font-black py-4 rounded-xl text-center hover:bg-white transition text-lg">
+            <i class="fab fa-chrome"></i>
+            Chrome에 추가
+          </a>
+        </div>
+        
+        <div class="mt-6 pt-6 border-t border-zinc-800 text-zinc-500 text-sm space-y-2">
+          <div class="flex items-center gap-2">
+            <span class="text-[#c4ff00]">✓</span>
+            <span>완전 무료</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[#c4ff00]">✓</span>
+            <span>Chrome 브라우저 지원</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[#c4ff00]">✓</span>
+            <span>설치 후 바로 사용 가능</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[#c4ff00]">✓</span>
+            <span>API 키만 등록하면 끝</span>
+          </div>
+        </div>
+        
+      </div>
+      
+      <!-- 요구사항 -->
+      <div class="mt-4 bg-zinc-900/40 border border-zinc-800 rounded-xl p-4">
+        <h3 class="font-bold text-white text-sm mb-3">📋 요구사항</h3>
+        <ul class="text-zinc-500 text-xs space-y-1">
+          <li>• Chrome 브라우저 (최신 버전 권장)</li>
+          <li>• 쿠팡 파트너스 계정 & API 키</li>
+        </ul>
+      </div>
+      
+      <!-- 문의 -->
+      <div class="mt-4 text-center">
+        <a href="/support" class="text-zinc-500 hover:text-white text-sm transition">문의하기 →</a>
+      </div>
+    </div>
+  </div>
+  
+</div>
+
+{% endblock %}

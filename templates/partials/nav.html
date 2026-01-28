@@ -1,0 +1,99 @@
+<nav id="mainNav" class="glass-nav fixed w-full z-50 top-0">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="flex justify-between items-center h-16">
+
+      <!-- 로고 -->
+      <a href="/" class="text-2xl font-black tracking-tighter text-white">
+        MONEY<span class="text-highlight">ING</span>
+      </a>
+
+      <!-- PC 메뉴 -->
+      <div class="hidden md:flex items-center gap-8">
+        <a href="/gallery" class="text-gray-300 hover:text-white text-sm font-medium transition">영상 갤러리</a>
+        <a href="/trend" class="text-gray-300 hover:text-white text-sm font-medium transition">트렌드</a>
+        <a href="/store" class="text-gray-300 hover:text-white text-sm font-medium transition">지식 스토어</a>
+        <a href="/profitguard" class="text-gray-300 hover:text-white text-sm font-medium transition">프로핏가드</a>
+        <a href="/link-requests" class="text-gray-300 hover:text-white text-sm font-medium transition">링크요청</a>
+        <a href="/community" class="text-gray-300 hover:text-white text-sm font-medium transition">커뮤니티</a>
+        <a href="/pricing" class="text-gray-300 hover:text-white text-sm font-medium transition">요금제</a>
+
+        <!-- 우측 액션 -->
+        <div class="flex items-center gap-3">
+          {% if session.get("admin") %}
+            <a href="/admin" class="text-gray-300 hover:text-white text-sm font-bold transition">관리자 홈</a>
+            <a href="/admin/logout" class="text-gray-300 hover:text-white text-sm font-medium transition">로그아웃</a>
+          {% elif session.get("user_id") %}
+            <a href="/notifications" class="text-gray-300 hover:text-white transition relative" title="알림">
+              <i class="fas fa-bell text-lg"></i>
+              <span id="notiBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"></span>
+            </a>
+            <a href="/my" class="text-gray-300 hover:text-white text-sm font-bold transition">내정보</a>
+            <a href="/logout" class="text-gray-300 hover:text-white text-sm font-medium transition">로그아웃</a>
+          {% else %}
+            <a href="/login" class="text-gray-300 hover:text-white text-sm font-medium transition">로그인</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 모바일 햄버거 -->
+      <button id="mobileMenuBtn"
+              class="md:hidden text-gray-200 hover:text-white w-10 h-10 flex items-center justify-center"
+              aria-label="메뉴 열기">
+        <i class="fas fa-bars text-xl"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- 모바일 메뉴 -->
+  <div id="mobileMenu" class="hidden md:hidden border-t border-zinc-800 bg-black/95">
+    <div class="px-4 py-4 flex flex-col gap-3">
+      <a href="/gallery" class="text-gray-200 font-bold">영상 갤러리</a>
+      <a href="/trend" class="text-gray-200 font-bold">트렌드</a>
+      <a href="/store" class="text-gray-200 font-bold">지식 스토어</a>
+      <a href="/profitguard" class="text-gray-200 font-bold">프로핏가드</a>
+      <a href="/link-requests" class="text-gray-200 font-bold">링크요청</a>
+      <a href="/community" class="text-gray-200 font-bold">커뮤니티</a>
+      <a href="/pricing" class="text-gray-200 font-bold">요금제</a>
+
+      <div class="h-px bg-zinc-800 my-2"></div>
+
+      {% if session.get("admin") %}
+        <a href="/admin" class="text-gray-200 font-bold">관리자 홈</a>
+        <a href="/admin/logout" class="text-gray-300">로그아웃</a>
+      {% elif session.get("user_id") %}
+        <a href="/notifications" class="text-gray-200 font-bold"><i class="fas fa-bell mr-2"></i>알림</a>
+        <a href="/my" class="text-gray-200 font-bold">내정보</a>
+        <a href="/logout" class="text-gray-300">로그아웃</a>
+      {% else %}
+        <a href="/login" class="text-gray-200 font-bold">로그인</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var mobileBtn = document.getElementById("mobileMenuBtn");
+  var mobileMenu = document.getElementById("mobileMenu");
+  if (mobileBtn && mobileMenu) {
+    mobileBtn.onclick = function() {
+      mobileMenu.classList.toggle("hidden");
+    };
+  }
+  
+  // 알림 개수 체크
+  var notiBadge = document.getElementById("notiBadge");
+  if (notiBadge) {
+    fetch("/api/notifications/count")
+      .then(r => r.json())
+      .then(data => {
+        if (data.count > 0) {
+          notiBadge.textContent = data.count > 9 ? "9+" : data.count;
+          notiBadge.classList.remove("hidden");
+          notiBadge.classList.add("flex");
+        }
+      })
+      .catch(() => {});
+  }
+});
+</script>

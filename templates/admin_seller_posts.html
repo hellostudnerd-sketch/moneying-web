@@ -1,0 +1,127 @@
+{% extends "admin_base.html" %}
+{% block title %}판매자 게시물 관리 - MONEYING Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+  
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="text-3xl font-black">판매자 게시물 관리</h1>
+      <p class="text-zinc-400 mt-2">판매자가 업로드한 영상 승인/거절</p>
+    </div>
+  </div>
+
+  <!-- 필터 탭 -->
+  <div class="flex gap-2 mb-6">
+    <a href="?status=pending" class="px-4 py-2 rounded-lg font-bold text-sm transition {% if status_filter == 'pending' %}bg-[#a3e635] text-black{% else %}bg-zinc-800 text-zinc-400 hover:bg-zinc-700{% endif %}">
+      대기중
+    </a>
+    <a href="?status=approved" class="px-4 py-2 rounded-lg font-bold text-sm transition {% if status_filter == 'approved' %}bg-[#a3e635] text-black{% else %}bg-zinc-800 text-zinc-400 hover:bg-zinc-700{% endif %}">
+      승인됨
+    </a>
+    <a href="?status=rejected" class="px-4 py-2 rounded-lg font-bold text-sm transition {% if status_filter == 'rejected' %}bg-[#a3e635] text-black{% else %}bg-zinc-800 text-zinc-400 hover:bg-zinc-700{% endif %}">
+      거절됨
+    </a>
+    <a href="?status=all" class="px-4 py-2 rounded-lg font-bold text-sm transition {% if status_filter == 'all' %}bg-[#a3e635] text-black{% else %}bg-zinc-800 text-zinc-400 hover:bg-zinc-700{% endif %}">
+      전체
+    </a>
+  </div>
+
+  <!-- 목록 -->
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
+    {% if posts|length == 0 %}
+      <div class="p-10 text-center">
+        <div class="text-4xl mb-4">📹</div>
+        <div class="text-zinc-500 font-bold">게시물이 없습니다</div>
+      </div>
+    {% else %}
+      <table class="w-full">
+        <thead class="bg-zinc-800/50">
+          <tr>
+            <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">제목</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">카테고리</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">영상 링크</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">등록일</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">상태</th>
+            <th class="px-6 py-4 text-right text-xs font-bold text-zinc-500 uppercase">액션</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-zinc-800/70">
+          {% for post in posts %}
+            <tr class="hover:bg-zinc-800/30 transition" id="post-row-{{ post.id }}">
+              <td class="px-6 py-4">
+                <div class="font-bold text-white">{{ post.title }}</div>
+              </td>
+              <td class="px-6 py-4 text-zinc-300">{{ post.category }}</td>
+              <td class="px-6 py-4">
+                {% if post.video_url %}
+                  <a href="{{ post.video_url }}" target="_blank" class="text-blue-400 hover:underline text-sm">링크1</a>
+                {% endif %}
+                {% if post.video_url2 %}
+                  <a href="{{ post.video_url2 }}" target="_blank" class="text-blue-400 hover:underline text-sm ml-2">링크2</a>
+                {% endif %}
+                {% if post.video_url3 %}
+                  <a href="{{ post.video_url3 }}" target="_blank" class="text-blue-400 hover:underline text-sm ml-2">링크3</a>
+                {% endif %}
+              </td>
+              <td class="px-6 py-4 text-zinc-500 text-sm">{{ post.created_at.strftime('%Y-%m-%d') }}</td>
+              <td class="px-6 py-4">
+                {% if post.status == 'approved' %}
+                  <span class="px-3 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 text-xs font-bold">승인됨</span>
+                {% elif post.status == 'pending' %}
+                  <span class="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 text-xs font-bold">대기중</span>
+                {% else %}
+                  <span class="px-3 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-bold">거절됨</span>
+                {% endif %}
+              </td>
+              <td class="px-6 py-4 text-right">
+                {% if post.status == 'pending' %}
+                  <button onclick="approvePost({{ post.id }})" class="px-3 py-1 bg-green-600 hover:bg-green-500 text-white rounded text-sm font-bold mr-2">승인</button>
+                  <button onclick="rejectPost({{ post.id }})" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-sm font-bold">거절</button>
+                {% elif post.status == 'approved' %}
+                  <a href="/gallery/{{ post.id }}" target="_blank" class="text-[#a3e635] text-sm font-bold hover:underline">보기</a>
+                {% else %}
+                  <button onclick="approvePost({{ post.id }})" class="px-3 py-1 bg-zinc-700 hover:bg-zinc-600 text-white rounded text-sm font-bold">재승인</button>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+function approvePost(postId) {
+  if (!confirm('이 게시물을 승인하시겠습니까?')) return;
+  
+  fetch(`/admin/seller-posts/${postId}/approve`, { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        alert('승인되었습니다.');
+        location.reload();
+      } else {
+        alert('오류: ' + (data.error || 'unknown'));
+      }
+    });
+}
+
+function rejectPost(postId) {
+  if (!confirm('이 게시물을 거절하시겠습니까?')) return;
+  
+  fetch(`/admin/seller-posts/${postId}/reject`, { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        alert('거절되었습니다.');
+        location.reload();
+      } else {
+        alert('오류: ' + (data.error || 'unknown'));
+      }
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+{% block title %}{{ item.title }} - 공구/협찬{% endblock %}
+
+{% block head_extra %}
+<style>
+:root {
+  --neon-lime: #c4ff00;
+}
+
+/* ===== 메인 카드 ===== */
+.detail-card {
+  background: linear-gradient(135deg, rgba(24, 24, 27, 0.9), rgba(9, 9, 11, 0.95));
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* ===== 배지 ===== */
+.badge-groupbuy {
+  background: var(--neon-lime);
+  color: #000;
+  box-shadow: 0 0 15px rgba(196, 255, 0, 0.4);
+}
+.badge-sponsor {
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  color: #fff;
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+}
+.badge-subscriber {
+  background: rgba(196, 255, 0, 0.1);
+  border: 1px solid rgba(196, 255, 0, 0.3);
+  color: var(--neon-lime);
+}
+.badge-closed {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+/* ===== 진행률 바 ===== */
+.progress-bar {
+  background: rgba(255,255,255,0.1);
+  overflow: hidden;
+}
+.progress-fill {
+  background: linear-gradient(90deg, var(--neon-lime), #84cc16);
+  transition: width 0.5s ease;
+}
+.progress-fill.full {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+/* ===== 정보 박스 ===== */
+.info-box {
+  background: rgba(39, 39, 42, 0.5);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* ===== 폼 입력 ===== */
+.form-input {
+  background: rgba(24, 24, 27, 0.8);
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.2s ease;
+}
+.form-input:focus {
+  border-color: var(--neon-lime);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(196, 255, 0, 0.1);
+}
+
+/* ===== 신청 버튼 ===== */
+.btn-apply {
+  background: var(--neon-lime);
+  color: #000;
+  box-shadow: 0 0 20px rgba(196, 255, 0, 0.3);
+  transition: all 0.3s ease;
+}
+.btn-apply:hover {
+  box-shadow: 0 0 30px rgba(196, 255, 0, 0.5);
+  transform: translateY(-2px);
+}
+.btn-apply:disabled {
+  background: #3f3f46;
+  color: #71717a;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ===== 신청 완료 박스 ===== */
+.applied-box {
+  background: linear-gradient(135deg, rgba(196, 255, 0, 0.1), rgba(132, 204, 22, 0.05));
+  border: 1px solid rgba(196, 255, 0, 0.3);
+}
+
+/* ===== 구독 필요 박스 ===== */
+.subscribe-box {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.05));
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{% set is_closed = item.is_ended() or item.status == 'closed' %}
+{% set is_full = item.is_full() %}
+{% set progress = (item.current_count() / item.max_participants * 100) if item.max_participants > 0 else 0 %}
+{% set is_subscriber = session.get('subscriber') or session.get('is_trial') or session.get('admin') %}
+{% set can_apply = not is_closed and not is_full and (not item.subscribers_only or is_subscriber) and not user_applied %}
+
+<div class="max-w-4xl mx-auto">
+  <!-- 뒤로가기 -->
+  <a href="{{ url_for('groupbuy_list') }}" class="inline-flex items-center gap-2 text-zinc-400 hover:text-white mb-6 transition">
+    <i class="fas fa-arrow-left"></i>
+    <span>목록으로</span>
+  </a>
+
+  <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+    <!-- 왼쪽: 상세 정보 -->
+    <div class="lg:col-span-3 space-y-6">
+      <!-- 메인 이미지 -->
+      <div class="detail-card rounded-2xl overflow-hidden">
+        <div class="relative aspect-video bg-zinc-800/50">
+          {% if item.image %}
+          <img src="{{ item.image }}" alt="{{ item.title }}" class="w-full h-full object-cover">
+          {% else %}
+          <div class="w-full h-full flex items-center justify-center text-6xl bg-gradient-to-br from-zinc-800 to-zinc-900">
+            {% if item.category == 'sponsorship' %}🎁{% else %}🛒{% endif %}
+          </div>
+          {% endif %}
+          
+          <!-- 마감 오버레이 -->
+          {% if is_closed %}
+          <div class="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center">
+            <span class="text-3xl font-black text-zinc-400">마감되었습니다</span>
+          </div>
+          {% elif is_full %}
+          <div class="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center">
+            <span class="text-3xl font-black text-red-400">인원이 마감되었습니다</span>
+          </div>
+          {% endif %}
+        </div>
+        
+        <div class="p-6">
+          <!-- 배지들 -->
+          <div class="flex flex-wrap gap-2 mb-4">
+            <span class="px-3 py-1.5 rounded-full text-xs font-black {% if item.category == 'sponsorship' %}badge-sponsor{% else %}badge-groupbuy{% endif %}">
+              {% if item.category == 'sponsorship' %}🎁 협찬{% else %}🛒 공구{% endif %}
+            </span>
+            {% if item.subscribers_only %}
+            <span class="badge-subscriber px-3 py-1.5 rounded-full text-xs font-bold">👑 구독자 전용</span>
+            {% endif %}
+            {% if is_closed or is_full %}
+            <span class="badge-closed px-3 py-1.5 rounded-full text-xs font-bold">마감</span>
+            {% endif %}
+          </div>
+          
+          {% if item.brand %}
+          <p class="text-zinc-500 text-sm font-bold mb-2 uppercase tracking-wider">{{ item.brand }}</p>
+          {% endif %}
+          
+          <h1 class="text-2xl md:text-3xl font-black text-white mb-4">{{ item.title }}</h1>
+          
+          {% if item.description %}
+          <div class="text-zinc-300 leading-relaxed whitespace-pre-line">{{ item.description }}</div>
+          {% endif %}
+        </div>
+      </div>
+      
+      <!-- 혜택 -->
+      {% if item.benefit %}
+      <div class="detail-card rounded-2xl p-6">
+        <h3 class="text-lg font-black text-white mb-4 flex items-center gap-2">
+          <span class="text-[#c4ff00]">🎁</span> 혜택
+        </h3>
+        <div class="text-zinc-300 leading-relaxed whitespace-pre-line">{{ item.benefit }}</div>
+      </div>
+      {% endif %}
+      
+      <!-- 신청 조건 -->
+      {% if item.requirements %}
+      <div class="detail-card rounded-2xl p-6">
+        <h3 class="text-lg font-black text-white mb-4 flex items-center gap-2">
+          <span class="text-[#c4ff00]">📋</span> 신청 조건
+        </h3>
+        <div class="text-zinc-300 leading-relaxed whitespace-pre-line">{{ item.requirements }}</div>
+      </div>
+      {% endif %}
+    </div>
+    
+    <!-- 오른쪽: 신청 패널 -->
+    <div class="lg:col-span-2">
+      <div class="detail-card rounded-2xl p-6 sticky top-24">
+        <!-- 신청 현황 -->
+        <div class="mb-6">
+          <h3 class="text-sm font-bold text-zinc-400 mb-3">신청 현황</h3>
+          
+          {% if item.max_participants > 0 %}
+          <div class="mb-2">
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-zinc-400">참여 인원</span>
+              <span class="{% if is_full %}text-red-400{% else %}text-[#c4ff00]{% endif %} font-bold">
+                {{ item.current_count() }} / {{ item.max_participants }}명
+              </span>
+            </div>
+            <div class="progress-bar h-3 rounded-full">
+              <div class="progress-fill h-full rounded-full {% if is_full %}full{% endif %}" style="width: {{ progress }}%"></div>
+            </div>
+          </div>
+          {% else %}
+          <div class="info-box rounded-xl p-4 text-center">
+            <span class="text-2xl font-black text-white">{{ item.current_count() }}</span>
+            <span class="text-zinc-400 text-sm ml-1">명 신청</span>
+          </div>
+          {% endif %}
+        </div>
+        
+        <!-- 기간 정보 -->
+        {% if item.end_date %}
+        <div class="info-box rounded-xl p-4 mb-6">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center">
+              <i class="fas fa-clock text-[#c4ff00]"></i>
+            </div>
+            <div>
+              <p class="text-xs text-zinc-500">마감일</p>
+              <p class="text-white font-bold">{{ item.end_date.strftime('%Y년 %m월 %d일 %H:%M') }}</p>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        
+        <!-- 연락처 -->
+        {% if item.contact %}
+        <div class="info-box rounded-xl p-4 mb-6">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center">
+              <i class="fas fa-headset text-[#c4ff00]"></i>
+            </div>
+            <div>
+              <p class="text-xs text-zinc-500">문의</p>
+              <p class="text-white font-bold">{{ item.contact }}</p>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        
+        <!-- 신청 상태별 표시 -->
+        {% if user_applied %}
+        <!-- 이미 신청함 -->
+        <div class="applied-box rounded-xl p-6 text-center">
+          <div class="text-4xl mb-3">✅</div>
+          <p class="text-[#c4ff00] font-bold text-lg">신청 완료!</p>
+          <p class="text-zinc-400 text-sm mt-2">신청이 접수되었습니다.<br>결과는 별도 안내드립니다.</p>
+        </div>
+        
+        {% elif is_closed %}
+        <!-- 마감됨 -->
+        <div class="info-box rounded-xl p-6 text-center">
+          <div class="text-4xl mb-3">⏰</div>
+          <p class="text-zinc-400 font-bold">마감되었습니다</p>
+        </div>
+        
+        {% elif is_full %}
+        <!-- 인원 마감 -->
+        <div class="info-box rounded-xl p-6 text-center">
+          <div class="text-4xl mb-3">👥</div>
+          <p class="text-red-400 font-bold">인원이 마감되었습니다</p>
+        </div>
+        
+        {% elif item.subscribers_only and not is_subscriber %}
+        <!-- 구독자 전용 (비구독자) -->
+        <div class="subscribe-box rounded-xl p-6 text-center">
+          <div class="text-4xl mb-3">👑</div>
+          <p class="text-purple-400 font-bold text-lg mb-2">구독자 전용</p>
+          <p class="text-zinc-400 text-sm mb-4">이 공구/협찬은 구독자만 신청할 수 있습니다.</p>
+          <a href="{{ url_for('pricing') }}" class="block w-full bg-purple-500 hover:bg-purple-400 text-white font-bold py-3 rounded-xl transition">
+            구독하고 신청하기
+          </a>
+        </div>
+        
+        {% elif not session.get('user_id') %}
+        <!-- 비로그인 -->
+        <div class="info-box rounded-xl p-6 text-center">
+          <div class="text-4xl mb-3">🔐</div>
+          <p class="text-zinc-400 font-bold mb-4">로그인이 필요합니다</p>
+          <a href="{{ url_for('login', next=request.path) }}" class="block w-full bg-[#c4ff00] hover:bg-white text-black font-bold py-3 rounded-xl transition">
+            로그인하기
+          </a>
+        </div>
+        
+        {% else %}
+        <!-- 신청 폼 -->
+        <form method="POST" action="{{ url_for('groupbuy_apply', item_id=item.id) }}" class="space-y-4">
+          <div>
+            <label class="block text-sm font-bold text-zinc-400 mb-2">이름 *</label>
+            <input type="text" name="name" required placeholder="실명을 입력하세요"
+                   class="form-input w-full px-4 py-3 rounded-xl text-white">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-bold text-zinc-400 mb-2">연락처 *</label>
+            <input type="tel" name="phone" required placeholder="010-0000-0000"
+                   class="form-input w-full px-4 py-3 rounded-xl text-white">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-bold text-zinc-400 mb-2">SNS 채널 URL</label>
+            <input type="url" name="sns_url" placeholder="https://instagram.com/..."
+                   class="form-input w-full px-4 py-3 rounded-xl text-white">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-bold text-zinc-400 mb-2">신청 메시지</label>
+            <textarea name="message" rows="3" placeholder="간단한 자기소개나 신청 이유를 적어주세요"
+                      class="form-input w-full px-4 py-3 rounded-xl text-white resize-none"></textarea>
+          </div>
+          
+          <button type="submit" class="btn-apply w-full py-4 rounded-xl font-black text-lg">
+            신청하기
+          </button>
+          
+          <p class="text-xs text-zinc-500 text-center">
+            신청 시 개인정보 수집에 동의하는 것으로 간주됩니다.
+          </p>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

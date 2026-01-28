@@ -1,0 +1,318 @@
+{% extends "admin_base.html" %}
+{% block title %}새 게시물 - MONEYING Admin{% endblock %}
+{% block page_title %}새 게시물{% endblock %}
+{% block page_desc %}링크(최대 3개) + 하이라이트 캡처(최대 5장){% endblock %}
+
+{% block page_actions %}
+<a href="/admin/gallery" class="px-4 py-2 rounded-xl bg-zinc-800 text-gray-200 hover:bg-zinc-700 transition font-bold">
+  ← 목록으로
+</a>
+{% endblock %}
+
+{% block head_extra %}
+<style>
+  .dropzone.dragover { border-color:#a3e635; box-shadow:0 0 0 3px rgba(163,230,53,0.15); }
+</style>
+{% endblock %}
+
+{% block content_admin %}
+<div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 md:p-8">
+  <div class="grid md:grid-cols-2 gap-6">
+
+    <div>
+      <label class="text-xs font-black tracking-widest text-zinc-500 uppercase">카테고리</label>
+      <div class="flex gap-2 mt-2">
+        <select id="category" class="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white font-bold focus:border-[#a3e635] focus:outline-none">
+          <option value="all">전체</option>
+          {% for cat in categories %}
+            <option value="{{ cat.key }}">{{ cat.emoji }} {{ cat.name }}</option>
+          {% endfor %}
+        </select>
+        <button type="button" onclick="openCategoryModal()" class="px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white hover:bg-zinc-700 transition" title="카테고리 추가">
+          +
+        </button>
+      </div>
+
+      <label class="block mt-6 text-xs font-black tracking-widest text-zinc-500 uppercase">제목</label>
+      <input id="title" type="text" placeholder="예: 머리카락 잘 빠지는 빗"
+             class="mt-2 w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white font-black focus:border-[#a3e635] focus:outline-none"/>
+
+      <label class="block mt-6 text-xs font-black tracking-widest text-zinc-500 uppercase">쿠팡 링크(선택)</label>
+      <input id="coupang" type="text" placeholder="link.coupang.com/a/..."
+             class="mt-2 w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white font-bold focus:border-[#a3e635] focus:outline-none"/>
+
+      <label class="block mt-6 text-xs font-black tracking-widest text-zinc-500 uppercase">참고 링크 최대 3개</label>
+      <p class="text-zinc-500 text-xs mt-1 mb-2">틱톡, 도우인, 인스타, 유튜브, 샤오홍슈, 네이버 MYBOX 등 모든 링크 지원</p>
+      <input id="link1" type="text" placeholder="링크 1"
+             class="mt-2 w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none"/>
+      <input id="link2" type="text" placeholder="링크 2"
+             class="mt-2 w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none"/>
+      <input id="link3" type="text" placeholder="링크 3"
+             class="mt-2 w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none"/>
+
+      <div class="mt-6 p-4 bg-zinc-900/50 border border-zinc-700 rounded-xl">
+        <label class="flex items-center gap-3 cursor-pointer">
+          <input id="isFree" type="checkbox" class="w-5 h-5 accent-[#a3e635]"/>
+          <div>
+            <span class="font-black text-white">무료 공개</span>
+            <p class="text-xs text-zinc-500 mt-1">체크하면 비구독자도 볼 수 있어요</p>
+          </div>
+        </label>
+      </div>
+
+      <label class="block mt-6 text-xs font-black tracking-widest text-zinc-500 uppercase">자동 태그(제목 기반)</label>
+      <div id="tagBox" class="mt-2 flex flex-wrap gap-2"></div>
+      <p class="text-[11px] text-zinc-500 mt-2">* 저장 시 태그가 함께 저장됩니다.</p>
+    </div>
+
+    <div>
+      <label class="text-xs font-black tracking-widest text-zinc-500 uppercase">하이라이트 캡처 업로드 (1~5장)</label>
+
+      <div id="dropzone" class="dropzone mt-2 bg-zinc-900/60 border border-zinc-700 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#a3e635] transition">
+        <i class="fas fa-cloud-upload-alt text-3xl text-[#a3e635] mb-3"></i>
+        <p class="font-black">드래그앤드롭으로 이미지 올리기</p>
+        <p class="text-xs text-zinc-500 mt-1">또는 클릭해서 선택 (jpg/png/webp/gif)</p>
+        <input id="fileInput" type="file" accept="image/*" multiple class="hidden"/>
+      </div>
+
+      <div class="mt-4">
+        <div class="flex items-center justify-between">
+          <p class="text-sm font-black">업로드된 이미지</p>
+          <p id="countText" class="text-xs text-zinc-500">0/5</p>
+        </div>
+        <div id="preview" class="mt-3 grid grid-cols-3 gap-3"></div>
+        <p class="text-[11px] text-zinc-500 mt-3">* 첫 번째 이미지가 카드 썸네일로 사용됩니다.</p>
+      </div>
+
+      <button id="saveBtn" class="mt-6 w-full bg-[#a3e635] text-black py-4 rounded-xl font-black text-lg hover:bg-white transition">
+        저장하기
+      </button>
+
+      <div id="msg" class="mt-3 text-sm font-bold text-zinc-400"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 카테고리 추가 모달 -->
+<div id="categoryModal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4">
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-md">
+    <h3 class="text-xl font-black mb-4">카테고리 추가</h3>
+    <form id="categoryForm">
+      <div class="mb-4">
+        <label class="block text-sm font-bold text-zinc-400 mb-2">키 (영문)</label>
+        <input type="text" id="catKey" required placeholder="예: fashion"
+               class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none">
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-bold text-zinc-400 mb-2">이름</label>
+        <input type="text" id="catName" required placeholder="예: Fashion"
+               class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none">
+      </div>
+      <div class="mb-6">
+        <label class="block text-sm font-bold text-zinc-400 mb-2">이모지</label>
+        <input type="text" id="catEmoji" placeholder="👗"
+               class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none">
+      </div>
+      <div class="flex gap-3">
+        <button type="button" onclick="closeCategoryModal()" class="flex-1 py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition">
+          취소
+        </button>
+        <button type="submit" class="flex-1 py-3 bg-[#a3e635] text-black font-black rounded-xl hover:bg-white transition">
+          추가
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const dropzone = document.getElementById("dropzone");
+  const fileInput = document.getElementById("fileInput");
+  const preview = document.getElementById("preview");
+  const countText = document.getElementById("countText");
+  const msg = document.getElementById("msg");
+  const saveBtn = document.getElementById("saveBtn");
+
+  const titleEl = document.getElementById("title");
+  const tagBox = document.getElementById("tagBox");
+
+  let uploadedFiles = [];
+
+  // 카테고리 모달
+  function openCategoryModal() {
+    document.getElementById('categoryModal').classList.remove('hidden');
+    document.getElementById('categoryModal').classList.add('flex');
+  }
+  function closeCategoryModal() {
+    document.getElementById('categoryModal').classList.add('hidden');
+    document.getElementById('categoryModal').classList.remove('flex');
+    document.getElementById('catKey').value = '';
+    document.getElementById('catName').value = '';
+    document.getElementById('catEmoji').value = '';
+  }
+
+  document.getElementById('categoryForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const key = document.getElementById('catKey').value.trim().toLowerCase();
+    const name = document.getElementById('catName').value.trim();
+    const emoji = document.getElementById('catEmoji').value.trim();
+    
+    const fd = new FormData();
+    fd.append('key', key);
+    fd.append('name', name);
+    fd.append('emoji', emoji);
+    
+    const res = await fetch('/admin/categories/add', { method: 'POST', body: fd });
+    if (res.ok) {
+      const select = document.getElementById('category');
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = (emoji ? emoji + ' ' : '') + name;
+      select.appendChild(opt);
+      select.value = key;
+      closeCategoryModal();
+    } else {
+      alert('카테고리 추가 실패');
+    }
+  });
+
+  function normalizeUrl(u) {
+    if (!u) return "";
+    let s = (u || "").trim();
+    if (!s) return "";
+    if (!/^https?:\/\//i.test(s)) s = "https://" + s.replace(/^\/+/, "");
+    return s;
+  }
+
+  function autoTagsFromTitle(t) {
+    if (!t) return [];
+    t = t.trim();
+    const stop = new Set(["the","a","an","and","or","to","of","in","on","for","with","is","are"]);
+    const eng = (t.match(/[A-Za-z0-9]{2,}/g) || []).map(x => x.toUpperCase()).filter(x => !stop.has(x.toLowerCase()));
+    const kor = (t.match(/[가-힣]{2,}/g) || []);
+    const merged = [];
+    for (const w of [...eng, ...kor]) {
+      if (!merged.includes(w)) merged.push(w);
+      if (merged.length >= 5) break;
+    }
+    return merged;
+  }
+
+  function renderTags(tags) {
+    tagBox.innerHTML = "";
+    tags.forEach(t => {
+      const s = document.createElement("span");
+      s.className = "text-[11px] font-black text-[#a3e635] border border-[#a3e635]/30 px-2 py-1 rounded bg-[#a3e635]/10 uppercase tracking-wider";
+      s.innerText = "#" + t;
+      tagBox.appendChild(s);
+    });
+  }
+
+  titleEl.addEventListener("input", () => renderTags(autoTagsFromTitle(titleEl.value)));
+
+  function updateCount() { countText.innerText = `${uploadedFiles.length}/5`; }
+
+  function addPreviewThumb(filename) {
+    const url = `/static/uploads/${filename}`;
+    const wrap = document.createElement("div");
+    wrap.className = "relative rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900";
+    wrap.innerHTML = `
+      <img src="${url}" class="w-full h-28 object-cover opacity-90">
+      <button class="absolute top-2 right-2 w-8 h-8 rounded-lg bg-black/60 hover:bg-red-500 text-white flex items-center justify-center border border-white/10">
+        <i class="fas fa-times text-sm"></i>
+      </button>
+      ${uploadedFiles[0] === filename ? `<div class="absolute bottom-2 left-2 text-[10px] font-black bg-[#a3e635] text-black px-2 py-1 rounded">THUMB</div>` : ``}
+    `;
+    wrap.querySelector("button").onclick = () => {
+      uploadedFiles = uploadedFiles.filter(x => x !== filename);
+      wrap.remove();
+      refreshPreview();
+    };
+    preview.appendChild(wrap);
+  }
+
+  function refreshPreview() {
+    preview.innerHTML = "";
+    uploadedFiles.forEach(fn => addPreviewThumb(fn));
+    updateCount();
+  }
+
+  async function uploadOne(file) {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/upload_file", { method:"POST", body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "업로드 실패");
+    return data.filename;
+  }
+
+  async function handleFiles(files) {
+    const arr = Array.from(files || []);
+    if (arr.length === 0) return;
+    for (const f of arr) {
+      if (uploadedFiles.length >= 5) break;
+      msg.innerText = `업로드 중... (${uploadedFiles.length+1}/5)`;
+      try {
+        const fn = await uploadOne(f);
+        uploadedFiles.push(fn);
+        refreshPreview();
+      } catch (e) {
+        msg.innerText = e.message;
+        return;
+      }
+    }
+    msg.innerText = "";
+  }
+
+  dropzone.addEventListener("click", () => fileInput.click());
+  fileInput.addEventListener("change", async (e) => { await handleFiles(e.target.files); fileInput.value = ""; });
+  dropzone.addEventListener("dragover", (e) => { e.preventDefault(); dropzone.classList.add("dragover"); });
+  dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+  dropzone.addEventListener("drop", async (e) => { e.preventDefault(); dropzone.classList.remove("dragover"); await handleFiles(e.dataTransfer.files); });
+
+  saveBtn.addEventListener("click", async () => {
+    const category = document.getElementById("category").value;
+    const title = document.getElementById("title").value.trim();
+    const coupang = normalizeUrl(document.getElementById("coupang").value);
+    const link1 = normalizeUrl(document.getElementById("link1").value);
+    const link2 = normalizeUrl(document.getElementById("link2").value);
+    const link3 = normalizeUrl(document.getElementById("link3").value);
+    const isFree = document.getElementById("isFree").checked;
+
+    if (!title) return msg.innerText = "제목을 입력하세요.";
+    if (uploadedFiles.length === 0) return msg.innerText = "이미지를 1장 이상 업로드하세요.";
+
+    const links = [link1, link2, link3].filter(x => x);
+    const tags = autoTagsFromTitle(title);
+
+    const fd = new FormData();
+    fd.append("category", category);
+    fd.append("title", title);
+    fd.append("coupang_link", coupang);
+    fd.append("links_json", JSON.stringify(links));
+    fd.append("images_json", JSON.stringify(uploadedFiles));
+    fd.append("tags_json", JSON.stringify(tags));
+    fd.append("is_free", isFree ? "1" : "0");
+
+    msg.innerText = "저장 중...";
+
+    const res = await fetch("/api/save_post", {
+      method: "POST",
+      body: fd,
+      headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" }
+    });
+
+    const ct = (res.headers.get("content-type") || "").toLowerCase();
+    const data = ct.includes("application/json") ? await res.json() : null;
+
+    if (!res.ok) {
+      msg.innerText = (data && data.error) ? data.error : "저장 실패";
+      return;
+    }
+
+    msg.innerText = "✅ 저장 완료! 이동합니다...";
+    setTimeout(() => window.location.href = (data?.redirect || "/admin/gallery"), 400);
+  });
+</script>
+{% endblock %}

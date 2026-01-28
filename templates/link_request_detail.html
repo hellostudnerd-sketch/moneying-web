@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}링크요청 상세{% endblock %}
+{% block main_class %}max-w-4xl mx-auto px-4 pt-28 md:pt-32{% endblock %}
+
+{% block content %}
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-black">링크요청 상세</h1>
+      <p class="text-zinc-400 text-sm">요청 내용을 확인하고, 관리자라면 쿠팡 링크를 입력하세요.</p>
+    </div>
+
+    <div class="flex gap-2">
+      <button onclick="history.back()"
+              class="px-4 py-2 rounded-lg bg-zinc-800 text-gray-200 hover:bg-zinc-700 transition">
+        ← 뒤로가기
+      </button>
+
+      <!-- ✅ 관리자면 관리자 목록으로, 유저면 유저 목록으로 -->
+      {% if session.get("admin") %}
+        <a href="{{ url_for('admin_link_requests') }}"
+           class="px-4 py-2 rounded-lg bg-zinc-900 text-gray-200 border border-zinc-800 hover:bg-zinc-800 transition">
+          목록
+        </a>
+      {% else %}
+        <a href="{{ url_for('link_requests') }}"
+           class="px-4 py-2 rounded-lg bg-zinc-900 text-gray-200 border border-zinc-800 hover:bg-zinc-800 transition">
+          목록
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 space-y-4">
+    <div>
+      <div class="text-xs text-zinc-500 font-black mb-1">제목</div>
+      <div class="text-lg font-bold">{{ it.title }}</div>
+    </div>
+
+    <div>
+      <div class="text-xs text-zinc-500 font-black mb-1">원본 링크</div>
+      <a class="text-highlight break-all underline" href="{{ it.original_url }}" target="_blank">
+        {{ it.original_url }}
+      </a>
+    </div>
+
+    <div>
+      <div class="text-xs text-zinc-500 font-black mb-1">상태</div>
+      {% if it.coupang_url %}
+        <span class="px-2 py-1 rounded bg-green-500/10 text-green-400 border border-green-500/20 font-bold">완료</span>
+      {% else %}
+        <span class="px-2 py-1 rounded bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 font-bold">접수</span>
+      {% endif %}
+    </div>
+
+    <div class="pt-2 border-t border-zinc-800"></div>
+
+    {% if session.get("admin") %}
+      <form method="POST" class="space-y-3">
+        <div>
+          <label class="block text-sm text-zinc-400 font-bold mb-2">쿠팡 링크(관리자 입력)</label>
+          <input name="coupang_url"
+                 value="{{ it.coupang_url or '' }}"
+                 placeholder="https://www.coupang.com/..."
+                 class="w-full p-4 rounded-xl bg-black border border-zinc-700 text-white"/>
+        </div>
+        <button class="bg-[#a3e635] text-black font-black px-5 py-3 rounded-xl hover:bg-white transition">
+          저장하기
+        </button>
+      </form>
+    {% else %}
+      <div>
+        <div class="text-xs text-zinc-500 font-black mb-1">쿠팡 링크</div>
+        {% if it.coupang_url %}
+          <a class="text-highlight break-all underline" href="{{ it.coupang_url }}" target="_blank">
+            {{ it.coupang_url }}
+          </a>
+        {% else %}
+          <div class="text-zinc-500">아직 관리자 확인 중입니다.</div>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

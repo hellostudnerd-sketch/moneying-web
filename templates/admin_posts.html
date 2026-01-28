@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ADMIN - 게시물 목록</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#050505] text-white">
+  <div class="max-w-6xl mx-auto px-4 py-10">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-black">갤러리 게시물</h1>
+        <p class="text-zinc-500 text-sm mt-1">관리자 전용: 업로드/수정/삭제</p>
+      </div>
+
+      <div class="flex gap-2">
+        <a href="/" class="bg-zinc-900 border border-zinc-800 font-black px-4 py-2 rounded-lg">메인</a>
+        <a href="/gallery" class="bg-zinc-900 border border-zinc-800 font-black px-4 py-2 rounded-lg">갤러리</a>
+        <a href="/admin/posts/upload" class="bg-lime-400 text-black font-black px-4 py-2 rounded-lg">+ 새 글</a>
+        <a href="/admin/logout" class="bg-zinc-800 font-black px-4 py-2 rounded-lg">로그아웃</a>
+      </div>
+    </div>
+
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
+      <div class="grid grid-cols-12 gap-0 text-[12px] font-black text-zinc-400 border-b border-zinc-800 px-4 py-3">
+        <div class="col-span-1">ID</div>
+        <div class="col-span-2">카테고리</div>
+        <div class="col-span-6">제목</div>
+        <div class="col-span-2">생성일</div>
+        <div class="col-span-1 text-right">액션</div>
+      </div>
+
+      {% for p in posts %}
+      <div class="grid grid-cols-12 gap-0 px-4 py-3 border-b border-zinc-800/60 items-center">
+        <div class="col-span-1 text-zinc-500 text-sm font-bold">{{ p.id }}</div>
+        <div class="col-span-2">
+          <span class="text-[11px] font-black px-2 py-1 rounded bg-zinc-800 border border-zinc-700">
+            {{ p.category or 'all' }}
+          </span>
+        </div>
+        <div class="col-span-6 font-bold truncate">{{ p.title }}</div>
+        <div class="col-span-2 text-zinc-500 text-[12px] font-bold">
+          {{ (p.created_at|string)[:10] }}
+        </div>
+        <div class="col-span-1 flex justify-end gap-2">
+          <a href="/admin/posts/{{ p.id }}/edit?next=/admin/posts"
+             class="bg-zinc-800 px-3 py-1.5 rounded-lg font-black text-[12px]">수정</a>
+
+          <form action="/admin/posts/{{ p.id }}/delete?next=/admin/posts" method="POST" onsubmit="return confirm('삭제할까요?');">
+            <button class="bg-red-500/80 px-3 py-1.5 rounded-lg font-black text-[12px]">삭제</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+
+      {% if posts|length == 0 %}
+      <div class="px-4 py-10 text-center text-zinc-500 font-bold">
+        아직 게시물이 없습니다. 오른쪽 위에서 “새 글”을 눌러 등록하세요.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>

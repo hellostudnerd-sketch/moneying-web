@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}리워드 - MONEYING{% endblock %}
+
+{% block content %}
+
+<div class="max-w-2xl mx-auto">
+
+  <div class="mb-6">
+    <a href="/my" class="text-zinc-500 hover:text-white transition text-sm">← 내정보</a>
+    <h1 class="text-2xl font-black mt-4">🎁 리워드</h1>
+    <p class="text-zinc-400 mt-1 text-sm">친구 초대하고, 수익 인증하고, 무료 구독 연장!</p>
+  </div>
+
+  <!-- 친구 초대 -->
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 mb-4">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-xl">🎉</span>
+      <span class="font-bold">친구 초대</span>
+      <span class="text-[#c4ff00] text-sm font-bold">+7일</span>
+    </div>
+    
+    <p class="text-zinc-400 text-sm mb-4">친구가 내 링크로 가입하면 나도, 친구도 7일 연장!</p>
+    
+    <div class="bg-black/30 rounded-xl p-4 mb-4">
+      <div class="text-zinc-500 text-xs mb-1">내 초대 링크</div>
+      <div class="flex items-center justify-between gap-3">
+        <code id="referralUrl" class="text-[#c4ff00] text-sm truncate">{{ request.host_url }}signup?ref={{ user.referral_code }}</code>
+        <button onclick="copyReferralLink()" class="shrink-0 px-3 py-1 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-xs font-bold transition">복사</button>
+      </div>
+    </div>
+    
+    <div class="border-t border-zinc-800 pt-4">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-zinc-400 text-sm">초대한 친구</span>
+        <span class="font-bold text-white">{{ invited_users|length }}명</span>
+      </div>
+      
+      {% if invited_users|length > 0 %}
+      <div class="space-y-2">
+        {% for friend in invited_users[:5] %}
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-zinc-400">{{ friend.email[:3] }}***{{ friend.email.split('@')[1] }}</span>
+          <span class="text-zinc-500 text-xs">{{ friend.created_at.strftime('%Y-%m-%d') }}</span>
+        </div>
+        {% endfor %}
+        {% if invited_users|length > 5 %}
+        <div class="text-zinc-500 text-xs">외 {{ invited_users|length - 5 }}명</div>
+        {% endif %}
+      </div>
+      {% else %}
+      <div class="text-zinc-500 text-sm">아직 초대한 친구가 없어요</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 수익 인증 -->
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 mb-4">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-xl">💸</span>
+      <span class="font-bold">수익 인증</span>
+      <span class="text-[#c4ff00] text-sm font-bold">+7일</span>
+    </div>
+    
+    <p class="text-zinc-400 text-sm mb-4">머닝 영상으로 수익 발생하면 인증하고 7일 연장! (월 1회)</p>
+    
+    <a href="/community/write?category=revenue" class="block w-full py-3 bg-green-500/20 text-green-400 font-bold rounded-xl text-center hover:bg-green-500/30 transition mb-4">
+      수익 인증하기
+    </a>
+    
+    {% if revenue_posts|length > 0 %}
+    <div class="border-t border-zinc-800 pt-4">
+      <div class="text-zinc-500 text-xs mb-3">내 수익 인증 내역</div>
+      <div class="space-y-2">
+        {% for post in revenue_posts[:5] %}
+        <a href="/community/{{ post.id }}" class="flex items-center justify-between text-sm hover:bg-zinc-800/50 p-2 rounded-lg transition">
+          <span class="text-white truncate flex-1">{{ post.title }}</span>
+          <div class="flex items-center gap-2 shrink-0 ml-2">
+            {% if post.reward_approved %}
+              <span class="text-green-400 text-xs">✓ 승인</span>
+            {% elif post.reward_requested %}
+              <span class="text-yellow-400 text-xs">대기중</span>
+            {% else %}
+              <span class="text-zinc-500 text-xs">미신청</span>
+            {% endif %}
+            <span class="text-zinc-500 text-xs">{{ post.created_at.strftime('%m/%d') }}</span>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+function copyReferralLink() {
+  const url = document.getElementById('referralUrl').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('초대 링크가 복사되었습니다!', 'success');
+  });
+}
+</script>
+
+{% endblock %}

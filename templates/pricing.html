@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+{% block title %}요금제 - MONEYING{% endblock %}
+
+{% block head_extra %}
+<style>
+/* ===== 네온 컬러 변수 ===== */
+:root {
+  --neon-lime: #c4ff00;
+}
+
+/* ===== 요금제 카드 - 글래스모피즘 ===== */
+.pricing-card {
+  background: linear-gradient(180deg, rgba(24,24,27,0.9) 0%, rgba(9,9,11,0.95) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.pricing-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+}
+
+.pricing-card:hover {
+  border-color: rgba(196,255,0,0.3);
+  box-shadow: 0 25px 50px rgba(0,0,0,0.4), 0 0 40px rgba(196,255,0,0.08);
+}
+
+.pricing-card.featured {
+  background: linear-gradient(180deg, rgba(196,255,0,0.08) 0%, rgba(9,9,11,0.95) 50%);
+  border: 1px solid rgba(196,255,0,0.3);
+}
+
+.pricing-card.featured::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(196,255,0,0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.pricing-card.featured:hover {
+  border-color: rgba(196,255,0,0.5);
+  box-shadow: 0 25px 50px rgba(0,0,0,0.4), 0 0 60px rgba(196,255,0,0.15);
+}
+
+/* ===== 체크 아이템 ===== */
+.check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.check-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  background: rgba(196,255,0,0.15);
+}
+
+/* ===== 가격 글로우 ===== */
+.price-glow {
+  text-shadow: 0 0 30px rgba(196,255,0,0.3);
+}
+
+/* ===== CTA 버튼 글로우 ===== */
+.cta-glow {
+  box-shadow: 0 0 20px rgba(196,255,0,0.3);
+  transition: all 0.3s ease;
+}
+
+.cta-glow:hover {
+  box-shadow: 0 0 30px rgba(196,255,0,0.5);
+  transform: translateY(-2px);
+}
+
+/* ===== FAQ 아코디언 ===== */
+.faq-item {
+  background: rgba(24,24,27,0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: all 0.3s ease;
+}
+
+.faq-item:hover {
+  border-color: rgba(255,255,255,0.1);
+  background: rgba(39,39,42,0.6);
+}
+
+/* ===== 배지 애니메이션 ===== */
+@keyframes badge-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(196,255,0,0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(196,255,0,0); }
+}
+
+.badge-pulse {
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+</style>
+{% endblock %}
+
+{% block main_class %}{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="pt-24 md:pt-32 pb-12 md:pb-20">
+  <div class="max-w-4xl mx-auto px-4 text-center">
+    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-800/50 backdrop-blur-sm border border-zinc-700/50 mb-6 badge-pulse">
+      <span class="w-2 h-2 bg-[#c4ff00] rounded-full animate-pulse"></span>
+      <span class="text-sm text-zinc-400">지금 가입하면 3일 무료 체험</span>
+    </div>
+    <h1 class="text-3xl md:text-5xl font-black mb-4 leading-tight">
+      요금제
+    </h1>
+    <p class="text-zinc-400 text-base md:text-lg">
+      복잡한 요금제는 없습니다. 필요한 것만 선택하세요.
+    </p>
+  </div>
+</section>
+
+
+<!-- 메인 요금제 -->
+<section class="pb-20 pt-6">
+  <div class="max-w-5xl mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      
+      <!-- 영상 갤러리 -->
+<div class="pricing-card rounded-3xl p-6 md:p-8 flex flex-col h-full">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-12 h-12 rounded-2xl bg-zinc-800 flex items-center justify-center text-2xl">🎬</div>
+          <div>
+            <h3 class="font-black text-lg text-white">영상 갤러리</h3>
+            <p class="text-zinc-500 text-sm">소스 영상 무제한</p>
+          </div>
+        </div>
+        
+        <div class="mb-6">
+          <div class="flex items-baseline gap-1">
+            <span class="text-4xl md:text-5xl font-black text-white">39,000</span>
+            <span class="text-zinc-500">원/월</span>
+          </div>
+        </div>
+        
+        <div class="space-y-1 mb-8">
+          <div class="check-item">
+            <div class="check-icon bg-[#a3e635]/20"><i class="fas fa-check text-[#a3e635] text-xs"></i></div>
+            <span class="text-zinc-300 text-sm">해외/국내 소스 영상 무제한</span>
+          </div>
+          <div class="check-item">
+            <div class="check-icon bg-[#a3e635]/20"><i class="fas fa-check text-[#a3e635] text-xs"></i></div>
+            <span class="text-zinc-300 text-sm">쿠팡 파트너스 링크 매칭</span>
+          </div>
+          <div class="check-item">
+            <div class="check-icon bg-[#a3e635]/20"><i class="fas fa-check text-[#a3e635] text-xs"></i></div>
+            <span class="text-zinc-300 text-sm">매일 신규 소스 업데이트</span>
+          </div>
+          <div class="check-item">
+            <div class="check-icon bg-[#a3e635]/20"><i class="fas fa-check text-[#a3e635] text-xs"></i></div>
+            <span class="text-zinc-300 text-sm">링크요청 월 10회</span>
+          </div>
+        </div>
+        
+        <div class="mt-auto">
+  {% if session.get('user_id') %}
+    <button onclick="subscribe('gallery')" class="w-full py-4 rounded-xl font-bold border border-zinc-600 text-white hover:bg-zinc-800 transition">
+      구독하기
+    </button>
+  {% else %}
+    <a href="/login?next=/pricing" class="block w-full py-4 rounded-xl font-bold border border-zinc-600 text-white hover:bg-zinc-800 transition text-center">
+      로그인 후 구독
+    </a>
+  {% endif %}
+</div>
+</div>     
+      <!-- 올인원 패키지 -->
+<div class="pricing-card featured rounded-3xl p-6 md:p-8 relative flex flex-col h-full">
+  
+  
+  <div class="flex items-center gap-3 mb-6">
+    <div class="w-12 h-12 rounded-2xl bg-[#c4ff00]/20 flex items-center justify-center text-2xl">⚡</div>
+    <div>
+      <h3 class="font-black text-lg text-white">올인원 패키지</h3>
+      <p class="text-[#c4ff00] text-sm font-bold">영상 갤러리 + 프로핏가드</p>
+    </div>
+  </div>
+  
+  <div class="mb-6">
+    <div class="flex items-baseline gap-1">
+      <span class="text-4xl md:text-5xl font-black text-white">59,000</span>
+      <span class="text-zinc-500">원/월</span>
+    </div>
+    <p class="text-zinc-500 text-sm mt-1"><span class="line-through">78,000원</span> <span class="text-[#c4ff00] font-bold">24% 할인</span></p>
+  </div>
+  
+  <div class="space-y-1 mb-8">
+    <div class="check-item">
+      <div class="check-icon bg-[#c4ff00]/20"><i class="fas fa-check text-[#c4ff00] text-xs"></i></div>
+      <span class="text-zinc-300 text-sm">영상 갤러리 전체</span>
+    </div>
+    <div class="check-item">
+      <div class="check-icon bg-[#c4ff00]/20"><i class="fas fa-check text-[#c4ff00] text-xs"></i></div>
+      <span class="text-zinc-300 text-sm">프로핏가드 PRO</span>
+    </div>
+    <div class="check-item">
+      <div class="check-icon bg-[#c4ff00]/20"><i class="fas fa-check text-[#c4ff00] text-xs"></i></div>
+      <span class="text-zinc-300 text-sm">24시간 품절 감시 + 알림</span>
+    </div>
+    <div class="check-item">
+      <div class="check-icon bg-[#c4ff00]/20"><i class="fas fa-check text-[#c4ff00] text-xs"></i></div>
+      <span class="text-zinc-300 text-sm">링크요청 월 20회</span>
+    </div>
+  </div>
+  
+  <div class="mt-auto">
+  {% if session.get('user_id') %}
+    <button onclick="subscribe('allinone')" class="w-full py-4 rounded-xl font-black bg-[#c4ff00] text-black hover:bg-white transition">
+      구독하기
+    </button>
+  {% else %}
+    <a href="/login?next=/pricing" class="block w-full py-4 rounded-xl font-black bg-[#c4ff00] text-black hover:bg-white transition text-center">
+      로그인 후 구독
+    </a>
+  {% endif %}
+</div>
+      
+    </div>
+  </div>
+</section>
+
+<!-- 프로핏가드 단독 -->
+<section class="py-16 md:py-20 border-t border-zinc-800/50">
+  <div class="max-w-5xl mx-auto px-4">
+    <div class="text-center mb-10">
+      <h2 class="text-2xl md:text-3xl font-black mb-2">🛡️ 프로핏가드만 필요하다면</h2>
+      <p class="text-zinc-500">품절 감시 기능만 따로 이용하세요</p>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+      <!-- 라이트 -->
+      <div class="pricing-card rounded-2xl p-6">
+        <div class="mb-4">
+          <span class="text-xs font-bold text-blue-400">LITE</span>
+          <h4 class="font-bold text-white mt-1">라이트</h4>
+        </div>
+        <div class="flex items-baseline gap-1 mb-4">
+          <span class="text-3xl font-black text-white">19,000</span>
+          <span class="text-zinc-500 text-sm">원/월</span>
+        </div>
+        <div class="text-zinc-400 text-sm mb-6 space-y-2">
+          <p>✓ 1회 즉시 검사</p>
+          <p>✓ 상품 등록 무제한</p>
+          <p class="text-zinc-600">✕ 실시간 감시 없음</p>
+        </div>
+        {% if session.get('user_id') %}
+          <button onclick="subscribe('profitguard_lite')" class="w-full py-3 rounded-xl text-sm font-bold border border-zinc-700 text-white hover:bg-zinc-800 transition">선택</button>
+        {% else %}
+          <a href="/login?next=/pricing" class="block w-full py-3 rounded-xl text-sm font-bold border border-zinc-700 text-white hover:bg-zinc-800 transition text-center">선택</a>
+        {% endif %}
+      </div>
+      
+      <!-- PRO -->
+      <div class="pricing-card rounded-2xl p-6 border-[#a3e635]/30">
+        <div class="mb-4">
+          <span class="text-xs font-bold text-[#a3e635]">PRO · 추천</span>
+          <h4 class="font-bold text-white mt-1">프로</h4>
+        </div>
+        <div class="flex items-baseline gap-1 mb-4">
+          <span class="text-3xl font-black text-white">39,000</span>
+          <span class="text-zinc-500 text-sm">원/월</span>
+        </div>
+        <div class="text-zinc-400 text-sm mb-6 space-y-2">
+          <p class="text-white font-bold">✓ 24시간 실시간 감시</p>
+          <p class="text-white font-bold">✓ 텔레그램 알림</p>
+          <p>✓ 상품 등록 무제한</p>
+        </div>
+        {% if session.get('user_id') %}
+          <button onclick="subscribe('profitguard_pro')" class="w-full py-3 rounded-xl text-sm font-bold bg-[#a3e635] text-black hover:bg-white transition">선택</button>
+        {% else %}
+          <a href="/login?next=/pricing" class="block w-full py-3 rounded-xl text-sm font-bold bg-[#a3e635] text-black hover:bg-white transition text-center">선택</a>
+        {% endif %}
+      </div>
+      
+      <!-- 평생 -->
+      <div class="pricing-card rounded-2xl p-6">
+        <div class="mb-4">
+          <span class="text-xs font-bold text-purple-400">LIFETIME</span>
+          <h4 class="font-bold text-white mt-1">평생 이용권</h4>
+        </div>
+        <div class="flex items-baseline gap-1 mb-4">
+          <span class="text-3xl font-black text-white">200,000</span>
+          <span class="text-zinc-500 text-sm">원</span>
+        </div>
+        <div class="text-zinc-400 text-sm mb-6 space-y-2">
+          <p class="text-purple-300">✓ PRO 모든 기능</p>
+          <p>✓ 1회 결제, 평생 이용</p>
+          <p>✓ 5개월만 써도 이득</p>
+        </div>
+        {% if session.get('user_id') %}
+          <button onclick="subscribe('profitguard_lifetime')" class="w-full py-3 rounded-xl text-sm font-bold border border-purple-500/50 text-purple-400 hover:bg-purple-500/10 transition">선택</button>
+        {% else %}
+          <a href="/login?next=/pricing" class="block w-full py-3 rounded-xl text-sm font-bold border border-purple-500/50 text-purple-400 hover:bg-purple-500/10 transition text-center">선택</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 무료 체험 -->
+{% if session.get('user_id') and can_use_trial %}
+<section class="py-12 border-t border-zinc-800/50">
+  <div class="max-w-2xl mx-auto px-4">
+    <div class="bg-gradient-to-r from-[#a3e635]/10 to-transparent border border-[#a3e635]/20 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div>
+        <h3 class="font-black text-lg text-white mb-1">🎁 아직 결정을 못 하셨나요?</h3>
+        <p class="text-zinc-400 text-sm">3일 무료 체험으로 먼저 경험해보세요. 카드 등록 없이 바로 시작!</p>
+      </div>
+      <a href="/free-trial" class="shrink-0 bg-white text-black font-black px-6 py-3 rounded-xl hover:bg-[#a3e635] transition">
+        무료 체험 시작
+      </a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- FAQ -->
+<section class="py-16 border-t border-zinc-800/50">
+  <div class="max-w-2xl mx-auto px-4">
+    <h2 class="text-xl font-black text-center mb-8">자주 묻는 질문</h2>
+    <div class="space-y-3">
+      <details class="group bg-zinc-900/50 rounded-xl border border-zinc-800">
+        <summary class="flex items-center justify-between p-4 cursor-pointer">
+          <span class="font-bold text-sm">올인원이 제일 이득인가요?</span>
+          <i class="fas fa-chevron-down text-zinc-500 group-open:rotate-180 transition-transform"></i>
+        </summary>
+        <div class="px-4 pb-4 text-zinc-400 text-sm">
+          영상 갤러리(3.9만) + 프로핏가드 PRO(3.9만) = 7.8만원인데, 올인원은 5.9만원이에요. 둘 다 쓰신다면 매월 1.9만원 절약!
+        </div>
+      </details>
+      <details class="group bg-zinc-900/50 rounded-xl border border-zinc-800">
+        <summary class="flex items-center justify-between p-4 cursor-pointer">
+          <span class="font-bold text-sm">언제든 해지할 수 있나요?</span>
+          <i class="fas fa-chevron-down text-zinc-500 group-open:rotate-180 transition-transform"></i>
+        </summary>
+        <div class="px-4 pb-4 text-zinc-400 text-sm">
+          네, 언제든 해지 가능합니다. 해지 후에도 결제 기간까지는 이용 가능해요.
+        </div>
+      </details>
+      <details class="group bg-zinc-900/50 rounded-xl border border-zinc-800">
+        <summary class="flex items-center justify-between p-4 cursor-pointer">
+          <span class="font-bold text-sm">환불 정책은 어떻게 되나요?</span>
+          <i class="fas fa-chevron-down text-zinc-500 group-open:rotate-180 transition-transform"></i>
+        </summary>
+        <div class="px-4 pb-4 text-zinc-400 text-sm">
+          디지털 콘텐츠 특성상 이용 후 환불이 어려워요. 자세한 내용은 <a href="/refund" class="text-[#a3e635] hover:underline">환불정책</a>을 확인해주세요.
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<script>
+function subscribe(planType) {
+  // 결제 시스템 연동 전 임시 처리
+  alert('결제 시스템 연동 준비 중입니다.\n\n선택한 플랜: ' + planType + '\n\n빠른 시일 내에 오픈 예정이에요!');
+  // 실제 결제 연동 시:
+  // window.location.href = '/checkout/' + planType;
+}
+</script>
+{% endblock %}

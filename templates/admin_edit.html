@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ADMIN - {{ "수정" if post else "새 글" }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#050505] text-white">
+  <div class="max-w-4xl mx-auto px-4 py-10">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-black">갤러리 글 {{ "수정" if post else "등록" }}</h1>
+      <div class="flex gap-2">
+        <a href="{{ next_url or request.args.get('next', '/admin/gallery') }}" class="bg-zinc-800 px-4 py-2 rounded-lg font-black">목록</a>
+      </div>
+    </div>
+
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+      <form id="postForm">
+        <input type="hidden" name="post_id" value="{{ post.id if post else '' }}"/>
+
+        <!-- ✅ 서버가 기대하는 json 필드들 -->
+        <input type="hidden" name="images_json" id="images_json"/>
+        <input type="hidden" name="links_json" id="links_json"/>
+        <input type="hidden" name="tags_json" id="tags_json"/>
+        
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm font-black text-zinc-300">카테고리</label>
+            <select name="category" class="mt-2 w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-3">
+              {% set cat = post.category if post else 'all' %}
+              <option value="all"   {{ "selected" if cat=="all" else "" }}>all</option>
+              <option value="seller"{{ "selected" if cat=="seller" else "" }}>📸 판매자 직촬</option>
+              <option value="beauty"{{ "selected" if cat=="beauty" else "" }}>beauty</option>
+              <option value="living"{{ "selected" if cat=="living" else "" }}>living</option>
+              <option value="food"  {{ "selected" if cat=="food" else "" }}>food</option>
+              <option value="tech"  {{ "selected" if cat=="tech" else "" }}>tech</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-sm font-black text-zinc-300">쿠팡 링크</label>
+            <input name="coupang_link" value="{{ post.coupang_link if post else '' }}"
+              class="mt-2 w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-3"
+              placeholder="https://link.coupang.com/a/..." />
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <label class="text-sm font-black text-zinc-300">제목</label>
+          <input id="title" name="title" value="{{ post.title if post else '' }}"
+            class="mt-2 w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-3"
+            placeholder="예: 머리카락 잘 빠지는 빗" />
+          <p class="text-[11px] text-zinc-500 mt-2">
+            제목 기반으로 태그는 자동 생성됩니다.
+          </p>
+        </div>
+
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="text-sm font-black text-zinc-300">참고 링크 1</label>
+            <input id="link1" name="link1"
+              value="{{ (post_data['links'][0]) if post_data and (post_data['links']|length>0) else '' }}"
+              class="mt-2 w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-3" placeholder="https://..."/>
+          </div>
+          <div>
+            <label class="text-sm font-black text-zinc-300">참고 링크 2</label>
+            <input id="link2" name="link2"
+              value="{{ (post_data['links'][1]) if post_data and (post_data['links']|length>1) else '' }}"
+              class="mt-2 w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-3" placeholder="https://..."/>
+          </div>
+          <div>
+            <label class="text-sm font-black text-zinc-300">참고 링크 3</label>
+            <input id="link3" name="link3"
+              value="{{ (post_data['links'][2]) if post_data and (post_data['links']|length>2) else '' }}"
+              class="mt-2 w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-3" placeholder="https://..."/>
+          </div>
+        </div>
+
+        <!-- ✅ 무료 공개 체크박스 -->
+        <div class="mt-6 p-4 bg-zinc-950/60 border border-zinc-800 rounded-lg">
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input id="isFree" name="is_free" type="checkbox" class="w-5 h-5 accent-[#a3e635]"
+                   {{ "checked" if post and post.is_free else "" }}/>
+            <div>
+              <span class="font-black text-white">무료 공개</span>
+              <p class="text-xs text-zinc-500 mt-1">체크하면 비구독자도 볼 수 있어요</p>
+            </div>
+          </label>
+        </div>
+
+        <!-- 이미지 드래그앤드롭 -->
+        <div class="mt-8">
+          <label class="text-sm font-black text-zinc-300">하이라이트 이미지 (최대 5장)</label>
+
+          <div id="dropzone"
+               class="mt-3 border-2 border-dashed border-zinc-700 rounded-2xl p-6 bg-zinc-950/40">
+            <div class="text-center">
+              <div class="text-sm font-black">여기로 드래그&드롭</div>
+              <div class="text-[11px] text-zinc-500 mt-2">또는 클릭해서 선택 (jpg/png/webp/gif)</div>
+              <input id="fileInput" type="file" accept="image/*" multiple class="hidden"/>
+              <button type="button" id="pickBtn"
+                      class="mt-4 bg-lime-400 text-black font-black px-4 py-2 rounded-lg">
+                이미지 선택
+              </button>
+            </div>
+
+            <div class="mt-6 overflow-x-auto">
+              <div id="previewRow" class="flex gap-3 w-max"></div>
+            </div>
+
+            <div class="mt-3 text-[11px] text-zinc-500">
+              * 첫 번째 이미지가 카드 대표(썸네일)처럼 사용됩니다.
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3 text-sm font-bold text-zinc-400" id="msg"></div>
+
+        <div class="mt-8 flex gap-3">
+          <button type="submit" class="flex-1 bg-lime-400 text-black font-black py-3 rounded-xl">
+            저장하기
+          </button>
+          <a href="{{ next_url }}" class="flex-1 bg-zinc-800 font-black py-3 rounded-xl text-center">
+            취소
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const existing = {{ (post_data["images"] if post_data else []) | tojson }};
+    let images = [...existing];
+    let uploading = false;
+
+    const dropzone = document.getElementById("dropzone");
+    const fileInput = document.getElementById("fileInput");
+    const pickBtn = document.getElementById("pickBtn");
+    const previewRow = document.getElementById("previewRow");
+    const imagesJsonInput = document.getElementById("images_json");
+    const linksJsonInput  = document.getElementById("links_json");
+    const tagsJsonInput   = document.getElementById("tags_json");
+    const msg = document.getElementById("msg");
+
+    function normalizeUrl(u) {
+      if (!u) return "";
+      let s = (u || "").trim();
+      if (!s) return "";
+      if (!/^https?:\/\//i.test(s)) s = "https://" + s.replace(/^\/+/, "");
+      return s;
+    }
+
+    function autoTagsFromTitle(t) {
+      if (!t) return [];
+      t = t.trim();
+      const stop = new Set(["the","a","an","and","or","to","of","in","on","for","with","is","are"]);
+      const eng = (t.match(/[A-Za-z0-9]{2,}/g) || [])
+        .map(x => x.toUpperCase())
+        .filter(x => !stop.has(x.toLowerCase()));
+      const kor = (t.match(/[가-힣]{2,}/g) || []);
+      const merged = [];
+      for (const w of [...eng, ...kor]) {
+        if (!merged.includes(w)) merged.push(w);
+        if (merged.length >= 5) break;
+      }
+      return merged;
+    }
+
+    function renderPreviews() {
+      previewRow.innerHTML = "";
+      images.slice(0,5).forEach((fn, idx) => {
+        const wrap = document.createElement("div");
+        wrap.className = "relative w-40 h-64 rounded-xl overflow-hidden border border-zinc-800 bg-black";
+
+        const img = document.createElement("img");
+        img.src = fn.startsWith("http") ? fn : ("/static/uploads/" + fn);
+        img.className = "w-full h-full object-cover opacity-90";
+        wrap.appendChild(img);
+
+        const badge = document.createElement("div");
+        badge.className = "absolute top-2 left-2 bg-black/60 border border-zinc-700 text-[10px] font-black px-2 py-1 rounded";
+        badge.innerText = idx === 0 ? "대표" : ("#" + (idx+1));
+        wrap.appendChild(badge);
+
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "absolute top-2 right-2 w-8 h-8 rounded-lg bg-red-500/90 font-black";
+        del.innerText = "×";
+        del.onclick = () => {
+          images.splice(idx, 1);
+          renderPreviews();
+        };
+        wrap.appendChild(del);
+
+        previewRow.appendChild(wrap);
+      });
+
+      imagesJsonInput.value = JSON.stringify(images.slice(0,5));
+    }
+
+    async function uploadOne(file) {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload_file", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "upload failed");
+      return data.filename;
+    }
+
+    async function handleFiles(fileList) {
+      if (uploading) return;
+      const files = Array.from(fileList || []);
+      if (!files.length) return;
+
+      const room = 5 - images.length;
+      const pick = files.slice(0, room);
+      if (pick.length === 0) {
+        alert("이미지는 최대 5장까지입니다.");
+        return;
+      }
+
+      uploading = true;
+      pickBtn.innerText = "업로드 중...";
+      pickBtn.disabled = true;
+
+      try {
+        for (const f of pick) {
+          const fn = await uploadOne(f);
+          images.push(fn);
+          renderPreviews();
+        }
+      } catch (e) {
+        alert("업로드 실패: " + e.message);
+      } finally {
+        uploading = false;
+        pickBtn.innerText = "이미지 선택";
+        pickBtn.disabled = false;
+      }
+    }
+
+    pickBtn.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", (e) => handleFiles(e.target.files));
+
+    dropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.classList.add("border-lime-400");
+    });
+    dropzone.addEventListener("dragleave", () => {
+      dropzone.classList.remove("border-lime-400");
+    });
+    dropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("border-lime-400");
+      handleFiles(e.dataTransfer.files);
+    });
+
+    document.getElementById("postForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (uploading) return alert("업로드가 끝난 뒤 저장하세요.");
+
+      const title = document.getElementById("title").value.trim();
+      const link1 = normalizeUrl(document.getElementById("link1").value);
+      const link2 = normalizeUrl(document.getElementById("link2").value);
+      const link3 = normalizeUrl(document.getElementById("link3").value);
+
+      if (!title) return alert("제목은 필수입니다.");
+      if (images.length === 0) return alert("이미지는 최소 1장 필요합니다.");
+
+      // ✅ json 필드 채우기 (서버가 이걸 저장함)
+      imagesJsonInput.value = JSON.stringify(images.slice(0,5));
+      linksJsonInput.value  = JSON.stringify([link1, link2, link3].filter(Boolean));
+      tagsJsonInput.value   = JSON.stringify(autoTagsFromTitle(title));
+
+      const form = e.target;
+      const fd = new FormData(form);
+
+      msg.innerText = "저장 중...";
+      const res = await fetch(`/admin/posts/{{ post.id }}/edit?next={{ next_url }}`, {
+        method:"POST",
+        body: fd,
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "Accept": "application/json"
+        }
+      });
+
+      const ct = (res.headers.get("content-type") || "").toLowerCase();
+      const data = ct.includes("application/json") ? await res.json() : null;
+
+      if (!res.ok) {
+        alert((data && data.error) ? data.error : "수정 실패");
+        msg.innerText = "";
+        return;
+      }
+
+      msg.innerText = "✅ 수정 완료! 이동합니다...";
+      setTimeout(() => window.location.href = (data?.redirect || "{{ next_url }}" || "/admin/posts"), 400);
+    });
+    
+    renderPreviews();
+  </script>
+</body>
+</html>

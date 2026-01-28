@@ -1,0 +1,172 @@
+{% extends "admin_base.html" %}
+{% block title %}갤러리 대량등록 - MONEYING{% endblock %}
+{% block page_title %}📦 갤러리 대량등록{% endblock %}
+{% block page_desc %}CSV 파일로 여러 게시물을 한번에 등록하세요{% endblock %}
+
+{% block content_admin %}
+
+<!-- 안내 -->
+<div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 mb-6">
+  <h3 class="font-bold text-white mb-4">📋 CSV 파일 형식</h3>
+  <div class="bg-black/50 rounded-xl p-4 font-mono text-sm text-zinc-400 overflow-x-auto">
+    <div class="text-zinc-500 mb-2"># 첫 줄은 헤더 (필수)</div>
+    <div class="text-[#a3e635]">title,category,video_url1,video_url2,video_url3,coupang_url,is_free</div>
+    <div>미니선풍기,리빙,https://tiktok.com/...,https://instagram.com/...,,https://coupang.com/...,0</div>
+    <div>다이어트음료,푸드,https://tiktok.com/...,,https://xiaohongshu.com/...,https://coupang.com/...,1</div>
+    <div>LED조명,리빙,https://tiktok.com/...,,,https://coupang.com/...,0</div>
+  </div>
+  
+  <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+    <div>
+      <h4 class="font-bold text-zinc-300 mb-2">필드 설명</h4>
+      <ul class="text-zinc-500 space-y-1">
+        <li><span class="text-white">title</span> - 제목 (필수)</li>
+        <li><span class="text-white">category</span> - 카테고리 (뷰티/리빙/푸드/패션/육아/기타)</li>
+        <li><span class="text-white">video_url1</span> - 영상 링크 1</li>
+        <li><span class="text-white">video_url2</span> - 영상 링크 2 (선택)</li>
+        <li><span class="text-white">video_url3</span> - 영상 링크 3 (선택)</li>
+        <li><span class="text-white">coupang_url</span> - 쿠팡 제품 링크</li>
+        <li><span class="text-white">is_free</span> - 무료공개 (1=무료, 0=유료)</li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="font-bold text-zinc-300 mb-2">주의사항</h4>
+      <ul class="text-zinc-500 space-y-1">
+        <li>• UTF-8 인코딩으로 저장하세요</li>
+        <li>• 이미지는 나중에 개별 추가</li>
+        <li>• 쉼표가 포함된 내용은 "따옴표"로 감싸기</li>
+        <li>• 빈 URL은 비워두면 됩니다</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 샘플 다운로드 -->
+<div class="mb-6">
+  <a href="/admin/gallery/bulk/sample" class="inline-flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg transition">
+    <i class="fas fa-download"></i> 샘플 CSV 다운로드
+  </a>
+</div>
+
+<!-- 업로드 폼 -->
+<form id="bulkForm" class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+  <div class="mb-6">
+    <label class="block text-sm font-bold text-zinc-400 mb-2">CSV 파일 선택</label>
+    <div id="dropZone" class="border-2 border-dashed border-zinc-700 rounded-xl p-10 text-center hover:border-[#c4ff00] transition cursor-pointer">
+      <input type="file" name="csv_file" id="csvFile" accept=".csv" class="hidden" required>
+      <i class="fas fa-file-csv text-4xl text-zinc-600 mb-4"></i>
+      <p class="text-zinc-400 mb-2">클릭하거나 CSV 파일을 드래그하세요</p>
+      <p id="fileName" class="text-[#c4ff00] font-bold hidden"></p>
+    </div>
+  </div>
+  
+  <button type="submit" id="submitBtn" class="w-full bg-[#c4ff00] text-black font-bold py-4 rounded-xl hover:bg-white transition">
+    <i class="fas fa-upload mr-2"></i> 대량 등록하기
+  </button>
+</form>
+
+<!-- 결과 모달 -->
+<div id="resultModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center">
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-8 max-w-md mx-4 text-center">
+    <div id="resultIcon" class="text-6xl mb-4">✅</div>
+    <h3 id="resultTitle" class="text-2xl font-black text-white mb-2">등록 완료!</h3>
+    <p id="resultMessage" class="text-zinc-400 mb-6"></p>
+    <div class="flex gap-3">
+      <button onclick="closeResultModal()" class="flex-1 py-3 rounded-xl font-bold bg-zinc-800 text-white hover:bg-zinc-700 transition">닫기</button>
+      <a href="/admin/gallery" class="flex-1 py-3 rounded-xl font-bold bg-[#c4ff00] text-black hover:bg-white transition text-center">갤러리 확인</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('csvFile');
+const fileName = document.getElementById('fileName');
+const bulkForm = document.getElementById('bulkForm');
+const submitBtn = document.getElementById('submitBtn');
+
+dropZone.addEventListener('click', () => fileInput.click());
+
+dropZone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropZone.classList.add('border-[#c4ff00]', 'bg-[#c4ff00]/5');
+});
+
+dropZone.addEventListener('dragleave', () => {
+  dropZone.classList.remove('border-[#c4ff00]', 'bg-[#c4ff00]/5');
+});
+
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('border-[#c4ff00]', 'bg-[#c4ff00]/5');
+  if (e.dataTransfer.files.length) {
+    fileInput.files = e.dataTransfer.files;
+    showFileName(e.dataTransfer.files[0].name);
+  }
+});
+
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files.length) {
+    showFileName(e.target.files[0].name);
+  }
+});
+
+function showFileName(name) {
+  fileName.textContent = '📄 ' + name;
+  fileName.classList.remove('hidden');
+}
+
+// 폼 제출 처리
+bulkForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  if (!fileInput.files.length) {
+    showResult('error', '파일 선택 필요', '업로드할 CSV 파일을 선택해주세요.');
+    return;
+  }
+  
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> 업로드 중...';
+  
+  const formData = new FormData();
+  formData.append('csv_file', fileInput.files[0]);
+  
+  try {
+    const res = await fetch('/admin/gallery/bulk/upload', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    
+    if (data.ok) {
+      showResult('success', '등록 완료!', `총 ${data.count}개의 게시물이 등록되었습니다.`);
+    } else {
+      showResult('error', '오류 발생', data.error || '알 수 없는 오류가 발생했습니다.');
+    }
+  } catch (err) {
+    showResult('error', '업로드 실패', err.message);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="fas fa-upload mr-2"></i> 대량 등록하기';
+  }
+});
+
+function showResult(type, title, message) {
+  document.getElementById('resultIcon').textContent = type === 'success' ? '✅' : '❌';
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultMessage').textContent = message;
+  document.getElementById('resultModal').classList.remove('hidden');
+  document.getElementById('resultModal').classList.add('flex');
+}
+
+function closeResultModal() {
+  document.getElementById('resultModal').classList.add('hidden');
+  document.getElementById('resultModal').classList.remove('flex');
+}
+
+document.getElementById('resultModal').addEventListener('click', function(e) {
+  if (e.target === this) closeResultModal();
+});
+</script>
+
+{% endblock %}

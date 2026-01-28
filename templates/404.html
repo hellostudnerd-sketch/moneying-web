@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}페이지를 찾을 수 없습니다 - MONEYING{% endblock %}
+
+{% block content %}
+<div class="min-h-[60vh] flex items-center justify-center">
+  <div class="text-center">
+    <div class="text-8xl font-black text-[#a3e635] mb-4">404</div>
+    <h1 class="text-2xl md:text-3xl font-black mb-4">페이지를 찾을 수 없습니다</h1>
+    <p class="text-zinc-400 mb-8">요청하신 페이지가 존재하지 않거나 이동되었어요.</p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="/" class="bg-[#a3e635] text-black font-black px-6 py-3 rounded-xl hover:bg-white transition">
+        홈으로 가기
+      </a>
+      <a href="/gallery" class="bg-zinc-800 text-white font-bold px-6 py-3 rounded-xl border border-zinc-700 hover:bg-zinc-700 transition">
+        영상 갤러리
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

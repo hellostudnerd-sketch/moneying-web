@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block title %}내정보 - MONEYING{% endblock %}
+
+{% block content %}
+
+<div class="max-w-xl mx-auto">
+
+  <!-- 프로필 카드 -->
+<div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 mb-4">
+  <div class="flex items-center gap-4">
+    <div class="w-14 h-14 bg-gradient-to-br from-[#c4ff00]/20 to-zinc-800 rounded-full flex items-center justify-center text-2xl shrink-0">
+      {% if user_is_seller %}🏪{% elif session.get("is_trial") %}🎁{% elif subscriptions and subscriptions|length > 0 %}⭐{% else %}👤{% endif %}
+    </div>
+    <div class="flex-1 min-w-0">
+      <!-- 닉네임 + 변경 버튼 -->
+      <div class="flex items-center gap-2">
+        <div class="font-bold text-lg truncate">{{ get_nickname(user_email) }}</div>
+        <a href="/my/nickname" class="text-zinc-500 hover:text-white transition" title="닉네임 변경">
+          <i class="fas fa-pen text-xs"></i>
+        </a>
+      </div>
+      <div class="text-zinc-500 text-xs truncate">{{ user_email or "unknown" }}</div>
+      <div class="flex flex-wrap gap-2 mt-1">
+        {% if user_is_seller %}
+          <span class="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 text-xs font-bold">🏪 판매자</span>
+        {% endif %}
+        {% if session.get("is_trial") %}
+          <span class="px-2 py-0.5 rounded-full bg-[#c4ff00]/20 text-[#c4ff00] text-xs font-bold">🎁 체험중</span>
+        {% elif subscriptions and subscriptions|length > 0 %}
+          <span class="px-2 py-0.5 rounded-full bg-[#c4ff00]/20 text-[#c4ff00] text-xs font-bold">⭐ 구독중</span>
+        {% else %}
+          <span class="px-2 py-0.5 rounded-full bg-zinc-700 text-zinc-400 text-xs font-bold">일반회원</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="flex gap-3 mt-4 pt-4 border-t border-zinc-800 text-sm">
+    <a href="/change-password" class="text-zinc-400 hover:text-white transition">비밀번호 변경</a>
+    <span class="text-zinc-700">|</span>
+    <a href="/logout" class="text-zinc-400 hover:text-white transition">로그아웃</a>
+  </div>
+</div>
+
+  <!-- 나의 구독 -->
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl mb-4 overflow-hidden">
+    <div class="px-5 py-3 border-b border-zinc-800">
+      <span class="font-bold text-sm">나의 구독</span>
+    </div>
+    
+    <!-- 구독 상태 요약 -->
+    <a href="/pricing" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition border-b border-zinc-800/50">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">📦</span>
+        <div>
+          <div class="font-medium text-white text-sm">구독 관리</div>
+          <div class="text-zinc-500 text-xs">
+            {% if session.get("is_trial") %}
+              체험중 · {% if trial_expires_at %}{{ trial_expires_at.strftime('%m/%d') }} 만료{% endif %}
+            {% elif subscriptions and subscriptions|length > 0 %}
+              {{ subscriptions|length }}개 이용중
+            {% else %}
+              구독 중인 상품 없음
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <i class="fas fa-chevron-right text-zinc-600 text-sm"></i>
+    </a>
+    
+    <!-- 링크요청 -->
+    <a href="/link-requests" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">🔗</span>
+        <div>
+          <div class="font-medium text-white text-sm">링크요청</div>
+          <div class="text-zinc-500 text-xs">이번 달 {{ monthly_used or 0 }}/{{ monthly_limit or 3 }}회 사용</div>
+        </div>
+      </div>
+      <i class="fas fa-chevron-right text-zinc-600 text-sm"></i>
+    </a>
+  </div>
+
+  <!-- 비구독자/체험중일 때 CTA -->
+  {% if not subscriptions or subscriptions|length == 0 %}
+  <div class="bg-gradient-to-r from-[#c4ff00]/10 to-purple-500/10 border border-[#c4ff00]/30 rounded-2xl p-5 mb-4">
+    <div class="text-center">
+      {% if session.get("is_trial") %}
+        <div class="text-lg font-bold text-white mb-1">체험 기간이 곧 끝나요!</div>
+        <div class="text-zinc-400 text-sm mb-4">구독하고 계속 이용하세요</div>
+      {% elif can_use_trial %}
+        <div class="text-lg font-bold text-white mb-1">3일 무료체험 해보세요!</div>
+        <div class="text-zinc-400 text-sm mb-4">결제 없이 모든 기능을 체험</div>
+      {% else %}
+        <div class="text-lg font-bold text-white mb-1">구독하고 시작하세요!</div>
+        <div class="text-zinc-400 text-sm mb-4">영상 소스 + 쿠팡 링크 무제한</div>
+      {% endif %}
+      <div class="flex gap-3">
+        {% if can_use_trial and not session.get("is_trial") %}
+          <a href="/free-trial" class="flex-1 py-3 rounded-xl font-bold border border-zinc-600 text-white hover:bg-zinc-800 transition text-center text-sm">🎁 무료체험</a>
+        {% endif %}
+        <a href="/pricing" class="flex-1 py-3 rounded-xl font-bold bg-[#c4ff00] text-black hover:bg-white transition text-center text-sm">구독하기</a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 나의 활동 -->
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl mb-4 overflow-hidden">
+    <div class="px-5 py-3 border-b border-zinc-800">
+      <span class="font-bold text-sm">나의 활동</span>
+    </div>
+    
+    <!-- 내가 쓴 글 -->
+    <a href="/my/posts" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition border-b border-zinc-800/50">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">✏️</span>
+        <div>
+          <div class="font-medium text-white text-sm">내가 쓴 글</div>
+          <div class="text-zinc-500 text-xs">{{ my_posts_count or 0 }}개</div>
+        </div>
+      </div>
+      <i class="fas fa-chevron-right text-zinc-600 text-sm"></i>
+    </a>
+    
+    <!-- 리워드 -->
+    <a href="/my/rewards" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">🎁</span>
+        <div>
+          <div class="font-medium text-white text-sm">리워드</div>
+          <div class="text-zinc-500 text-xs">친구초대 {{ invited_count or 0 }}명 · 수익인증</div>
+        </div>
+      </div>
+      <i class="fas fa-chevron-right text-zinc-600 text-sm"></i>
+    </a>
+  </div>
+
+  <!-- 판매자 섹션 (판매자만) -->
+  {% if user_is_seller %}
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl mb-4 overflow-hidden">
+    <div class="px-5 py-3 border-b border-zinc-800">
+      <span class="font-bold text-sm">판매자</span>
+    </div>
+    
+    <a href="/my/deals" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition border-b border-zinc-800/50">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">🛍️</span>
+        <div>
+          <div class="font-medium text-white text-sm">공구/협찬 관리</div>
+          <div class="text-zinc-500 text-xs">신청 현황 확인</div>
+        </div>
+      </div>
+      <i class="fas fa-chevron-right text-zinc-600 text-sm"></i>
+    </a>
+    
+    <a href="/seller/dashboard" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">📊</span>
+        <div>
+          <div class="font-medium text-white text-sm">판매자 대시보드</div>
+          <div class="text-zinc-500 text-xs">{{ user_seller_company or '내 업체' }}</div>
+        </div>
+      </div>
+      <i class="fas fa-chevron-right text-zinc-600 text-sm"></i>
+    </a>
+  </div>
+  
+  {% elif user_seller_status == 'pending' %}
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl mb-4 p-5">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">🏪</span>
+        <div>
+          <div class="font-medium text-white text-sm">판매자 신청 중</div>
+          <div class="text-zinc-500 text-xs">1~2일 내 검토 후 안내</div>
+        </div>
+      </div>
+      <span class="px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-bold">대기중</span>
+    </div>
+  </div>
+  
+  {% else %}
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl mb-4 overflow-hidden">
+    <a href="/seller/apply" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">🏪</span>
+        <div>
+          <div class="font-medium text-white text-sm">판매자 전환</div>
+          <div class="text-zinc-500 text-xs">직접 영상 올리고 크리에이터에게 노출</div>
+        </div>
+      </div>
+      <i class="fas fa-chevron-right text-zinc-600 text-sm"></i>
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- 기타 -->
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl mb-6 overflow-hidden">
+    <div class="px-5 py-3 border-b border-zinc-800">
+      <span class="font-bold text-sm">기타</span>
+    </div>
+    
+    <a href="/my/payments" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition border-b border-zinc-800/50">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">💳</span>
+        <div>
+          <div class="font-medium text-white text-sm">결제 내역</div>
+          <div class="text-zinc-500 text-xs">구매 및 환불 내역</div>
+        </div>
+      </div>
+      <i class="fas fa-chevron-right text-zinc-600 text-sm"></i>
+    </a>
+    
+    <a href="/support" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">💬</span>
+        <div>
+          <div class="font-medium text-white text-sm">고객센터</div>
+          <div class="text-zinc-500 text-xs">문의 및 도움말</div>
+        </div>
+      </div>
+      <i class="fas fa-chevron-right text-zinc-600 text-sm"></i>
+    </a>
+  </div>
+
+  <a href="/" class="block w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-4 rounded-xl text-center transition text-sm">메인으로</a>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block title %}커뮤니티 - MONEYING{% endblock %}
+
+{% block main_class %}max-w-7xl mx-auto px-4 md:px-6 pt-24 md:pt-28 pb-20{% endblock %}
+
+{% block head_extra %}
+<style>
+    .filter-btn { 
+      background: rgba(39, 39, 42, 0.5); 
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1); 
+      color: #a1a1aa; 
+      transition: all .2s ease; 
+    }
+    .filter-btn:hover { 
+      background: rgba(63, 63, 70, 0.6); 
+      border-color: rgba(255,255,255,0.2);
+      color: #fff;
+    }
+    .filter-btn.active { 
+      background: #fff; 
+      border-color: #fff; 
+      color: #000; 
+      font-weight: 700;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    .deal-card {
+      background: linear-gradient(135deg, rgba(24, 24, 27, 0.9), rgba(9, 9, 11, 0.95));
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: all 0.3s ease;
+    }
+    .deal-card:hover {
+      border-color: rgba(255,255,255,0.25);
+    }
+    .deal-card .deal-image {
+      aspect-ratio: 16/9;
+      object-fit: cover;
+    }
+    
+    .post-card {
+      background: rgba(24, 24, 27, 0.6);
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.3s ease;
+    }
+    .post-card:hover {
+      border-color: rgba(255,255,255,0.2);
+      background: rgba(39, 39, 42, 0.6);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+  <!-- 헤더 -->
+<div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
+  <div>
+    <h1 class="text-3xl md:text-4xl font-black">머닝 크루 <span class="text-white">라운지</span></h1>
+    <p class="text-zinc-400 mt-2">함께 성장하는 숏폼 수익화 커뮤니티</p>
+  </div>
+  <div class="flex items-center gap-2 shrink-0">
+    <!-- 검색 -->
+    <form method="GET" action="/community" class="relative">
+      <input type="text" name="q" value="{{ search or '' }}" placeholder="검색"
+             class="w-28 focus:w-40 transition-all bg-zinc-800/80 border border-zinc-700/50 rounded-full px-4 py-2 pr-9 text-white text-sm placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none">
+      <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white">
+        <i class="fas fa-search text-sm"></i>
+      </button>
+    </form>
+    <!-- 글쓰기 -->
+    <a href="/community/write"
+       class="bg-[#c4ff00] text-black font-black px-4 py-2 rounded-xl hover:bg-white transition flex items-center shadow-lg shadow-[#c4ff00]/20">
+      <i class="fas fa-pen mr-2"></i> 글쓰기
+    </a>
+  </div>
+</div>
+
+{% if search %}
+<div class="mb-4 text-sm text-zinc-400">
+  "<span class="text-white">{{ search }}</span>" 검색 결과 <span class="text-[#c4ff00] font-bold">{{ posts|length }}</span>건
+  <a href="/community" class="text-zinc-500 hover:text-white ml-2 text-xs">[초기화]</a>
+</div>
+{% endif %}
+
+  <!-- 카테고리 필터 -->
+  <div class="flex gap-2 overflow-x-auto no-scrollbar mb-8">
+    <button class="filter-btn active px-5 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('all', this)">전체보기</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('notice', this)">공지사항</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('deal', this)">공구/협찬</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('revenue', this)">수익인증</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('tips', this)">꿀팁공유</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('qna', this)">질문답변</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('free', this)">자유게시판</button>
+  </div>
+
+  <!-- 공구/협찬 카드형 섹션 (deal 탭에서만 보임) -->
+  <div id="dealCardSection" class="hidden mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for p in posts if p.category == 'deal' %}
+      <a href="/community/{{ p.id }}" class="deal-card rounded-2xl overflow-hidden group">
+        {% if p.images()|length > 0 %}
+        <div class="relative">
+          <img src="{{ p.images()[0] }}" class="deal-image w-full" alt="">
+          <div class="absolute top-3 left-3">
+            <span class="bg-[#c4ff00] text-black text-xs font-black px-2 py-1 rounded">🛍️ 공구/협찬</span>
+          </div>
+        </div>
+        {% else %}
+        <div class="deal-image w-full bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center relative">
+          <span class="text-4xl">🛍️</span>
+          <div class="absolute top-3 left-3">
+            <span class="bg-[#c4ff00] text-black text-xs font-black px-2 py-1 rounded">공구/협찬</span>
+          </div>
+        </div>
+        {% endif %}
+        
+        <div class="p-4">
+          <h3 class="text-white font-bold text-lg mb-2 group-hover:text-zinc-300 transition line-clamp-2">{{ p.title }}</h3>
+          <p class="text-zinc-400 text-sm line-clamp-2 mb-3">{{ p.content }}</p>
+          <div class="flex items-center justify-between text-xs text-zinc-500">
+            <span>{{ get_nickname(p.author_email) }}</span>
+            <span>{{ (p.created_at|string)[:10] }}</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    
+    {% if posts|selectattr('category', 'equalto', 'deal')|list|length == 0 %}
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-10 text-center">
+      <div class="text-4xl mb-4">🛍️</div>
+      <div class="text-zinc-500 font-bold">아직 공구/협찬 글이 없어요.</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- 일반 게시글 리스트 -->
+  <div id="postListSection" class="space-y-2">
+    {% for p in posts %}
+    <a href="/community/{{ p.id }}" 
+       class="post-card post-item flex items-center gap-3 rounded-xl px-4 py-3 group"
+       data-category="{{ p.category }}">
+      
+      <span class="text-xs bg-zinc-800/80 text-gray-200 px-2 py-1 rounded border border-zinc-700/50 font-bold shrink-0">
+        {% if p.category == 'notice' %}📢 공지{% elif p.category == 'deal' %}🛍️ 공구{% elif p.category == 'revenue' %}💸 수익{% elif p.category == 'tips' %}💡 꿀팁{% elif p.category == 'qna' %}❓ 질문{% else %}🗣 자유{% endif %}
+      </span>
+      
+      <h3 class="text-zinc-300 font-medium group-hover:text-white transition truncate flex-1 min-w-0">{{ p.title }}</h3>
+      
+      {% if p.images()|length > 0 %}
+      <span class="text-zinc-500 text-xs shrink-0">📷{{ p.images()|length }}</span>
+      {% endif %}
+      
+      <span class="text-zinc-500 text-xs shrink-0 hidden md:block">{{ get_nickname(p.author_email) }}</span>
+      
+      <span class="text-zinc-600 text-xs shrink-0">{{ p.created_at.strftime('%m/%d') }}</span>
+    </a>
+    {% endfor %}
+
+    {% if posts|length == 0 %}
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-10 text-center">
+      <div class="text-zinc-500 font-bold">{% if search %}검색 결과가 없습니다.{% else %}아직 글이 없어요. 첫 글을 써보세요!{% endif %}</div>
+    </div>
+    {% endif %}
+  </div>
+
+<script>
+function filterPosts(category, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const dealCardSection = document.getElementById('dealCardSection');
+  const postListSection = document.getElementById('postListSection');
+
+  if (category === 'deal') {
+    dealCardSection.classList.remove('hidden');
+    postListSection.classList.add('hidden');
+  } else {
+    dealCardSection.classList.add('hidden');
+    postListSection.classList.remove('hidden');
+    
+    document.querySelectorAll('#postListSection .post-item').forEach(card => {
+      if (category === 'all') {
+        card.style.display = 'flex';
+      } else {
+        card.style.display = card.dataset.category === category ? 'flex' : 'none';
+      }
+    });
+  }
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,636 @@
+{% extends "base.html" %}
+
+{% block main_class %}max-w-7xl mx-auto px-4 md:px-6 pt-24 md:pt-28 pb-20{% endblock %}
+
+{% block content %}
+
+<style>
+/* ===== 컬러 변수 ===== */
+:root {
+  --neon-lime: #c4ff00;
+}
+
+/* ===== 필터 버튼 ===== */
+.filter-btn{
+  background: rgba(39, 39, 42, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #a1a1aa;
+  transition: all .2s ease;
+}
+
+.filter-btn:hover{
+  background: rgba(63, 63, 70, 0.6);
+  border-color: rgba(255,255,255,0.2);
+  color: #fff;
+}
+
+.filter-btn.active{
+  background: #fff;
+  border-color: #fff;
+  color: #000;
+  font-weight: 700;
+}
+
+/* ===== 갤러리 카드 ===== */
+.gallery-card {
+  background: transparent;
+  transition: all 0.15s ease-out;
+}
+
+.gallery-card:hover {
+  transform: translateY(-4px);
+}
+
+.gallery-card .relative {
+  aspect-ratio: 9/16;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: rgba(24, 24, 27, 0.8);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.gallery-card:hover .relative {
+  border-color: rgba(255,255,255,0.2);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+}
+
+/* ===== 캡처 이미지 그리드 ===== */
+.capture-row{
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .capture-row {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+  }
+}
+
+.capture-item{
+  aspect-ratio: 9/16;
+  min-height: 300px;
+  transition: all 0.3s ease;
+}
+
+.capture-item:hover {
+  transform: scale(1.03);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+@media (min-width: 768px) {
+  .capture-item {
+    min-height: 400px;
+  }
+}
+
+.capture-item img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ===== 뷰 배지 ===== */
+.view-badge {
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* ===== 북마크 버튼 ===== */
+.bookmark-btn {
+  transition: all 0.2s ease;
+}
+.bookmark-btn:hover {
+  transform: scale(1.15);
+}
+.bookmark-btn.active {
+  color: #ef4444;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+/* ===== 카드 북마크 버튼 ===== */
+.card-bookmark-btn {
+  backdrop-filter: blur(8px);
+}
+
+/* ===== 모달 ===== */
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+#detailBox {
+  background: linear-gradient(135deg, rgba(24, 24, 27, 0.95), rgba(9, 9, 11, 0.98));
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* ===== FREE 배지 ===== */
+.free-badge {
+  background: var(--neon-lime);
+}
+
+/* ===== 페이지 제목 ===== */
+.text-highlight {
+  color: var(--neon-lime);
+}
+
+/* ===== 스크롤바 숨기기 ===== */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ===== 구독 모달 ===== */
+#subscribeBox {
+  background: linear-gradient(135deg, rgba(24, 24, 27, 0.98), rgba(9, 9, 11, 0.99));
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+}
+
+/* ===== 빈 상태 아이콘 애니메이션 ===== */
+#emptyBookmark .text-4xl,
+#emptyRecent .text-4xl {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+</style>
+
+  <!-- 헤더 -->
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-3xl md:text-4xl font-black">
+        영상 <span class="text-highlight">Gallery</span>
+      </h1>
+      <p class="text-zinc-400 mt-2">
+        하이라이트 캡처로만 빠르게 판단하고, 바로 제작으로 넘어가세요.
+      </p>
+    </div>
+
+    <div class="flex gap-2 shrink-0">
+      {% if session.get("admin") %}
+        <a href="/admin/gallery/bulk" class="bg-zinc-700 text-white font-bold px-4 py-2 rounded-xl hover:bg-zinc-600 transition">📦 대량등록</a>
+        <a href="/admin/upload" class="bg-highlight text-black font-black px-4 py-2 rounded-xl hover:bg-white transition">+ 게시물 추가</a>
+      {% elif session.get("is_seller") %}
+        <a href="/seller/upload" class="bg-purple-600 text-white font-bold px-4 py-2 rounded-xl hover:bg-purple-500 transition">📸 직촬 업로드</a>
+        {% if session.get("subscriber") or session.get("is_trial") %}
+        <span class="bg-zinc-800 text-zinc-400 font-bold px-4 py-2 rounded-xl border border-zinc-700">
+          {% if session.get("is_trial") %}🎁 체험중{% else %}✅ 구독중{% endif %}
+        </span>
+        {% endif %}
+      {% elif session.get("subscriber") or session.get("is_trial") %}
+        <span class="bg-zinc-800 text-zinc-400 font-bold px-4 py-2 rounded-xl border border-zinc-700">
+          {% if session.get("is_trial") %}🎁 체험중{% else %}✅ 구독중{% endif %}
+        </span>
+      {% elif session.get("user_id") %}
+        <a href="/free-trial" class="bg-zinc-800 text-white font-bold px-4 py-2 rounded-xl border border-zinc-700 hover:border-highlight hover:text-highlight transition">🎁 3일 무료체험</a>
+        <a href="/pricing" class="bg-highlight text-black font-black px-4 py-2 rounded-xl hover:bg-white transition">구독하기</a>
+      {% else %}
+        <a href="/login?next=/gallery" class="bg-zinc-800 text-white font-bold px-4 py-2 rounded-xl border border-zinc-700 hover:border-highlight hover:text-highlight transition">🎁 3일 무료체험</a>
+        <a href="/pricing" class="bg-highlight text-black font-black px-4 py-2 rounded-xl hover:bg-white transition">구독하기</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 카테고리 필터 -->
+  <div class="flex gap-2 overflow-x-auto no-scrollbar mb-8">
+    <button class="filter-btn active px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="all" onclick="filterGallery('all', this)">전체보기</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="popular" onclick="filterGallery('popular', this)">인기순</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="bookmark" onclick="filterGallery('bookmark', this)">찜한 영상</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="recent" onclick="filterGallery('recent', this)">최근 본</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="seller" onclick="filterGallery('seller', this)">판매자 직촬</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="beauty" onclick="filterGallery('beauty', this)">Beauty</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="living" onclick="filterGallery('living', this)">Living</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="food" onclick="filterGallery('food', this)">Food</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="tech" onclick="filterGallery('tech', this)">Tech</button>
+  </div>
+
+  <div id="gallery-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6"></div>
+
+  <div id="emptyState" class="hidden text-center text-zinc-500 font-bold py-20">아직 등록된 갤러리 게시물이 없습니다.</div>
+  <div id="emptyBookmark" class="hidden text-center py-20">
+    <div class="text-4xl mb-4">❤️</div>
+    <div class="text-zinc-500 font-bold">찜한 영상이 없습니다</div>
+    <p class="text-zinc-600 text-sm mt-2">마음에 드는 영상에 하트를 눌러보세요!</p>
+  </div>
+  <div id="emptyRecent" class="hidden text-center py-20">
+    <div class="text-4xl mb-4">🕐</div>
+    <div class="text-zinc-500 font-bold">최근 본 영상이 없습니다</div>
+    <p class="text-zinc-600 text-sm mt-2">영상을 클릭해서 상세 정보를 확인해보세요!</p>
+  </div>
+
+<div id="detailModal" class="fixed inset-0 z-[999] hidden items-center justify-center modal-backdrop backdrop-blur-xl md:p-4">
+  <div id="detailBox" class="bg-zinc-950 w-full md:max-w-7xl h-full md:h-auto md:max-h-[92vh] md:rounded-2xl overflow-hidden shadow-2xl border border-zinc-800/50 relative flex flex-col">
+    <div class="absolute top-4 right-4 md:top-6 md:right-6 z-50 flex gap-2">
+      <button id="modalBookmarkBtn" class="bookmark-btn bg-zinc-800/80 hover:bg-zinc-700 w-10 h-10 rounded-md flex items-center justify-center border border-zinc-700 transition text-white" title="찜하기">
+        <i class="fas fa-heart text-lg"></i>
+      </button>
+      <button id="editBtn" class="hidden bg-zinc-800/80 hover:bg-highlight hover:text-black w-10 h-10 rounded-md flex items-center justify-center border border-zinc-700 transition" title="수정">
+        <i class="fas fa-pen text-sm"></i>
+      </button>
+      <button type="button" id="detailCloseBtn" class="bg-zinc-900/80 hover:bg-red-500 w-10 h-10 rounded-md flex items-center justify-center border border-zinc-800 transition" title="닫기">
+        <i class="fas fa-times text-lg"></i>
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-4 md:p-10">
+      <div class="w-full max-w-3xl mx-auto mt-12 md:mt-4 mb-6">
+        <div class="text-center px-4">
+          <h2 id="modalTitle" class="text-2xl md:text-4xl font-black text-white mb-4 leading-[1.2] tracking-tight">제목</h2>
+          <div id="modalTags" class="flex flex-wrap justify-center gap-1.5 md:gap-2 mt-4 mb-4"></div>
+          <div id="modalViews" class="text-zinc-500 text-sm">👁 0회</div>
+        </div>
+        <div class="w-full flex flex-col items-center gap-4 mt-6">
+          <span class="text-[11px] font-black text-zinc-300 uppercase tracking-widest">Source Video Links</span>
+          <div id="videoLinkGroup" class="flex flex-wrap justify-center gap-3"></div>
+        </div>
+        <div class="mt-8 mb-2 text-center">
+          <p class="text-zinc-300 text-sm">⚡ 미리보기 시간조차 아껴드립니다. 하이라이트 캡처만 확인하세요.</p>
+        </div>
+      </div>
+      <div id="imageRowsContainer" class="space-y-6"></div>
+    </div>
+  </div>
+</div>
+
+<div id="subscribeModal" class="hidden fixed inset-0 z-[1000] items-center justify-center bg-black/80 backdrop-blur-sm">
+  <div id="subscribeBox" class="w-full max-w-md mx-4 rounded-2xl border border-zinc-700 bg-zinc-950 shadow-2xl overflow-hidden">
+    <div class="p-6 flex items-start justify-between gap-4">
+      <div>
+        <h3 class="text-xl font-black text-white">구독이 필요합니다</h3>
+        <p class="text-zinc-400 text-sm mt-2 leading-relaxed">이 카드는 <span class="text-white font-bold">구독자 전용 상세정보</span>입니다.<br>구독하면 모든 영상 소스 + 쿠팡 링크를 바로 볼 수 있어요.</p>
+      </div>
+      <button type="button" id="subCloseBtn" class="text-zinc-400 hover:text-white text-2xl leading-none">×</button>
+    </div>
+    <div class="px-6 pb-6 flex flex-col gap-3">
+      <a href="/pricing" class="bg-lime-400 text-black font-black py-3 rounded-xl text-center hover:bg-white transition">요금제 보러가기</a>
+      <button type="button" id="subLaterBtn" class="bg-zinc-900 hover:bg-zinc-800 text-white font-bold py-3 rounded-xl border border-zinc-800">지금은 그냥 둘러볼게요</button>
+    </div>
+  </div>
+</div>
+<script>
+const IS_ADMIN = {{ session.get("admin", false) | tojson }};
+const IS_SUBSCRIBER = {{ session.get("subscriber", false) | tojson }};
+const IS_TRIAL = {{ session.get("is_trial", false) | tojson }};
+
+let currentPage = 1;
+let isLoading = false;
+let hasMore = true;
+let currentFilter = 'all';
+let allPosts = [];
+let currentModalItem = null;
+
+// ===== 북마크 관련 =====
+function getBookmarks() { try { return JSON.parse(localStorage.getItem('gallery_bookmarks') || '[]'); } catch { return []; } }
+function saveBookmarks(ids) { localStorage.setItem('gallery_bookmarks', JSON.stringify(ids)); }
+function isBookmarked(id) { return getBookmarks().includes(id); }
+function toggleBookmark(id) {
+  let bookmarks = getBookmarks();
+  if (bookmarks.includes(id)) { bookmarks = bookmarks.filter(b => b !== id); }
+  else { bookmarks.unshift(id); }
+  saveBookmarks(bookmarks);
+  return bookmarks.includes(id);
+}
+
+// ===== 최근 본 관련 =====
+function getRecentViewed() { try { return JSON.parse(localStorage.getItem('gallery_recent') || '[]'); } catch { return []; } }
+function saveRecentViewed(ids) { localStorage.setItem('gallery_recent', JSON.stringify(ids.slice(0, 20))); }
+function addRecentViewed(id) {
+  let recent = getRecentViewed();
+  recent = recent.filter(r => r !== id);
+  recent.unshift(id);
+  saveRecentViewed(recent);
+}
+
+// ===== 유틸리티 =====
+function normalizeUrl(u) { if (!u) return ""; let s = (u || "").trim(); if (!s) return ""; if (!/^https?:\/\//i.test(s)) s = "https://" + s.replace(/^\/+/, ""); return s; }
+function escapeHtml(str) { return (str || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
+
+function getPlatformInfo(url) {
+  const u = (url || "").toLowerCase();
+  // SNS 플랫폼
+  if (u.includes("instagram.com") || u.includes("instagr.am")) return { name: "Instagram", icon: "fab fa-instagram", color: "bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500" };
+  if (u.includes("xiaohongshu.com") || u.includes("xhslink.com")) return { name: "小红书", icon: "fas fa-book", color: "bg-red-500" };
+  if (u.includes("tiktok.com") || u.includes("tiktok")) return { name: "TikTok", icon: "fab fa-tiktok", color: "bg-black border border-white/20" };
+  if (u.includes("douyin.com") || u.includes("iesdouyin.com")) return { name: "抖音", icon: "fab fa-tiktok", color: "bg-black border border-white/20" };
+  if (u.includes("youtube.com") || u.includes("youtu.be")) return { name: "YouTube", icon: "fab fa-youtube", color: "bg-red-600" };
+  if (u.includes("twitter.com") || u.includes("x.com")) return { name: "X", icon: "fab fa-x-twitter", color: "bg-black border border-white/20" };
+  if (u.includes("facebook.com") || u.includes("fb.com")) return { name: "Facebook", icon: "fab fa-facebook", color: "bg-blue-600" };
+  if (u.includes("threads.net")) return { name: "Threads", icon: "fas fa-at", color: "bg-black border border-white/20" };
+  // 클라우드/파일 공유
+  if (u.includes("mybox.naver.com")) return { name: "네이버 MYBOX", icon: "fas fa-cloud", color: "bg-green-500" };
+  if (u.includes("naver.com") || u.includes("naver.me")) return { name: "네이버", icon: "fas fa-n", color: "bg-green-500" };
+  if (u.includes("drive.google.com")) return { name: "Google Drive", icon: "fab fa-google-drive", color: "bg-yellow-500" };
+  if (u.includes("dropbox.com")) return { name: "Dropbox", icon: "fab fa-dropbox", color: "bg-blue-500" };
+  if (u.includes("onedrive.com") || u.includes("1drv.ms")) return { name: "OneDrive", icon: "fab fa-microsoft", color: "bg-blue-400" };
+  if (u.includes("mega.nz")) return { name: "MEGA", icon: "fas fa-cloud", color: "bg-red-600" };
+  // 기타 링크
+  return { name: "영상링크", icon: "fas fa-play-circle", color: "bg-zinc-600" };
+}
+
+// ===== 구독 모달 =====
+function openSubscribeModal() { const m = document.getElementById("subscribeModal"); m.classList.remove("hidden"); m.classList.add("flex"); document.body.style.overflow = "hidden"; }
+function closeSubscribeModal() { const m = document.getElementById("subscribeModal"); m.classList.add("hidden"); m.classList.remove("flex"); document.body.style.overflow = ""; }
+
+// ===== 조회수 증가 =====
+async function incrementViewCount(postId) { try { const res = await fetch(`/api/gallery/${postId}/view`, { method: 'POST' }); const data = await res.json(); return data.view_count || 0; } catch (e) { return 0; } }
+
+// ===== 갤러리 로드 (무한스크롤) =====
+async function loadGallery(reset = false) {
+  if (isLoading || (!hasMore && !reset)) return;
+  
+  if (reset) {
+    currentPage = 1;
+    hasMore = true;
+    allPosts = [];
+    document.getElementById('gallery-grid').innerHTML = '';
+  }
+  
+  isLoading = true;
+  showLoadingSpinner();
+  
+  try {
+    const category = (currentFilter === 'all' || currentFilter === 'bookmark' || currentFilter === 'recent' || currentFilter === 'popular') ? '' : currentFilter;
+    const res = await fetch(`/api/gallery?page=${currentPage}&category=${category}`);
+    const data = await res.json();
+    
+    allPosts = [...allPosts, ...data.posts];
+    hasMore = data.has_next;
+    currentPage++;
+    
+    appendGalleryItems(data.posts);
+  } catch (e) {
+    console.error('Gallery load error:', e);
+  } finally {
+    isLoading = false;
+    hideLoadingSpinner();
+  }
+}
+
+// ===== 카드 추가 =====
+function appendGalleryItems(list) {
+  const grid = document.getElementById('gallery-grid');
+  const empty = document.getElementById('emptyState');
+  
+  if (allPosts.length === 0 && list.length === 0) {
+    empty.classList.remove("hidden");
+    return;
+  }
+  empty.classList.add("hidden");
+  list.forEach((item) => grid.appendChild(createGalleryCard(item)));
+}
+
+// ===== 카드 생성 =====
+function createGalleryCard(item) {
+  const imgs = Array.isArray(item.images) ? item.images : [];
+  const thumb = imgs.length ? (imgs[0] || "") : "";
+  const thumbUrl = thumb ? (thumb.startsWith("http") ? thumb : `/static/uploads/${thumb}`) : "";
+  const viewCount = item.view_count || 0;
+  const bookmarked = isBookmarked(item.id);
+  const canAccess = IS_ADMIN || IS_SUBSCRIBER || IS_TRIAL || item.is_free;
+  const titleSafe = escapeHtml(item.title || "");
+
+  const card = document.createElement('div');
+  card.className = 'gallery-card cursor-pointer group';
+  card.dataset.category = (item.category || "all").toLowerCase();
+  card.dataset.id = item.id;
+
+  card.addEventListener("click", (e) => {
+    if (e.target.closest('.card-bookmark-btn')) return;
+    e.preventDefault(); e.stopPropagation();
+    if (canAccess) return openDetailModal(item);
+    return openSubscribeModal();
+  });
+
+  const adminEditBtn = IS_ADMIN ? `<a href="/admin/posts/${item.id}/edit?next=/gallery" class="absolute top-2 right-2 z-20 w-9 h-9 rounded-lg bg-black/60 hover:bg-highlight text-white hover:text-black flex items-center justify-center border border-white/10" title="수정" onclick="event.stopPropagation();"><i class="fas fa-pen text-sm"></i></a>` : "";
+
+  card.innerHTML = `
+    <div class="relative aspect-shorts rounded-lg overflow-hidden bg-zinc-900 border border-white/5 group-hover:border-white/20 transition-all duration-150">
+      ${adminEditBtn}
+      <img src="${thumbUrl}" class="w-full h-full object-cover transition-all duration-150" alt="${titleSafe}" loading="lazy">
+      <button class="card-bookmark-btn absolute top-2 ${IS_ADMIN ? 'right-12' : 'right-2'} z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-black/80 flex items-center justify-center border border-white/10 transition ${bookmarked ? 'text-red-500' : 'text-white/60 hover:text-red-400'}" onclick="event.stopPropagation(); handleCardBookmark(${item.id}, this);" title="${bookmarked ? '찜 해제' : '찜하기'}"><i class="fas fa-heart text-sm"></i></button>
+      ${item.is_free ? `<div class="absolute top-2 left-2 px-2 py-1 rounded bg-red-500 text-white text-xs font-bold">무료</div>` : ''}
+      ${!canAccess ? `<div class="absolute inset-0 bg-black/40 flex items-center justify-center"><span class="text-2xl">🔒</span></div>` : ''}
+    </div>
+    <div class="mt-2 px-1">
+      <div class="text-white text-sm font-bold truncate">${titleSafe}</div>
+      <div class="text-zinc-500 text-xs mt-1 flex items-center gap-1">
+        <i class="far fa-eye"></i> ${viewCount}
+      </div>
+    </div>
+  `;
+  
+  return card;
+}
+
+
+
+// ===== 로딩 스피너 =====
+function showLoadingSpinner() {
+  let spinner = document.getElementById('loadingSpinner');
+  if (!spinner) {
+    spinner = document.createElement('div');
+    spinner.id = 'loadingSpinner';
+    spinner.className = 'col-span-full flex justify-center py-8';
+    spinner.innerHTML = '<div class="w-8 h-8 border-2 border-white/20 border-t-[#c4ff00] rounded-full animate-spin"></div>';
+    document.getElementById('gallery-grid').appendChild(spinner);
+  }
+  spinner.classList.remove('hidden');
+}
+
+function hideLoadingSpinner() {
+  const spinner = document.getElementById('loadingSpinner');
+  if (spinner) spinner.classList.add('hidden');
+}
+
+// ===== 무한 스크롤 감지 =====
+function handleScroll() {
+  if (currentFilter === 'bookmark' || currentFilter === 'recent' || currentFilter === 'popular') return;
+  const scrollY = window.scrollY;
+  const windowHeight = window.innerHeight;
+  const docHeight = document.documentElement.scrollHeight;
+  if (scrollY + windowHeight >= docHeight - 500) loadGallery();
+}
+
+// ===== 필터 =====
+function filterGallery(category, btn) {
+  currentFilter = category;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  
+  document.getElementById('emptyState').classList.add('hidden');
+  document.getElementById('emptyBookmark').classList.add('hidden');
+  document.getElementById('emptyRecent').classList.add('hidden');
+
+  if (category === 'bookmark') renderBookmarkedItems();
+  else if (category === 'recent') renderRecentItems();
+  else if (category === 'popular') renderPopularItems();
+  else loadGallery(true);
+}
+
+function renderBookmarkedItems() {
+  const bookmarks = getBookmarks();
+  const bookmarkedPosts = allPosts.filter(p => bookmarks.includes(p.id));
+  const grid = document.getElementById('gallery-grid');
+  grid.innerHTML = '';
+  if (bookmarkedPosts.length === 0) { document.getElementById('emptyBookmark').classList.remove('hidden'); return; }
+  bookmarkedPosts.sort((a, b) => bookmarks.indexOf(a.id) - bookmarks.indexOf(b.id));
+  bookmarkedPosts.forEach(item => grid.appendChild(createGalleryCard(item)));
+}
+
+function renderRecentItems() {
+  const recent = getRecentViewed();
+  const recentPosts = allPosts.filter(p => recent.includes(p.id));
+  const grid = document.getElementById('gallery-grid');
+  grid.innerHTML = '';
+  if (recentPosts.length === 0) { document.getElementById('emptyRecent').classList.remove('hidden'); return; }
+  recentPosts.sort((a, b) => recent.indexOf(a.id) - recent.indexOf(b.id));
+  recentPosts.forEach(item => grid.appendChild(createGalleryCard(item)));
+}
+
+function renderPopularItems() {
+  const grid = document.getElementById('gallery-grid');
+  grid.innerHTML = '';
+  const sorted = [...allPosts].sort((a, b) => (b.view_count || 0) - (a.view_count || 0));
+  sorted.forEach(item => grid.appendChild(createGalleryCard(item)));
+}
+
+// ===== 북마크 핸들러 =====
+function handleCardBookmark(id, btn) {
+  const isNowBookmarked = toggleBookmark(id);
+  if (isNowBookmarked) { btn.classList.remove('text-white/60', 'hover:text-red-400'); btn.classList.add('text-red-500'); btn.title = '찜 해제'; }
+  else { 
+    btn.classList.add('text-white/60', 'hover:text-red-400'); btn.classList.remove('text-red-500'); btn.title = '찜하기';
+    if (currentFilter === 'bookmark') { btn.closest('.gallery-card').remove(); if (getBookmarks().length === 0) document.getElementById('emptyBookmark').classList.remove('hidden'); }
+  }
+}
+
+// ===== 상세 모달 =====
+async function openDetailModal(item) {
+  currentModalItem = item;
+  const modal = document.getElementById('detailModal');
+  modal.classList.remove("hidden"); modal.classList.add("flex");
+  document.body.style.overflow = "hidden";
+
+  addRecentViewed(item.id);
+  const newViewCount = await incrementViewCount(item.id);
+  document.getElementById('modalViews').innerText = `👁 ${newViewCount}회`;
+  const card = document.querySelector(`.gallery-card[data-id="${item.id}"] .view-count`);
+  if (card) card.innerText = newViewCount;
+
+  document.getElementById('modalTitle').innerText = item.title || "";
+  updateModalBookmarkBtn(item.id);
+
+  const tagContainer = document.getElementById('modalTags');
+  tagContainer.innerHTML = "";
+  (item.tags || []).forEach(tag => {
+    const span = document.createElement('span');
+    span.className = 'text-highlight text-[9px] md:text-[10px] font-black bg-highlight/10 px-3 py-1 rounded-sm border border-highlight/30 tracking-wider uppercase';
+    span.innerText = "#" + tag;
+    tagContainer.appendChild(span);
+  });
+
+  const editBtn = document.getElementById("editBtn");
+  if (IS_ADMIN && item.id) { editBtn.classList.remove("hidden"); editBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/admin/posts/${item.id}/edit?next=/gallery`; }; }
+  else { editBtn.classList.add("hidden"); editBtn.onclick = null; }
+
+  const links = (item.links || []).filter(x => (x||"").trim().length > 0).slice(0,3);
+  const group = document.getElementById('videoLinkGroup');
+  group.innerHTML = "";
+  if (links.length === 0) { group.innerHTML = `<div class="text-zinc-600 text-xs font-bold">등록된 참고 링크가 없습니다.</div>`; }
+  else { 
+    links.forEach((u) => { 
+      const platform = getPlatformInfo(u);
+      const a = document.createElement("a"); 
+      a.href = normalizeUrl(u); 
+      a.target = "_blank"; 
+      a.rel = "noopener noreferrer"; 
+      a.className = `${platform.color} hover:opacity-80 text-white px-6 py-3 rounded-xl text-sm font-bold transition-all duration-150 flex items-center gap-2 shadow-lg`; 
+      a.innerHTML = `<i class="${platform.icon} text-lg"></i> ${platform.name}`; 
+      group.appendChild(a); 
+    }); 
+  }
+
+  const images = (Array.isArray(item.images) ? item.images : []).slice(0,5);
+  const rowContainer = document.getElementById('imageRowsContainer');
+  rowContainer.innerHTML = "";
+  const coupang = normalizeUrl(item.coupang_link || "");
+  const rowDiv = document.createElement("div");
+  rowDiv.className = "glass-panel p-5 md:p-8 rounded-xl relative";
+
+  let html = coupang ? `<div class="absolute top-5 right-5 z-10 hidden md:block"><a href="${coupang}" target="_blank" rel="noopener noreferrer" class="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 border border-zinc-600 transition">🚀 쿠팡 링크 보기</a></div>` : "";
+  html += `<div class="flex items-center gap-3 mb-6"><div class="w-9 h-9 bg-highlight rounded-lg flex items-center justify-center text-black font-black text-sm shadow-lg">📸</div><div><h4 class="text-white font-black text-base md:text-lg">하이라이트 캡처</h4><p class="text-zinc-500 text-[10px] font-bold">최대 5장의 핵심 장면</p></div></div>`;
+  html += coupang ? `<div class="md:hidden w-full mb-5"><a href="${coupang}" target="_blank" rel="noopener noreferrer" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-3 rounded-xl font-bold flex justify-center items-center gap-2 text-sm border border-zinc-600 transition">🚀 쿠팡 링크 보기</a></div>` : "";
+
+  if (images.length === 0) { html += `<div class="text-zinc-600 text-sm font-bold">등록된 이미지가 없습니다.</div>`; }
+  else {
+    html += `<div class="capture-row">`;
+    images.forEach((img, i) => {
+      const safeImg = (img || "").trim();
+      const url = safeImg.startsWith("http") ? safeImg : `/static/uploads/${safeImg}`;
+      html += `<div class="capture-item aspect-shorts rounded-lg overflow-hidden ${i===0 ? "border-2 border-highlight" : "border border-white/10"} bg-zinc-900 transition-all duration-150 hover:border-white/30 relative"><img src="${url}" class="w-full h-full object-cover ${i===0 ? "opacity-95" : "opacity-80 hover:opacity-100"} transition-opacity duration-150">${i===0 ? `<div class="absolute top-3 left-3 bg-highlight text-black text-[8px] font-black px-2 py-0.5 rounded-sm shadow-md uppercase tracking-tighter">Main</div>` : ""}</div>`;
+    });
+    html += `</div>`;
+  }
+  rowDiv.innerHTML = html;
+  rowContainer.appendChild(rowDiv);
+}
+
+function updateModalBookmarkBtn(id) {
+  const btn = document.getElementById('modalBookmarkBtn');
+  if (isBookmarked(id)) { btn.classList.add('active'); btn.title = '찜 해제'; }
+  else { btn.classList.remove('active'); btn.title = '찜하기'; }
+}
+
+function closeDetailModal() { 
+  const modal = document.getElementById('detailModal'); 
+  modal.classList.add('hidden'); 
+  modal.classList.remove('flex'); 
+  document.body.style.overflow = ''; 
+  currentModalItem = null; 
+}
+
+// ===== 초기화 =====
+window.addEventListener("load", () => {
+  loadGallery();
+  window.addEventListener('scroll', handleScroll);
+
+  document.getElementById('modalBookmarkBtn')?.addEventListener('click', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    if (!currentModalItem) return;
+    const isNowBookmarked = toggleBookmark(currentModalItem.id);
+    updateModalBookmarkBtn(currentModalItem.id);
+    const cardBtn = document.querySelector(`.gallery-card[data-id="${currentModalItem.id}"] .card-bookmark-btn`);
+    if (cardBtn) {
+      if (isNowBookmarked) { cardBtn.classList.remove('text-white/60', 'hover:text-red-400'); cardBtn.classList.add('text-red-500'); }
+      else { cardBtn.classList.add('text-white/60', 'hover:text-red-400'); cardBtn.classList.remove('text-red-500'); }
+    }
+  });
+
+  document.getElementById("detailCloseBtn")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); closeDetailModal(); });
+  const detailModal = document.getElementById("detailModal");
+  const detailBox = document.getElementById("detailBox");
+  detailModal?.addEventListener("click", (e) => { if (e.target === detailModal) closeDetailModal(); });
+  detailBox?.addEventListener("click", (e) => e.stopPropagation());
+
+  const subModal = document.getElementById("subscribeModal");
+  const subBox = document.getElementById("subscribeBox");
+  subModal?.addEventListener("click", (e) => { if (e.target === subModal) closeSubscribeModal(); });
+  subBox?.addEventListener("click", (e) => e.stopPropagation());
+
+  document.getElementById("subCloseBtn")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); closeSubscribeModal(); });
+  document.getElementById("subLaterBtn")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); closeSubscribeModal(); });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (subModal && !subModal.classList.contains("hidden")) return closeSubscribeModal();
+    if (detailModal && !detailModal.classList.contains("hidden")) return closeDetailModal();
+  });
+});
+</script>
+
+{% endblock %}

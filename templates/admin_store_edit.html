@@ -1,0 +1,144 @@
+{% extends "admin_base.html" %}
+{% block title %}상품 수정 - MONEYING Admin{% endblock %}
+{% block page_title %}상품 수정{% endblock %}
+{% block page_desc %}{{ product.title }}{% endblock %}
+
+{% block page_actions %}
+<a href="/admin/store" class="px-4 py-2 rounded-xl bg-zinc-800 text-gray-200 hover:bg-zinc-700 transition font-bold">
+  ← 목록으로
+</a>
+{% endblock %}
+
+{% block content_admin %}
+<form method="POST" class="space-y-6 max-w-4xl">
+    
+    <!-- 기본 정보 -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+      <h2 class="font-bold text-lg mb-4">기본 정보</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="md:col-span-2">
+          <label class="block text-sm font-bold text-zinc-300 mb-2">상품명 <span class="text-red-400">*</span></label>
+          <input type="text" name="title" required value="{{ product.title }}"
+                 class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-bold text-zinc-300 mb-2">카테고리 <span class="text-red-400">*</span></label>
+          <select name="category" required class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none">
+            <option value="ebook" {% if product.category == 'ebook' %}selected{% endif %}>전자책</option>
+            <option value="vod" {% if product.category == 'vod' %}selected{% endif %}>VOD 강의</option>
+            <option value="program" {% if product.category == 'program' %}selected{% endif %}>프로그램</option>
+            <option value="template" {% if product.category == 'template' %}selected{% endif %}>템플릿</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-bold text-zinc-300 mb-2">토픽</label>
+          <select name="topic" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none">
+            <option value="shortform" {% if product.topic == 'shortform' %}selected{% endif %}>#숏폼 부업</option>
+            <option value="longform" {% if product.topic == 'longform' %}selected{% endif %}>#롱폼/유튜브</option>
+            <option value="publishing" {% if product.topic == 'publishing' %}selected{% endif %}>#전자책 출판</option>
+            <option value="realestate" {% if product.topic == 'realestate' %}selected{% endif %}>#부동산/경매</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-bold text-zinc-300 mb-2">가격 (원) <span class="text-red-400">*</span></label>
+          <input type="number" name="price" required min="0" value="{{ product.price }}"
+                 class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-bold text-zinc-300 mb-2">뱃지</label>
+          <input type="text" name="badge" value="{{ product.badge or '' }}"
+                 class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none"
+                 placeholder="예: 베스트셀러, NEW">
+        </div>
+      </div>
+    </div>
+
+    <!-- 이미지 & 파일 -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+      <h2 class="font-bold text-lg mb-4">이미지 & 파일</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-bold text-zinc-300 mb-2">썸네일 이미지 URL</label>
+          <input type="url" name="image" value="{{ product.image or '' }}"
+                 class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-bold text-zinc-300 mb-2">상품 파일/링크 URL</label>
+          <input type="text" name="file_url" value="{{ product.file_url or '' }}"
+                 class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none">
+        </div>
+      </div>
+    </div>
+
+    <!-- 상세 설명 (HTML 직접 입력) -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+      <h2 class="font-bold text-lg mb-4">상세 설명 (HTML)</h2>
+      
+      <!-- 탭 버튼 -->
+      <div class="flex gap-2 mb-4">
+        <button type="button" onclick="showTab('code')" id="tab-code" class="px-4 py-2 rounded-lg bg-[#a3e635] text-black font-bold text-sm">코드 입력</button>
+        <button type="button" onclick="showTab('preview')" id="tab-preview" class="px-4 py-2 rounded-lg bg-zinc-700 text-white font-bold text-sm">미리보기</button>
+      </div>
+      
+      <!-- 코드 입력 -->
+      <div id="panel-code">
+        <textarea name="description" id="htmlCode" 
+                  class="w-full h-[500px] bg-zinc-800 border border-zinc-700 rounded-xl p-4 text-green-400 font-mono text-sm focus:outline-none focus:border-[#a3e635] resize-none"
+                  placeholder="HTML 코드를 붙여넣으세요... (style 태그 포함 가능)">{{ product.description or '' }}</textarea>
+      </div>
+      
+      <!-- 미리보기 -->
+      <div id="panel-preview" class="hidden">
+        <div id="previewArea" class="w-full min-h-[500px] bg-black border border-zinc-700 rounded-xl p-4 overflow-auto"></div>
+      </div>
+    </div>
+
+    <!-- 옵션 -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+      <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" name="is_active" value="1" {% if product.is_active %}checked{% endif %}
+               class="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-[#a3e635] focus:ring-[#a3e635]">
+        <span class="font-bold">판매중 (공개)</span>
+      </label>
+    </div>
+
+    <button type="submit" class="w-full bg-[#a3e635] text-black font-black py-4 rounded-xl hover:bg-white transition text-lg">
+      수정 완료
+    </button>
+  </form>
+
+<script>
+  function showTab(tab) {
+    const codePanel = document.getElementById('panel-code');
+    const previewPanel = document.getElementById('panel-preview');
+    const codeTab = document.getElementById('tab-code');
+    const previewTab = document.getElementById('tab-preview');
+    
+    if (tab === 'code') {
+      codePanel.classList.remove('hidden');
+      previewPanel.classList.add('hidden');
+      codeTab.classList.remove('bg-zinc-700', 'text-white');
+      codeTab.classList.add('bg-[#a3e635]', 'text-black');
+      previewTab.classList.remove('bg-[#a3e635]', 'text-black');
+      previewTab.classList.add('bg-zinc-700', 'text-white');
+    } else {
+      codePanel.classList.add('hidden');
+      previewPanel.classList.remove('hidden');
+      previewTab.classList.remove('bg-zinc-700', 'text-white');
+      previewTab.classList.add('bg-[#a3e635]', 'text-black');
+      codeTab.classList.remove('bg-[#a3e635]', 'text-black');
+      codeTab.classList.add('bg-zinc-700', 'text-white');
+      
+      // 미리보기 업데이트
+      document.getElementById('previewArea').innerHTML = document.getElementById('htmlCode').value;
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}3일 무료체험 - MONEYING{% endblock %}
+
+{% block content %}
+
+<div class="max-w-lg mx-auto py-12">
+
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-8 text-center">
+    
+    <div class="text-5xl mb-4">🎁</div>
+    
+    <h1 class="text-2xl md:text-3xl font-black mb-3">3일 무료체험</h1>
+    
+    <p class="text-zinc-400 mb-6">
+      영상 갤러리의 모든 콘텐츠를<br>
+      <span class="text-white font-bold">3일 동안 무료</span>로 이용해보세요!
+    </p>
+
+    <div class="bg-zinc-800/50 rounded-xl p-4 mb-6 text-left">
+      <div class="text-sm font-bold text-white mb-3">체험 혜택</div>
+      <ul class="space-y-2 text-sm text-zinc-400">
+        <li class="flex items-center gap-2">
+          <span class="text-[#a3e635]">✓</span> 모든 영상 갤러리 열람
+        </li>
+        <li class="flex items-center gap-2">
+          <span class="text-[#a3e635]">✓</span> 하이라이트 캡처 확인
+        </li>
+        <li class="flex items-center gap-2">
+          <span class="text-[#a3e635]">✓</span> 쿠팡 파트너스 링크 제공
+        </li>
+        <li class="flex items-center gap-2">
+          <span class="text-[#a3e635]">✓</span> 링크요청 월 10회
+        </li>
+      </ul>
+    </div>
+
+    <div class="bg-zinc-800/30 rounded-lg p-3 mb-6 text-xs text-zinc-500">
+      ⚠️ 체험은 <span class="text-white">1인 1회</span>만 가능합니다.<br>
+      체험 종료 후 자동 결제되지 않습니다.
+    </div>
+
+    <form method="POST">
+      <button type="submit" 
+              class="w-full bg-[#a3e635] text-black font-black py-4 rounded-xl hover:bg-white transition text-lg">
+        지금 바로 시작하기
+      </button>
+    </form>
+
+    <a href="/gallery" class="block mt-4 text-zinc-500 hover:text-white text-sm">
+      ← 갤러리로 돌아가기
+    </a>
+
+  </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,290 @@
+{% extends "admin_base.html" %}
+{% block title %}관리자 홈 - MONEYING{% endblock %}
+
+{% block page_title %}관리자 홈{% endblock %}
+{% block page_desc %}MONEYING 현황을 한눈에 확인하세요.{% endblock %}
+
+{% block content_admin %}
+
+<div class="space-y-6">
+
+  <!-- 오늘의 현황 -->
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-bold text-white">📊 오늘의 현황</h2>
+      <span class="text-zinc-500 text-sm">{{ today.strftime('%Y-%m-%d') }}</span>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="bg-zinc-800/50 rounded-xl p-4 text-center">
+        <div class="text-2xl font-black text-[#c4ff00]">+{{ today_users }}</div>
+        <div class="text-zinc-500 text-xs mt-1">신규 가입</div>
+      </div>
+      <div class="bg-zinc-800/50 rounded-xl p-4 text-center">
+        <div class="text-2xl font-black text-blue-400">+{{ today_links }}</div>
+        <div class="text-zinc-500 text-xs mt-1">링크요청</div>
+      </div>
+      <div class="bg-zinc-800/50 rounded-xl p-4 text-center">
+        <div class="text-2xl font-black text-purple-400">{{ pending_sellers }}</div>
+        <div class="text-zinc-500 text-xs mt-1">판매자 대기</div>
+      </div>
+      <div class="bg-zinc-800/50 rounded-xl p-4 text-center">
+        <div class="text-2xl font-black text-green-400">{{ pending_rewards }}</div>
+        <div class="text-zinc-500 text-xs mt-1">수익인증 대기</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 처리 필요 -->
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
+    <div class="px-5 py-3 border-b border-zinc-800">
+      <h2 class="font-bold text-white">🔔 처리 필요</h2>
+    </div>
+    
+    <a href="/admin/link-requests" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition border-b border-zinc-800/50">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">🔗</span>
+        <div>
+          <div class="font-medium text-white text-sm">링크요청</div>
+          <div class="text-zinc-500 text-xs">{{ pending_links }}건 대기중</div>
+        </div>
+      </div>
+      {% if pending_links > 0 %}
+        <span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded-full">{{ pending_links }}</span>
+      {% else %}
+        <span class="text-zinc-600 text-xs">완료 ✓</span>
+      {% endif %}
+    </a>
+    
+    <a href="/admin/sellers" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition border-b border-zinc-800/50">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">🏪</span>
+        <div>
+          <div class="font-medium text-white text-sm">판매자 신청</div>
+          <div class="text-zinc-500 text-xs">{{ pending_sellers }}건 대기중</div>
+        </div>
+      </div>
+      {% if pending_sellers > 0 %}
+        <span class="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs font-bold rounded-full">{{ pending_sellers }}</span>
+      {% else %}
+        <span class="text-zinc-600 text-xs">완료 ✓</span>
+      {% endif %}
+    </a>
+    
+    <a href="/admin/pending-posts" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition border-b border-zinc-800/50">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">📸</span>
+        <div>
+          <div class="font-medium text-white text-sm">판매자 게시물</div>
+          <div class="text-zinc-500 text-xs">{{ pending_posts }}건 승인대기</div>
+        </div>
+      </div>
+      {% if pending_posts > 0 %}
+        <span class="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs font-bold rounded-full">{{ pending_posts }}</span>
+      {% else %}
+        <span class="text-zinc-600 text-xs">완료 ✓</span>
+      {% endif %}
+    </a>
+    
+    <a href="/admin/revenue-proofs" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">💸</span>
+        <div>
+          <div class="font-medium text-white text-sm">수익인증 승인</div>
+          <div class="text-zinc-500 text-xs">{{ pending_rewards }}건 대기중</div>
+        </div>
+      </div>
+      {% if pending_rewards > 0 %}
+        <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">{{ pending_rewards }}</span>
+      {% else %}
+        <span class="text-zinc-600 text-xs">완료 ✓</span>
+      {% endif %}
+    </a>
+  </div>
+
+  <!-- 전체 통계 -->
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5">
+    <h2 class="font-bold text-white mb-4">📈 전체 통계</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <a href="/admin/users" class="text-center group cursor-pointer">
+        <div class="text-3xl font-black text-white group-hover:text-[#c4ff00] transition">{{ user_count }}</div>
+        <div class="text-zinc-500 text-sm group-hover:text-zinc-300 transition">가입자</div>
+      </a>
+      <a href="/admin/subscriptions" class="text-center group cursor-pointer">
+        <div class="text-3xl font-black text-[#c4ff00] group-hover:text-white transition">{{ subscriber_count }}</div>
+        <div class="text-zinc-500 text-sm group-hover:text-zinc-300 transition">구독자</div>
+      </a>
+      <a href="/admin/gallery" class="text-center group cursor-pointer">
+        <div class="text-3xl font-black text-white group-hover:text-[#c4ff00] transition">{{ gallery_count }}</div>
+        <div class="text-zinc-500 text-sm group-hover:text-zinc-300 transition">갤러리</div>
+      </a>
+      <a href="/admin/store" class="text-center group cursor-pointer">
+        <div class="text-3xl font-black text-white group-hover:text-[#c4ff00] transition">{{ store_count }}</div>
+        <div class="text-zinc-500 text-sm group-hover:text-zinc-300 transition">스토어</div>
+      </a>
+    </div>
+  </div>
+
+
+
+  <!-- 최근 활동 -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    
+    <!-- 최근 갤러리 -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-3 border-b border-zinc-800">
+        <div class="flex items-center gap-3">
+          <h3 class="font-bold text-sm">최근 갤러리</h3>
+          <button id="homeBulkDeleteBtn" onclick="homeBulkDelete()" class="hidden px-2 py-1 rounded bg-red-500/20 text-red-400 text-xs font-bold hover:bg-red-500/30 transition">
+            <span id="homeSelectedCount">0</span>개 삭제
+          </button>
+        </div>
+        <a href="/admin/gallery" class="text-[#c4ff00] text-xs hover:underline">전체 보기 →</a>
+      </div>
+      <div class="divide-y divide-zinc-800/50">
+        {% for post in recent_posts %}
+        <div class="px-5 py-3 flex items-center justify-between home-post-row" data-id="{{ post.id }}">
+          <div class="flex items-center gap-3 min-w-0">
+            <input type="checkbox" class="home-post-checkbox w-4 h-4 rounded accent-[#c4ff00]" value="{{ post.id }}" onchange="updateHomeSelectedCount()">
+            {% if post.thumbnail_url %}
+            <img src="{{ post.thumbnail_url }}" class="w-10 h-10 rounded-lg object-cover shrink-0">
+            {% else %}
+            <div class="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">🎬</div>
+            {% endif %}
+            <div class="min-w-0">
+              <div class="text-white text-sm font-medium truncate">{{ post.title }}</div>
+              <div class="text-zinc-500 text-xs">{{ post.category }}</div>
+            </div>
+          </div>
+          <a href="/admin/posts/{{ post.id }}/edit" class="text-zinc-500 hover:text-[#c4ff00] text-xs shrink-0">수정</a>
+        </div>
+        {% endfor %}
+        {% if not recent_posts %}
+        <div class="px-5 py-6 text-center text-zinc-500 text-sm">게시물이 없습니다</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- 최근 링크요청 -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-3 border-b border-zinc-800">
+        <h3 class="font-bold text-sm">최근 링크요청</h3>
+        <a href="/admin/link-requests" class="text-[#c4ff00] text-xs hover:underline">전체 보기 →</a>
+      </div>
+      <div class="divide-y divide-zinc-800/50">
+        {% for lr in recent_link_requests %}
+        <div class="px-5 py-3 flex items-center justify-between">
+          <div class="min-w-0">
+            <div class="text-white text-sm truncate">{{ lr.requester_email }}</div>
+            <div class="text-zinc-500 text-xs truncate">{{ lr.original_url[:40] }}...</div>
+          </div>
+          {% if lr.coupang_url %}
+            <span class="text-green-400 text-xs shrink-0">완료 ✓</span>
+          {% else %}
+            <span class="text-yellow-400 text-xs shrink-0">대기중</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+        {% if not recent_link_requests %}
+        <div class="px-5 py-6 text-center text-zinc-500 text-sm">링크요청이 없습니다</div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- 일괄 삭제 확인 모달 -->
+<div id="homeBulkDeleteModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center">
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm mx-4 text-center">
+    <div class="text-5xl mb-4">🗑️</div>
+    <h3 class="text-xl font-black text-white mb-2">일괄 삭제</h3>
+    <p class="text-zinc-400 mb-6"><span id="homeDeleteCountText">0</span>개의 게시물을 삭제하시겠습니까?</p>
+    <div class="flex gap-3">
+      <button onclick="closeHomeBulkDeleteModal()" class="flex-1 py-3 rounded-xl font-bold bg-zinc-800 text-white hover:bg-zinc-700 transition">취소</button>
+      <button onclick="confirmHomeBulkDelete()" class="flex-1 py-3 rounded-xl font-bold bg-red-500 text-white hover:bg-red-400 transition">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- 결과 모달 -->
+<div id="homeResultModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center">
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm mx-4 text-center">
+    <div id="homeResultIcon" class="text-5xl mb-4">✅</div>
+    <h3 id="homeResultTitle" class="text-xl font-black text-white mb-2">삭제 완료</h3>
+    <p id="homeResultMessage" class="text-zinc-400 mb-6"></p>
+    <button onclick="closeHomeResultModal()" class="w-full py-3 rounded-xl font-bold bg-[#c4ff00] text-black hover:bg-white transition">확인</button>
+  </div>
+</div>
+
+<script>
+function updateHomeSelectedCount() {
+  const checkboxes = document.querySelectorAll('.home-post-checkbox:checked');
+  const count = checkboxes.length;
+  const btn = document.getElementById('homeBulkDeleteBtn');
+  const countSpan = document.getElementById('homeSelectedCount');
+  
+  if (count > 0) {
+    btn.classList.remove('hidden');
+    countSpan.textContent = count;
+  } else {
+    btn.classList.add('hidden');
+  }
+}
+
+function homeBulkDelete() {
+  const checkboxes = document.querySelectorAll('.home-post-checkbox:checked');
+  document.getElementById('homeDeleteCountText').textContent = checkboxes.length;
+  document.getElementById('homeBulkDeleteModal').classList.remove('hidden');
+  document.getElementById('homeBulkDeleteModal').classList.add('flex');
+}
+
+function closeHomeBulkDeleteModal() {
+  document.getElementById('homeBulkDeleteModal').classList.add('hidden');
+  document.getElementById('homeBulkDeleteModal').classList.remove('flex');
+}
+
+async function confirmHomeBulkDelete() {
+  const checkboxes = document.querySelectorAll('.home-post-checkbox:checked');
+  const ids = Array.from(checkboxes).map(cb => parseInt(cb.value));
+  
+  closeHomeBulkDeleteModal();
+  
+  try {
+    const res = await fetch('/admin/gallery/bulk-delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids })
+    });
+    const data = await res.json();
+    
+    if (data.ok) {
+      showHomeResult('success', '삭제 완료', `${data.count}개의 게시물이 삭제되었습니다.`);
+      ids.forEach(id => {
+        const row = document.querySelector(`.home-post-row[data-id="${id}"]`);
+        if (row) row.remove();
+      });
+      updateHomeSelectedCount();
+    } else {
+      showHomeResult('error', '삭제 실패', data.error);
+    }
+  } catch (err) {
+    showHomeResult('error', '오류 발생', err.message);
+  }
+}
+
+function showHomeResult(type, title, message) {
+  document.getElementById('homeResultIcon').textContent = type === 'success' ? '✅' : '❌';
+  document.getElementById('homeResultTitle').textContent = title;
+  document.getElementById('homeResultMessage').textContent = message;
+  document.getElementById('homeResultModal').classList.remove('hidden');
+  document.getElementById('homeResultModal').classList.add('flex');
+}
+
+function closeHomeResultModal() {
+  document.getElementById('homeResultModal').classList.add('hidden');
+  document.getElementById('homeResultModal').classList.remove('flex');
+}
+</script>
+
+{% endblock %}

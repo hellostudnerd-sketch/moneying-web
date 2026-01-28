@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}신청자 관리 - MONEYING{% endblock %}
+
+{% block content %}
+
+<div class="max-w-4xl mx-auto">
+
+  <div class="mb-8">
+    <a href="/my/deals" class="text-zinc-500 hover:text-white transition text-sm">← 목록으로</a>
+    
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-4">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          {% if post.deal_closed %}
+            <span class="px-2 py-1 rounded text-xs font-bold bg-zinc-700 text-zinc-400">마감</span>
+          {% else %}
+            <span class="px-2 py-1 rounded text-xs font-bold bg-green-500/20 text-green-400">진행중</span>
+          {% endif %}
+        </div>
+        <h1 class="text-2xl md:text-3xl font-black">{{ post.title }}</h1>
+      </div>
+      
+      {% if not post.deal_closed %}
+      <button onclick="closeDeal()" class="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 font-bold rounded-lg hover:bg-red-500/30 transition text-sm">
+        마감하기
+      </button>
+      {% endif %}
+    </div>
+    
+    <!-- 통계 -->
+    <div class="grid grid-cols-3 gap-4 mt-6">
+      <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 text-center">
+        <div class="text-2xl font-black text-white">{{ applications|length }}</div>
+        <div class="text-xs text-zinc-500">총 신청</div>
+      </div>
+      <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 text-center">
+        <div class="text-2xl font-black text-green-400">{{ applications|selectattr('status', 'equalto', 'approved')|list|length }}</div>
+        <div class="text-xs text-zinc-500">승인</div>
+      </div>
+      <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 text-center">
+        <div class="text-2xl font-black text-yellow-400">{{ applications|selectattr('status', 'equalto', 'pending')|list|length }}</div>
+        <div class="text-xs text-zinc-500">대기</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 신청자 목록 -->
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
+    <div class="px-5 py-4 border-b border-zinc-800">
+      <h2 class="font-bold">신청자 목록</h2>
+    </div>
+    
+    {% if applications|length == 0 %}
+    <div class="p-10 text-center">
+      <div class="text-4xl mb-4">📋</div>
+      <div class="text-zinc-500 font-bold">아직 신청자가 없습니다</div>
+    </div>
+    {% else %}
+    <div class="divide-y divide-zinc-800/70">
+      {% for app in applications %}
+      <div class="p-5 hover:bg-zinc-800/30 transition" id="app-{{ app.id }}">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-2">
+              {% if app.status == 'approved' %}
+                <span class="px-2 py-1 rounded text-xs font-bold bg-green-500/20 text-green-400">승인됨</span>
+              {% elif app.status == 'rejected' %}
+                <span class="px-2 py-1 rounded text-xs font-bold bg-red-500/20 text-red-400">거절됨</span>
+              {% else %}
+                <span class="px-2 py-1 rounded text-xs font-bold bg-yellow-500/20 text-yellow-400">대기중</span>
+              {% endif %}
+              <span class="text-xs text-zinc-500">{{ app.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              <div>
+                <div class="text-zinc-500 text-xs">이름</div>
+                <div class="text-white font-bold">{{ app.name }}</div>
+              </div>
+              <div>
+                <div class="text-zinc-500 text-xs">연락처</div>
+                <div class="text-white">{{ app.phone }}</div>
+              </div>
+              <div>
+                <div class="text-zinc-500 text-xs">이메일</div>
+                <div class="text-white truncate">{{ app.user_email }}</div>
+              </div>
+              {% if app.sns_url %}
+              <div>
+                <div class="text-zinc-500 text-xs">SNS</div>
+                <a href="{{ app.sns_url }}" target="_blank" class="text-[#c4ff00] hover:underline truncate block">{{ app.sns_url[:30] }}...</a>
+              </div>
+              {% endif %}
+            </div>
+            
+            {% if app.message %}
+            <div class="mt-3 p-3 bg-zinc-800/50 rounded-lg">
+              <div class="text-zinc-500 text-xs mb-1">메시지</div>
+              <div class="text-zinc-300 text-sm">{{ app.message }}</div>
+            </div>
+            {% endif %}
+          </div>
+          
+          {% if app.status == 'pending' %}
+          <div class="flex gap-2 shrink-0">
+            <button onclick="approveApp({{ app.id }})" class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-bold">승인</button>
+            <button onclick="rejectApp({{ app.id }})" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-bold">거절</button>
+          </div>
+          {% endif %}
+          
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- 확인 모달 -->
+<div id="confirmModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center">
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm mx-4 text-center">
+    <div id="modalIcon" class="text-5xl mb-4">✅</div>
+    <h3 id="modalTitle" class="text-xl font-black text-white mb-2">승인하시겠습니까?</h3>
+    <p id="modalDesc" class="text-zinc-400 text-sm mb-6"></p>
+    <div class="flex gap-3">
+      <button onclick="closeModal()" class="flex-1 py-3 rounded-xl font-bold border border-zinc-600 text-white hover:bg-zinc-800 transition">취소</button>
+      <button id="modalConfirmBtn" onclick="confirmAction()" class="flex-1 py-3 rounded-xl font-bold bg-green-500 text-black hover:bg-green-400 transition">확인</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentAction = '';
+let currentAppId = null;
+
+function approveApp(appId) {
+  currentAction = 'approve';
+  currentAppId = appId;
+  showModal('승인', '이 신청을 승인하시겠습니까?', 'green');
+}
+
+function rejectApp(appId) {
+  currentAction = 'reject';
+  currentAppId = appId;
+  showModal('거절', '이 신청을 거절하시겠습니까?', 'red');
+}
+
+function closeDeal() {
+  currentAction = 'close';
+  showModal('마감', '이 공구/협찬을 마감하시겠습니까? 더 이상 신청을 받을 수 없습니다.', 'red');
+}
+
+function showModal(title, desc, color) {
+  document.getElementById('modalIcon').textContent = color === 'green' ? '✅' : '❌';
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalDesc').textContent = desc;
+  
+  const btn = document.getElementById('modalConfirmBtn');
+  btn.className = color === 'green' 
+    ? 'flex-1 py-3 rounded-xl font-bold bg-green-500 text-black hover:bg-green-400 transition'
+    : 'flex-1 py-3 rounded-xl font-bold bg-red-500 text-white hover:bg-red-400 transition';
+  
+  document.getElementById('confirmModal').classList.remove('hidden');
+  document.getElementById('confirmModal').classList.add('flex');
+}
+
+function closeModal() {
+  document.getElementById('confirmModal').classList.add('hidden');
+  document.getElementById('confirmModal').classList.remove('flex');
+  currentAction = '';
+  currentAppId = null;
+}
+
+function confirmAction() {
+  let url = '';
+  
+  if (currentAction === 'approve') {
+    url = `/my/deals/{{ post.id }}/approve/${currentAppId}`;
+  } else if (currentAction === 'reject') {
+    url = `/my/deals/{{ post.id }}/reject/${currentAppId}`;
+  } else if (currentAction === 'close') {
+    url = `/my/deals/{{ post.id }}/close`;
+  }
+  
+  fetch(url, { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        location.reload();
+      } else {
+        alert('오류: ' + (data.error || 'unknown'));
+      }
+    });
+}
+
+// 모달 바깥 클릭시 닫기
+document.getElementById('confirmModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+
+{% endblock %}

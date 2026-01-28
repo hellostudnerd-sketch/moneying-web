@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% block title %}공구/협찬 - MONEYING{% endblock %}
+
+{% block head_extra %}
+<style>
+/* ===== 네온 컬러 ===== */
+:root {
+  --neon-lime: #c4ff00;
+}
+
+/* ===== 필터 버튼 ===== */
+.filter-btn {
+  background: rgba(39, 39, 42, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #a1a1aa;
+  transition: all 0.2s ease;
+}
+.filter-btn:hover {
+  background: rgba(63, 63, 70, 0.6);
+  border-color: rgba(255,255,255,0.2);
+  color: #e4e4e7;
+}
+.filter-btn.active {
+  background: var(--neon-lime);
+  border-color: var(--neon-lime);
+  color: #000;
+  box-shadow: 0 0 20px rgba(196, 255, 0, 0.3);
+}
+
+/* ===== 카드 스타일 ===== */
+.deal-card {
+  background: linear-gradient(135deg, rgba(24, 24, 27, 0.9), rgba(9, 9, 11, 0.95));
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.deal-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+}
+
+.deal-card:hover {
+  border-color: rgba(196, 255, 0, 0.3);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 30px rgba(196, 255, 0, 0.1);
+}
+
+/* ===== 상태 배지 ===== */
+.badge-groupbuy {
+  background: var(--neon-lime);
+  color: #000;
+  box-shadow: 0 0 15px rgba(196, 255, 0, 0.4);
+}
+
+.badge-sponsor {
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  color: #fff;
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+}
+
+.badge-subscriber {
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(196, 255, 0, 0.3);
+}
+
+/* ===== 마감 오버레이 ===== */
+.closed-overlay {
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(4px);
+}
+
+/* ===== 진행률 바 ===== */
+.progress-bar {
+  background: rgba(255,255,255,0.1);
+  overflow: hidden;
+}
+.progress-fill {
+  background: linear-gradient(90deg, var(--neon-lime), #84cc16);
+  transition: width 0.5s ease;
+}
+.progress-fill.full {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+/* ===== 버튼 ===== */
+.btn-detail {
+  background: rgba(39, 39, 42, 0.8);
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.3s ease;
+}
+.btn-detail:hover {
+  background: var(--neon-lime);
+  border-color: var(--neon-lime);
+  color: #000;
+  box-shadow: 0 0 20px rgba(196, 255, 0, 0.3);
+}
+.btn-disabled {
+  background: rgba(39, 39, 42, 0.5);
+  color: #52525b;
+  cursor: not-allowed;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+  <!-- 헤더 -->
+  <div class="mb-8">
+    <h1 class="text-3xl md:text-4xl font-black">
+      공구/<span class="text-[#c4ff00]" style="text-shadow: 0 0 30px rgba(196,255,0,0.3);">협찬</span>
+    </h1>
+    <p class="text-zinc-400 mt-2">브랜드와 함께하는 특별한 기회를 잡으세요</p>
+  </div>
+
+  <!-- 필터 -->
+  <div class="flex gap-2 mb-8">
+    <button onclick="filterItems('all')" class="filter-btn active px-5 py-2 rounded-full text-sm font-bold" data-filter="all">전체</button>
+    <button onclick="filterItems('groupbuy')" class="filter-btn px-5 py-2 rounded-full text-sm font-bold" data-filter="groupbuy">🛒 공구</button>
+    <button onclick="filterItems('sponsorship')" class="filter-btn px-5 py-2 rounded-full text-sm font-bold" data-filter="sponsorship">🎁 협찬</button>
+  </div>
+
+  {% if items %}
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="itemGrid">
+    {% for item in items %}
+    {% set is_closed = item.is_ended() or item.status == 'closed' %}
+    {% set is_full = item.is_full() %}
+    {% set progress = (item.current_count() / item.max_participants * 100) if item.max_participants > 0 else 0 %}
+    
+    <div class="deal-card item-card rounded-2xl overflow-hidden" data-category="{{ item.category }}">
+      <!-- 이미지 -->
+      <div class="relative aspect-video bg-zinc-800/50">
+        {% if item.image %}
+        <img src="{{ item.image }}" alt="{{ item.title }}" class="w-full h-full object-cover">
+        {% else %}
+        <div class="w-full h-full flex items-center justify-center text-5xl bg-gradient-to-br from-zinc-800 to-zinc-900">
+          {% if item.category == 'sponsorship' %}🎁{% else %}🛒{% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- 마감 오버레이 -->
+        {% if is_closed %}
+        <div class="closed-overlay absolute inset-0 flex items-center justify-center">
+          <span class="text-2xl font-black text-zinc-400">마감</span>
+        </div>
+        {% elif is_full %}
+        <div class="closed-overlay absolute inset-0 flex items-center justify-center">
+          <span class="text-2xl font-black text-red-400">인원 마감</span>
+        </div>
+        {% else %}
+        <!-- 카테고리 배지 -->
+        <div class="absolute top-3 left-3">
+          <span class="px-3 py-1.5 rounded-full text-xs font-black {% if item.category == 'sponsorship' %}badge-sponsor{% else %}badge-groupbuy{% endif %}">
+            {% if item.category == 'sponsorship' %}🎁 협찬{% else %}🛒 공구{% endif %}
+          </span>
+        </div>
+        {% endif %}
+        
+        <!-- 구독자 전용 -->
+        {% if item.subscribers_only and not is_closed %}
+        <div class="absolute top-3 right-3">
+          <span class="badge-subscriber px-2 py-1 rounded text-xs text-[#c4ff00] font-bold">👑 구독자 전용</span>
+        </div>
+        {% endif %}
+      </div>
+      
+      <!-- 내용 -->
+      <div class="p-5">
+        {% if item.brand %}
+        <p class="text-zinc-500 text-xs font-bold mb-1 uppercase tracking-wider">{{ item.brand }}</p>
+        {% endif %}
+        <h3 class="font-bold text-lg text-white mb-3 line-clamp-2">{{ item.title }}</h3>
+        
+        <!-- 진행률 (인원 제한 있을 때) -->
+        {% if item.max_participants > 0 %}
+        <div class="mb-3">
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-zinc-400">신청 현황</span>
+            <span class="{% if is_full %}text-red-400{% else %}text-[#c4ff00]{% endif %} font-bold">
+              {{ item.current_count() }}/{{ item.max_participants }}명
+            </span>
+          </div>
+          <div class="progress-bar h-2 rounded-full">
+            <div class="progress-fill h-full rounded-full {% if is_full %}full{% endif %}" style="width: {{ progress }}%"></div>
+          </div>
+        </div>
+        {% else %}
+        <div class="flex items-center gap-2 text-sm text-zinc-400 mb-3">
+          <span>👥 {{ item.current_count() }}명 신청</span>
+        </div>
+        {% endif %}
+        
+        <!-- 마감일 -->
+        {% if item.end_date %}
+        <div class="flex items-center gap-2 text-sm text-zinc-400 mb-4">
+          <span>⏰ {{ item.end_date.strftime('%Y.%m.%d %H:%M') }}까지</span>
+        </div>
+        {% endif %}
+        
+        <a href="{{ url_for('groupbuy_detail', item_id=item.id) }}" 
+           class="block w-full py-3 rounded-xl text-center font-bold
+             {% if is_closed or is_full %}btn-disabled{% else %}btn-detail text-white{% endif %}">
+          {% if is_closed %}마감됨{% elif is_full %}인원 마감{% else %}자세히 보기 →{% endif %}
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-20">
+    <div class="text-6xl mb-4">📭</div>
+    <p class="text-zinc-400 font-bold text-lg">진행 중인 공구/협찬이 없습니다</p>
+    <p class="text-zinc-500 text-sm mt-2">새로운 기회가 열리면 알려드릴게요!</p>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function filterItems(category) {
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  document.querySelector(`[data-filter="${category}"]`).classList.add('active');
+  
+  document.querySelectorAll('.item-card').forEach(card => {
+    if (category === 'all' || card.dataset.category === category) {
+      card.style.display = 'block';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+</script>
+{% endblock %}

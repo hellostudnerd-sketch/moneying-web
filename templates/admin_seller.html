@@ -1,0 +1,167 @@
+{% extends "admin_base.html" %}
+{% block title %}판매자 관리{% endblock %}
+{% block page_title %}판매자 관리{% endblock %}
+{% block page_desc %}판매자 전환 신청 목록{% endblock %}
+
+{% block content_admin %}
+
+  <!-- 필터 탭 -->
+  <div class="flex gap-2 mb-6">
+    <a href="?status=pending" class="px-4 py-2 rounded-lg font-bold text-sm transition {% if status_filter == 'pending' %}bg-[#a3e635] text-black{% else %}bg-zinc-800 text-zinc-400 hover:bg-zinc-700{% endif %}">
+      대기중
+    </a>
+    <a href="?status=approved" class="px-4 py-2 rounded-lg font-bold text-sm transition {% if status_filter == 'approved' %}bg-[#a3e635] text-black{% else %}bg-zinc-800 text-zinc-400 hover:bg-zinc-700{% endif %}">
+      승인됨
+    </a>
+    <a href="?status=rejected" class="px-4 py-2 rounded-lg font-bold text-sm transition {% if status_filter == 'rejected' %}bg-[#a3e635] text-black{% else %}bg-zinc-800 text-zinc-400 hover:bg-zinc-700{% endif %}">
+      거절됨
+    </a>
+    <a href="?status=all" class="px-4 py-2 rounded-lg font-bold text-sm transition {% if status_filter == 'all' %}bg-[#a3e635] text-black{% else %}bg-zinc-800 text-zinc-400 hover:bg-zinc-700{% endif %}">
+      전체
+    </a>
+  </div>
+
+  <!-- 목록 -->
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
+    {% if users|length == 0 %}
+      <div class="p-10 text-center">
+        <div class="text-4xl mb-4">📋</div>
+        <div class="text-zinc-500 font-bold">신청 내역이 없습니다</div>
+      </div>
+    {% else %}
+      <table class="w-full">
+        <thead class="bg-zinc-800/50">
+          <tr>
+            <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">이메일</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">업체명</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">카테고리</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">신청일</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">상태</th>
+            <th class="px-6 py-4 text-right text-xs font-bold text-zinc-500 uppercase">액션</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-zinc-800/70">
+          {% for user in users %}
+            <tr class="hover:bg-zinc-800/30 transition" id="row-{{ user.id }}">
+              <td class="px-6 py-4">
+                <div class="font-bold text-white">{{ user.email }}</div>
+              </td>
+              <td class="px-6 py-4 text-zinc-300">{{ user.seller_company or '-' }}</td>
+              <td class="px-6 py-4 text-zinc-300">{{ user.seller_category or '-' }}</td>
+              <td class="px-6 py-4 text-zinc-500 text-sm">{{ user.seller_applied_at.strftime('%Y-%m-%d') if user.seller_applied_at else '-' }}</td>
+              <td class="px-6 py-4">
+                {% if user.seller_status == 'approved' %}
+                  <span class="px-3 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 text-xs font-bold">승인됨</span>
+                {% elif user.seller_status == 'pending' %}
+                  <span class="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 text-xs font-bold">대기중</span>
+                {% else %}
+                  <span class="px-3 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-bold">거절됨</span>
+                {% endif %}
+              </td>
+              <td class="px-6 py-4 text-right">
+                {% if user.seller_status == 'pending' %}
+                  <button onclick="showModal('approve', {{ user.id }}, '{{ user.email }}')" class="px-3 py-1 bg-green-600 hover:bg-green-500 text-white rounded text-sm font-bold mr-2">승인</button>
+                  <button onclick="showModal('reject', {{ user.id }}, '{{ user.email }}')" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-sm font-bold">거절</button>
+                {% elif user.seller_status == 'approved' %}
+                  <span class="text-zinc-500 text-sm">활동중</span>
+                {% else %}
+                  <button onclick="showModal('approve', {{ user.id }}, '{{ user.email }}')" class="px-3 py-1 bg-zinc-700 hover:bg-zinc-600 text-white rounded text-sm font-bold">재승인</button>
+                {% endif %}
+              </td>
+            </tr>
+            {% if user.seller_intro %}
+              <tr class="bg-zinc-900/30">
+                <td colspan="6" class="px-6 py-3">
+                  <div class="text-zinc-500 text-sm">
+                    <strong class="text-zinc-400">소개:</strong> {{ user.seller_intro }}
+                  </div>
+                </td>
+              </tr>
+            {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- 확인 모달 -->
+<div id="confirmModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center">
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm mx-4 text-center">
+    <div id="modalIcon" class="text-5xl mb-4">✅</div>
+    <h3 id="modalTitle" class="text-xl font-black text-white mb-2">승인하시겠습니까?</h3>
+    <p id="modalDesc" class="text-zinc-400 text-sm mb-6">이메일</p>
+    <div class="flex gap-3">
+      <button onclick="closeModal()" class="flex-1 py-3 rounded-xl font-bold border border-zinc-600 text-white hover:bg-zinc-800 transition">취소</button>
+      <button id="modalConfirmBtn" onclick="confirmAction()" class="flex-1 py-3 rounded-xl font-bold bg-green-500 text-black hover:bg-green-400 transition">확인</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentAction = '';
+let currentUserId = null;
+
+function showModal(action, userId, email) {
+  currentAction = action;
+  currentUserId = userId;
+  
+  const modal = document.getElementById('confirmModal');
+  const icon = document.getElementById('modalIcon');
+  const title = document.getElementById('modalTitle');
+  const desc = document.getElementById('modalDesc');
+  const btn = document.getElementById('modalConfirmBtn');
+  
+  if (action === 'approve') {
+    icon.textContent = '✅';
+    title.textContent = '판매자 승인';
+    desc.textContent = `${email} 님을 판매자로 승인하시겠습니까?`;
+    btn.className = 'flex-1 py-3 rounded-xl font-bold bg-green-500 text-black hover:bg-green-400 transition';
+    btn.textContent = '승인';
+  } else {
+    icon.textContent = '❌';
+    title.textContent = '판매자 거절';
+    desc.textContent = `${email} 님의 신청을 거절하시겠습니까?`;
+    btn.className = 'flex-1 py-3 rounded-xl font-bold bg-red-500 text-white hover:bg-red-400 transition';
+    btn.textContent = '거절';
+  }
+  
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeModal() {
+  const modal = document.getElementById('confirmModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+  currentAction = '';
+  currentUserId = null;
+}
+
+function confirmAction() {
+  if (!currentUserId) return;
+  
+  const url = currentAction === 'approve' 
+    ? `/admin/sellers/${currentUserId}/approve`
+    : `/admin/sellers/${currentUserId}/reject`;
+  
+  fetch(url, { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        closeModal();
+        location.reload();
+      } else {
+        alert('오류: ' + (data.error || 'unknown'));
+      }
+    });
+}
+
+// 모달 바깥 클릭시 닫기
+document.getElementById('confirmModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+
+{% endblock %}

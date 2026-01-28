@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}지식 스토어 - MONEYING{% endblock %}
+
+{% block head_extra %}
+<style>
+    .product-card:hover { transform: translateY(-5px); border-color: #a3e635; }
+    .filter-btn { background: transparent; border: 1px solid #3f3f46; color: #a1a1aa; transition: all .15s ease; }
+    .filter-btn:hover { background: #27272a; color: #fff; }
+    .filter-btn.active { background: #fff; border-color: #fff; color: #000; font-weight: 700; }
+    .topic-btn.active { color: #fff; font-weight: bold; border-bottom: 2px solid #fff; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+{% endblock %}
+
+{% block main_class %}max-w-7xl mx-auto px-4 md:px-6 pt-24 md:pt-28 pb-20{% endblock %}
+
+{% block content %}
+<!-- 헤더 -->
+<div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
+    <div>
+        <h1 class="text-3xl md:text-4xl font-black">지식 스토어</h1>
+        <p class="text-zinc-400 mt-2">시행착오를 줄여주는 10억 수익 노하우의 정수</p>
+    </div>
+</div>
+
+<!-- 카테고리 필터 -->
+<div class="flex gap-2 overflow-x-auto no-scrollbar mb-4">
+    <button class="filter-btn active px-5 py-2 rounded-full text-sm whitespace-nowrap" onclick="setFilter('type', 'all', this)">전체 상품</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" onclick="setFilter('type', 'ebook', this)">전자책</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" onclick="setFilter('type', 'vod', this)">VOD 강의</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" onclick="setFilter('type', 'program', this)">프로그램</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" onclick="setFilter('type', 'template', this)">템플릿</button>
+</div>
+
+<!-- 토픽 필터 -->
+<div class="flex space-x-6 overflow-x-auto no-scrollbar text-sm text-gray-400 mb-8">
+    <button class="topic-btn active hover:text-white transition pb-1 whitespace-nowrap" onclick="setFilter('topic', 'all', this)">#전체보기</button>
+    <button class="topic-btn hover:text-white transition pb-1 whitespace-nowrap" onclick="setFilter('topic', 'shortform', this)">#숏폼 부업</button>
+    <button class="topic-btn hover:text-white transition pb-1 whitespace-nowrap" onclick="setFilter('topic', 'longform', this)">#롱폼/유튜브</button>
+    <button class="topic-btn hover:text-white transition pb-1 whitespace-nowrap" onclick="setFilter('topic', 'publishing', this)">#전자책 출판</button>
+    <button class="topic-btn hover:text-white transition pb-1 whitespace-nowrap" onclick="setFilter('topic', 'realestate', this)">#부동산/경매</button>
+</div>
+
+<div class="pb-10">
+    {% if products|length == 0 %}
+    <div class="text-center py-20">
+        <div class="text-6xl mb-4">📦</div>
+        <h3 class="text-xl font-bold text-zinc-400 mb-2">아직 등록된 상품이 없습니다</h3>
+        <p class="text-zinc-500">곧 새로운 상품이 추가될 예정입니다!</p>
+    </div>
+    {% else %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="product-grid">
+        <!-- 크롬 확장 프로그램 (고정) -->
+        <a href="/store/chrome-extension" class="product-card bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden transition cursor-pointer group flex flex-col" data-type="program" data-topic="shortform">
+            <div class="relative h-56 bg-zinc-800 overflow-hidden">
+                <img src="https://image2url.com/r2/default/images/1769523323667-1c8e6e17-d01e-44ec-ae5f-141e8f3942a6.png" class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition duration-500">
+                <div class="absolute top-3 left-3 bg-[#c4ff00] text-black text-xs font-black px-2 py-1 rounded">무료</div>
+                <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent opacity-90"></div>
+            </div>
+            <div class="p-6 flex-1 flex flex-col">
+                <div class="flex gap-2 mb-3">
+                    <span class="text-white text-[11px] font-bold border border-zinc-600 px-2 py-0.5 rounded">프로그램</span>
+                    <span class="text-blue-400 text-[11px] font-bold border border-blue-600 px-2 py-0.5 rounded">Chrome</span>
+                </div>
+                <h3 class="text-lg font-bold text-white mb-2 line-clamp-2">쿠팡 파트너스 링크 변환기</h3>
+                <p class="text-gray-400 text-xs mb-4 line-clamp-2">쿠팡 상품 페이지에서 1초 만에 파트너스 링크 생성 & 복사. 로그인 불필요!</p>
+                <div class="mt-auto pt-4 border-t border-zinc-800 flex justify-between items-center">
+                    <span class="text-gray-500 text-xs">MONEYING</span>
+                    <span class="text-[#c4ff00] font-bold text-lg">무료</span>
+                </div>
+            </div>
+        </a>
+        
+        {% for p in products %}
+        <a href="/store/{{ p.id }}" class="product-card bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden transition cursor-pointer group flex flex-col" data-type="{{ p.category }}" data-topic="{{ p.topic }}">
+            <div class="relative h-56 bg-zinc-800 overflow-hidden">
+                {% if p.image %}
+                    {% if p.image.startswith('http') %}<img src="{{ p.image }}" class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition duration-500">
+                    {% else %}<img src="/static/uploads/{{ p.image }}" class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition duration-500">{% endif %}
+                {% else %}<div class="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center"><i class="fas fa-box-open text-4xl text-zinc-600"></i></div>{% endif %}
+                {% if p.badge or p.price == 0 %}
+                    {% if p.price == 0 %}<div class="absolute top-3 left-3 bg-[#c4ff00] text-black text-xs font-black px-2 py-1 rounded">무료</div>
+                    {% elif p.badge == 'BEST' %}<div class="absolute top-3 left-3 bg-white text-black text-xs font-black px-2 py-1 rounded uppercase">{{ p.badge }}</div>
+                    {% elif p.badge == 'NEW' %}<div class="absolute top-3 left-3 bg-[#c4ff00] text-black text-xs font-black px-2 py-1 rounded">{{ p.badge }}</div>
+                    {% else %}<div class="absolute top-3 left-3 bg-[#c4ff00] text-black text-xs font-black px-2 py-1 rounded">{{ p.badge }}</div>{% endif %}
+                {% endif %}
+                {% if p.category == 'vod' %}<div class="absolute inset-0 flex items-center justify-center"><div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center group-hover:scale-110 transition"><i class="fas fa-play text-2xl text-white ml-1"></i></div></div>{% endif %}
+                <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent opacity-90"></div>
+            </div>
+            <div class="p-6 flex-1 flex flex-col">
+                <div class="flex gap-2 mb-3">
+                    {% if p.category == 'ebook' %}<span class="text-white text-[11px] font-bold border border-zinc-600 px-2 py-0.5 rounded">전자책</span>
+                    {% elif p.category == 'vod' %}<span class="text-white text-[11px] font-bold border border-zinc-600 px-2 py-0.5 rounded">VOD</span>
+                    {% elif p.category == 'program' %}<span class="text-white text-[11px] font-bold border border-zinc-600 px-2 py-0.5 rounded">프로그램</span>
+                    {% elif p.category == 'template' %}<span class="text-white text-[11px] font-bold border border-zinc-600 px-2 py-0.5 rounded">템플릿</span>
+                    {% else %}<span class="text-gray-400 text-[11px] font-bold border border-gray-600 px-2 py-0.5 rounded">기타</span>{% endif %}
+                    {% if p.topic == 'shortform' %}<span class="text-gray-400 text-[11px] font-bold border border-zinc-600 px-2 py-0.5 rounded">숏폼</span>{% endif %}
+                </div>
+                <h3 class="text-lg font-bold text-white mb-2 line-clamp-2">{{ p.title }}</h3>
+                <p class="text-gray-400 text-xs mb-4 line-clamp-2">{{ p.description|striptags|truncate(100) }}</p>
+                <div class="mt-auto pt-4 border-t border-zinc-800 flex justify-between items-center">
+                    <span class="text-gray-500 text-xs">MONEYING</span>
+                    {% if p.price == 0 %}
+                    <span class="text-[#c4ff00] font-bold text-lg">무료</span>
+                    {% else %}
+                    <span class="text-white font-bold text-lg">{{ "{:,}".format(p.price) }}원</span>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<div id="productModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 hidden backdrop-blur-sm p-4">
+    <div class="bg-zinc-900 w-full max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl border border-zinc-700 relative flex flex-col md:flex-row">
+        <button onclick="closeProductModal()" class="absolute top-4 right-4 z-20 text-white bg-black/50 rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-500 transition"><i class="fas fa-times"></i></button>
+        <div class="w-full md:w-1/2 h-64 md:h-auto bg-black"><img id="modalImg" src="" class="w-full h-full object-cover opacity-90"></div>
+        <div class="w-full md:w-1/2 p-8 flex flex-col overflow-y-auto">
+            <div class="mb-6">
+                <span id="modalType" class="text-highlight text-xs font-bold border border-highlight/30 px-2 py-1 rounded mb-3 inline-block">전자책</span>
+                <h2 id="modalTitle" class="text-2xl md:text-3xl font-bold text-white leading-tight mb-4">상품 제목</h2>
+                <p id="modalDesc" class="text-gray-400 text-sm leading-relaxed border-t border-zinc-800 pt-4 whitespace-pre-line">상품 설명</p>
+            </div>
+            <div class="mt-auto">
+                <div class="flex justify-between items-end mb-4"><span class="text-gray-500 text-sm">판매가</span><span id="modalPrice" class="text-3xl font-bold text-white">29,000원</span></div>
+                <div class="flex gap-3">
+                    <button onclick="closeProductModal()" class="flex-1 border border-zinc-600 text-white py-3 rounded-lg hover:bg-zinc-800 transition font-bold">닫기</button>
+                    <a id="modalBuyBtn" href="#" class="flex-1 bg-highlight text-black py-3 rounded-lg hover:bg-white transition font-bold shadow-lg text-center">구매하기</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const productData = { {% for p in products %}{{ p.id }}: { title: "{{ p.title|e }}", category: "{{ p.category }}", price: {{ p.price }}, priceText: "{{ '{:,}'.format(p.price) }}원", description: `{{ p.description|e|replace('\n', '\\n') }}`, {% if p.image %}{% if p.image.startswith('http') %}image: "{{ p.image }}",{% else %}image: "/static/uploads/{{ p.image }}",{% endif %}{% else %}image: "",{% endif %} fileUrl: "{{ p.file_url or '' }}" },{% endfor %} };
+let currentFilters = { type: 'all', topic: 'all' };
+function setFilter(key, value, btn) { currentFilters[key] = value; const g = btn.parentElement; if (key === 'type') { g.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); } else { g.querySelectorAll('.topic-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); } applyFilters(); }
+function applyFilters() { document.querySelectorAll('.product-card').forEach(item => { item.style.display = (currentFilters.type === 'all' || item.dataset.type === currentFilters.type) && (currentFilters.topic === 'all' || item.dataset.topic === currentFilters.topic) ? 'flex' : 'none'; }); }
+function getCategoryLabel(c) { return {'ebook':'전자책','vod':'VOD 강의','program':'프로그램','template':'템플릿'}[c] || '기타'; }
+function openProductModal(id) { const d = productData[id]; if (!d) return; document.getElementById('modalImg').src = d.image || ''; document.getElementById('modalType').innerText = getCategoryLabel(d.category); document.getElementById('modalTitle').innerText = d.title; document.getElementById('modalPrice').innerText = d.priceText; document.getElementById('modalDesc').innerText = d.description || ''; const btn = document.getElementById('modalBuyBtn'); if (d.fileUrl) { btn.href = d.fileUrl; btn.target = '_blank'; } else { btn.href = '#'; btn.onclick = () => alert('구매 링크가 아직 등록되지 않았습니다.'); } document.getElementById('productModal').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+function closeProductModal() { document.getElementById('productModal').classList.add('hidden'); document.body.style.overflow = ''; }
+document.getElementById('productModal').addEventListener('click', function(e) { if (e.target === this) closeProductModal(); });
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeProductModal(); });
+</script>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}로그인 - MONEYING{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto px-4">
+  
+  <div class="text-center mb-6 md:mb-8">
+    <h1 class="text-2xl md:text-3xl font-black mb-2">로그인</h1>
+    <p class="text-zinc-400 text-sm md:text-base">다시 오셨군요! 환영합니다.</p>
+  </div>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-4 md:mb-6 text-sm">
+          {{ msg }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" class="space-y-4 md:space-y-5" autocomplete="off">
+    <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
+    
+    <div>
+      <label class="block text-sm font-bold text-zinc-300 mb-2">이메일</label>
+      <input type="email" name="email" required autocomplete="new-email"
+             class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-base focus:border-[#a3e635] focus:outline-none transition placeholder:text-zinc-600">
+    </div>
+
+    <div>
+      <label class="block text-sm font-bold text-zinc-300 mb-2">비밀번호</label>
+      <input type="password" name="password" required autocomplete="new-password"
+             class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-base focus:border-[#a3e635] focus:outline-none transition placeholder:text-zinc-600">
+    </div>
+
+    <button type="submit"
+            class="w-full bg-[#a3e635] text-black font-black py-3.5 md:py-4 rounded-xl hover:bg-white transition text-base md:text-lg">
+      로그인
+    </button>
+  </form>
+
+  <div class="mt-4 md:mt-6 text-center">
+    <a href="/forgot-password" class="text-zinc-500 text-sm hover:text-white">비밀번호를 잊으셨나요?</a>
+  </div>
+
+  <div class="mt-6 md:mt-8 text-center">
+    <p class="text-zinc-500 text-sm">
+      아직 계정이 없으신가요?
+      <a href="/register" class="text-[#a3e635] font-bold hover:underline">회원가입</a>
+    </p>
+  </div>
+
+  <!-- 카카오 로그인 (추후) -->
+  <div class="mt-6 pt-6 border-t border-zinc-800">
+    <button disabled class="w-full bg-[#FEE500] text-[#3C1E1E] font-bold py-3 rounded-xl flex items-center justify-center gap-2 opacity-50 cursor-not-allowed text-sm md:text-base">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 3C6.48 3 2 6.58 2 11c0 2.8 1.8 5.27 4.5 6.7-.2.74-.7 2.68-.8 3.1-.13.5.18.5.38.36.16-.1 2.46-1.66 3.46-2.33.48.07.97.1 1.46.1 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
+      </svg>
+      카카오로 시작하기 (준비중)
+    </button>
+  </div>
+
+</div>
+{% endblock %}
