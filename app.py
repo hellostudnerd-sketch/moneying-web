@@ -408,9 +408,17 @@ def save_upload(file_storage):
     ext = os.path.splitext(filename)[1].lower()
     if ext and ext not in ALLOWED_EXT:
         return ""
-    new_name = f"{uuid.uuid4().hex}{ext}"
+    new_name = f"{uuid.uuid4().hex}.webp"
     path = os.path.join(app.config["UPLOAD_FOLDER"], new_name)
-    file_storage.save(path)
+    
+    # 이미지 압축
+    from PIL import Image
+    img = Image.open(file_storage)
+    if img.mode in ('RGBA', 'P'):
+        img = img.convert('RGB')
+    img.thumbnail((1200, 1200), Image.LANCZOS)
+    img.save(path, 'WEBP', quality=80)
+    
     return new_name
 
 def parse_json_list_field(field_name: str):
