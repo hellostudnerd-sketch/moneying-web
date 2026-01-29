@@ -355,7 +355,7 @@ async function loadGallery(reset = false) {
   
   try {
     const category = (currentFilter === 'all' || currentFilter === 'bookmark' || currentFilter === 'recent' || currentFilter === 'popular') ? '' : currentFilter;
-    const res = await fetch(`/api/gallery?page=${currentPage}&category=${category}`);
+    const res = await fetch(`/api/gallery?page=${currentPage}&category=${category}&t=${Date.now()}`);
     const data = await res.json();
     
     allPosts = [...allPosts, ...data.posts];
