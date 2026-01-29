@@ -26,9 +26,12 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET", "moneying-perfect-final-safe")
 DATABASE_URL = os.getenv("DATABASE_URL")
+print(f"=== RAW DATABASE_URL: {DATABASE_URL} ===")
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+print(f"=== FINAL DATABASE_URL: {DATABASE_URL} ===")
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL or ("sqlite:///" + os.path.join(BASE_DIR, "database.db"))
+print(f"=== USING: {app.config['SQLALCHEMY_DATABASE_URI'][:50]}... ===")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # 이메일 설정
