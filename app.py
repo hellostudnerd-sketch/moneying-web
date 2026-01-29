@@ -325,6 +325,25 @@ class GroupBuyApplication(db.Model):
     
     __table_args__ = (db.UniqueConstraint('groupbuy_id', 'user_id'),)
 
+class DealApplication(db.Model):
+    """공구/협찬 신청 (커뮤니티용)"""
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('community_post.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    name = db.Column(db.String(50), nullable=True)
+    phone = db.Column(db.String(20), nullable=True)
+    sns_url = db.Column(db.String(500), nullable=True)
+    message = db.Column(db.Text, nullable=True)
+    
+    status = db.Column(db.String(20), default="pending")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    post = db.relationship('CommunityPost', backref='applications')
+    user = db.relationship('User', backref='deal_applications')
+    
+    __table_args__ = (db.UniqueConstraint('post_id', 'user_id'),)
+
 
 class Report(db.Model):
     """신고 모델"""
