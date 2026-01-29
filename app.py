@@ -765,6 +765,17 @@ def proof_page():
 def subscribe_info():
     return render_template("subscribe.html")
 
+@app.route("/terms")
+def terms():
+    return render_template("terms.html")
+
+@app.route("/privacy")
+def privacy():
+    return render_template("privacy.html")
+
+@app.route("/refund")
+def refund():
+    return render_template("refund.html")
 
 # ----------------------------
 # 무료 체험 신청
