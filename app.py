@@ -448,7 +448,7 @@ def save_upload(file_storage):
     )
     
     # R2 Public URL 반환
-    return f"https://pub-b6f9c47a567f57911cab3c58f07cfc61.r2.dev/{new_name}"
+    return f"https://pub-a2e6030a78b240aea6b998d958ae5b83.r2.dev/{new_name}"
 
 def parse_json_list_field(field_name: str):
     raw = (request.form.get(field_name) or "[]").strip()
