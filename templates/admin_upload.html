@@ -214,16 +214,17 @@
   function updateCount() { countText.innerText = `${uploadedFiles.length}/5`; }
 
   // 변경 후
+ // 변경 후
   function addPreviewThumb(filename) {
     const url = filename.startsWith('http') ? filename : `/static/uploads/${filename}`;
     const wrap = document.createElement("div");
-    wrap.className = "relative rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900";
+    wrap.className = "relative aspect-[9/16] rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900 group";
     wrap.innerHTML = `
-      <img src="${url}" class="w-full h-28 object-cover opacity-90">
-      <button class="absolute top-2 right-2 w-8 h-8 rounded-lg bg-black/60 hover:bg-red-500 text-white flex items-center justify-center border border-white/10">
-        <i class="fas fa-times text-sm"></i>
+      <img src="${url}" class="w-full h-full object-cover">
+      <button class="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+        <i class="fas fa-times text-xs"></i>
       </button>
-      ${uploadedFiles[0] === filename ? `<div class="absolute bottom-2 left-2 text-[10px] font-black bg-[#a3e635] text-black px-2 py-1 rounded">THUMB</div>` : ``}
+      ${uploadedFiles[0] === filename ? `<div class="absolute top-1 left-1 text-[10px] font-black bg-[#a3e635] text-black px-1.5 py-0.5 rounded">THUMB</div>` : ``}
     `;
     wrap.querySelector("button").onclick = () => {
       uploadedFiles = uploadedFiles.filter(x => x !== filename);
