@@ -1710,7 +1710,7 @@ def api_upload_file():
     saved = save_upload(f)
     if not saved:
         return jsonify({"ok": False, "error": "invalid_file"}), 400
-    return jsonify({"ok": True, "filename": saved, "url": url_for("static", filename=f"uploads/{saved}")})
+    return jsonify({"ok": True, "filename": saved, "url": saved})
 
 @app.route("/api/upload_public", methods=["POST"])
 def api_upload_public():
