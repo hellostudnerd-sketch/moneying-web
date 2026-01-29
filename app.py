@@ -415,18 +415,39 @@ def save_upload(file_storage):
     ext = os.path.splitext(filename)[1].lower()
     if ext and ext not in ALLOWED_EXT:
         return ""
-    new_name = f"{uuid.uuid4().hex}.webp"
-    path = os.path.join(app.config["UPLOAD_FOLDER"], new_name)
+    
+    import boto3
+    from io import BytesIO
+    from PIL import Image
     
     # 이미지 압축
-    from PIL import Image
     img = Image.open(file_storage)
     if img.mode in ('RGBA', 'P'):
         img = img.convert('RGB')
     img.thumbnail((1200, 1200), Image.LANCZOS)
-    img.save(path, 'WEBP', quality=80)
     
-    return new_name
+    buffer = BytesIO()
+    img.save(buffer, 'WEBP', quality=80)
+    buffer.seek(0)
+    
+    # R2 업로드
+    new_name = f"{uuid.uuid4().hex}.webp"
+    
+    s3 = boto3.client('s3',
+        endpoint_url=os.getenv('R2_ENDPOINT'),
+        aws_access_key_id=os.getenv('R2_ACCESS_KEY'),
+        aws_secret_access_key=os.getenv('R2_SECRET_KEY')
+    )
+    
+    s3.upload_fileobj(
+        buffer,
+        os.getenv('R2_BUCKET'),
+        new_name,
+        ExtraArgs={'ContentType': 'image/webp'}
+    )
+    
+    # R2 Public URL 반환
+    return f"https://pub-b6f9c47a567f57911cab3c58f07cfc61.r2.dev/{new_name}"
 
 def parse_json_list_field(field_name: str):
     raw = (request.form.get(field_name) or "[]").strip()
