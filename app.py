@@ -38,7 +38,7 @@ MAIL_FROM = os.getenv("MAIL_FROM", "noreply@moneying.co.kr")
 db = SQLAlchemy(app)
 @app.after_request
 def add_header(response):
-    if 'text/html' in response.content_type:
+    if 'text/html' in response.content_type or 'application/json' in response.content_type:
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
