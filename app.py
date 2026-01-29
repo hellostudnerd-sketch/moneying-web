@@ -435,14 +435,14 @@ def save_upload(file_storage):
     new_name = f"{uuid.uuid4().hex}.webp"
     
     s3 = boto3.client('s3',
-        endpoint_url=os.getenv('R2_ENDPOINT'),
-        aws_access_key_id=os.getenv('R2_ACCESS_KEY'),
-        aws_secret_access_key=os.getenv('R2_SECRET_KEY')
+        endpoint_url="https://b6f9c47a567f57911cab3c58f07cfc61.r2.cloudflarestorage.com",
+        aws_access_key_id="bd378a5b4a8c51dece8aeeec96c846e5",
+        aws_secret_access_key="f7001674ed1ee7f505a45f071891811db5e333c2a890f4f9f71a7f7be41c55f7"
     )
     
     s3.upload_fileobj(
         buffer,
-        os.getenv('R2_BUCKET'),
+        "moneying-uploads",
         new_name,
         ExtraArgs={'ContentType': 'image/webp'}
     )
