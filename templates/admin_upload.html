@@ -213,8 +213,9 @@
 
   function updateCount() { countText.innerText = `${uploadedFiles.length}/5`; }
 
+  // 변경 후
   function addPreviewThumb(filename) {
-    const url = `/static/uploads/${filename}`;
+    const url = filename.startsWith('http') ? filename : `/static/uploads/${filename}`;
     const wrap = document.createElement("div");
     wrap.className = "relative rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900";
     wrap.innerHTML = `
