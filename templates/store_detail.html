@@ -70,11 +70,11 @@
         {% endif %}
         
         <div class="space-y-3 mt-6">
-          {% if product.file_url %}
-          <!-- 외부 링크 -->
+          {% if product.price == 0 and product.file_url %}
+          <!-- 무료 다운로드 -->
           <a href="{{ product.file_url }}" target="_blank"
              class="block w-full bg-[#c4ff00] text-black font-black py-4 rounded-xl text-center hover:bg-white transition text-lg">
-            {% if product.price == 0 %}무료 다운로드{% else %}구매하기{% endif %}
+            무료 다운로드
           </a>
           {% elif product.price == 0 %}
           <!-- 무료인데 링크 없음 -->
@@ -83,11 +83,11 @@
             준비 중
           </button>
           {% else %}
-          <!-- 토스페이먼츠 연동 전 임시 -->
-          <a href="#" onclick="showAlert('준비 중', '결제 시스템 준비 중입니다.', '🔧'); return false;"
+          <!-- 유료 상품 - 결제 예정 모달 -->
+          <button onclick="openPaymentModal()"
              class="block w-full bg-[#c4ff00] text-black font-black py-4 rounded-xl text-center hover:bg-white transition text-lg">
             구매하기
-          </a>
+          </button>
           {% endif %}
         </div>
         
@@ -119,12 +119,36 @@
   
 </div>
 
+<!-- 결제 예정 모달 -->
+<div id="paymentModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center">
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-8 max-w-md mx-4 text-center">
+    <div class="text-6xl mb-4">💳</div>
+    <h3 class="text-2xl font-black text-white mb-2">결제 준비중</h3>
+    <p class="text-zinc-400 mb-6">결제 시스템을 준비하고 있습니다.<br>곧 구매하실 수 있어요!</p>
+    <button onclick="closePaymentModal()" class="w-full py-3 rounded-xl font-bold bg-[#c4ff00] text-black hover:bg-white transition">확인</button>
+  </div>
+</div>
+
 <script>
 function copyLink() {
   navigator.clipboard.writeText(window.location.href).then(() => {
     alert('링크가 복사되었습니다!');
   });
 }
+
+function openPaymentModal() {
+  document.getElementById('paymentModal').classList.remove('hidden');
+  document.getElementById('paymentModal').classList.add('flex');
+}
+
+function closePaymentModal() {
+  document.getElementById('paymentModal').classList.add('hidden');
+  document.getElementById('paymentModal').classList.remove('flex');
+}
+
+document.getElementById('paymentModal')?.addEventListener('click', function(e) {
+  if (e.target === this) closePaymentModal();
+});
 </script>
 
 {% endblock %}
