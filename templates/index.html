@@ -75,14 +75,6 @@
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 </head>
 <body class="pb-24 md:pb-0 overflow-x-hidden">
-<div id="announcementBar" class="bg-gradient-to-r from-[#c4ff00] to-[#a3e635] text-black text-sm font-bold text-center py-2.5 px-4 relative z-[100]">
-  <a href="/pricing" class="hover:underline">🎉 오픈 기념! 지금 가입하면 3일 무료체험 →</a>
-  <button onclick="closeAnnouncementBar()" class="absolute right-4 top-1/2 -translate-y-1/2 text-black/60 hover:text-black text-lg font-bold">×</button>
-</div>
-<script>
-  function closeAnnouncementBar() { document.getElementById('announcementBar').style.display = 'none'; localStorage.setItem('hideAnnouncement', Date.now() + 86400000); }
-  (function() { const hideUntil = localStorage.getItem('hideAnnouncement'); if (hideUntil && Date.now() < parseInt(hideUntil)) { document.getElementById('announcementBar').style.display = 'none'; } })();
-</script>
 {% include "partials/nav.html" %}
 
 <!-- Hero Section -->
@@ -148,7 +140,7 @@
 <section id="reality" class="py-24 bg-black"> 
     <div class="max-w-6xl mx-auto px-4">
         <div class="text-center mb-16 scroll-animate">
-            <h2 class="text-3xl md:text-5xl font-black mb-4 tracking-tight">요즘 물가는 미친듯이 올랐는데,<br><span class="text-white/40">왜 내 월급만 그대로인걸까요?</span></h2>
+            <h2 class="text-3xl md:text-5xl font-black mb-4 tracking-tight">"월급 빼고 다 오르는 세상,<br><span class="text-white/40">남 이야기 같지 않으시죠?"</span></h2>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="glass-card p-8 rounded-2xl scroll-animate" data-aos="fade-up">
@@ -178,8 +170,8 @@
 <section id="comparison" class="py-24 bg-black">
     <div class="max-w-6xl mx-auto px-4">
         <div class="text-center mb-12 scroll-animate">
-            <h2 class="text-3xl md:text-5xl font-black mb-4 tracking-tight">"부업, 이것저것 다 해봤는데.."<br><span class="text-highlight">결국 '숏폼'이 답입니다.</span></h2>
-            <p class="text-white/40">"안 해본 부업이 없습니다. 돌고 돌아 숏폼에 정착한 이유."</p>
+            <h2 class="text-3xl md:text-5xl font-black mb-4 tracking-tight">"부업, 이것저것 다 해보셨죠?"<br><span class="text-highlight">왜 결국 '숏폼'이어야 할까요?</span></h2>
+            <p class="text-white/40">안 해본 부업이 없습니다. 돌고 돌아 숏폼에 정착한 이유.</p>
         </div>
         <div class="overflow-x-auto scroll-animate" data-aos="fade-up">
             <table class="w-full text-left border-collapse comparison-table">
@@ -198,66 +190,45 @@
 
 <!-- Founder Story -->
 <section id="founder" class="py-24 bg-black">
-  <div class="max-w-4xl mx-auto px-4">
-    <div class="flex flex-col md:flex-row items-center gap-12">
-      
-      <!-- 수익 원 -->
-      <div class="w-full md:w-1/3">
-        <div class="aspect-square bg-black rounded-full border-4 border-[#c4ff00] flex flex-col items-center justify-center relative group cursor-pointer overflow-hidden hover:scale-105 transition duration-300" onclick="location.href='/proof'">
-          <div class="absolute inset-0 flex items-center justify-center bg-black/80 opacity-0 group-hover:opacity-100 transition z-20 backdrop-blur-sm">
-            <span class="border border-[#c4ff00] text-[#c4ff00] px-4 py-2 rounded-full text-sm font-bold">수익 증빙 보기 →</span>
-          </div>
-          <div class="text-center z-10">
-            <p class="text-zinc-500 text-xs font-bold mb-2 tracking-widest uppercase">Total Revenue</p>
-            <h3 class="text-6xl md:text-7xl font-black text-white leading-none">12<span class="text-[#c4ff00]">억</span><span class="text-2xl text-[#c4ff00]">+</span></h3>
-            <p class="text-zinc-600 text-xs mt-2">2년 누적 수익</p>
-          </div>
+    <div class="max-w-4xl mx-auto px-4">
+        <div class="flex flex-col md:flex-row items-center gap-12" data-aos="fade-up">
+            <div class="w-full md:w-1/3">
+                <div class="revenue-circle aspect-square bg-black rounded-full border-4 border-[#c4ff00] flex flex-col items-center justify-center relative group cursor-pointer overflow-hidden transform hover:scale-105 transition duration-300" onclick="location.href='/proof'">
+                    <div class="absolute inset-0 flex items-center justify-center text-white bg-black/80 opacity-0 group-hover:opacity-100 transition z-20 backdrop-blur-sm">
+                        <span class="border border-[#c4ff00] text-[#c4ff00] px-4 py-2 rounded-full text-sm">증빙 확인 🔍</span>
+                    </div>
+                    <div class="text-center z-10">
+                        <p class="text-white/40 text-sm font-bold mb-2 tracking-widest uppercase">Total Revenue</p>
+                        <h3 class="text-6xl md:text-7xl font-black text-white tracking-tighter leading-none mb-2">11<span class="text-highlight">억</span><span class="text-2xl text-highlight">+</span></h3>
+                        <p class="text-white/30 text-xs bg-white/5 px-3 py-1 rounded-full inline-block">2년 누적 수익</p>
+                    </div>
+                </div>
+            </div>
+            <div class="w-full md:w-2/3 text-left">
+                <span class="text-[#c4ff00] font-bold tracking-wider text-sm mb-2 block">FOUNDER STORY</span>
+                <h2 class="text-3xl md:text-4xl font-black mb-6 text-white keep-all leading-tight">"2년간 2차 가공 숏폼으로<br> 10억 이상 벌었습니다.<br><span class="text-white/50">근데 솔직히 제일 힘든 건<br> 매일 영상 찾는 것과<br> 쿠팡에 제품 찾기였어요.</span>"</h2>
+                <p class="text-white/40 mb-6 leading-relaxed keep-all">수익 자랑하려는 게 아니에요. <strong class="text-white">그 돈 벌기까지 가장 힘들었던 게 뭔지</strong> 말씀드리고 싶었습니다.</p>
+                <div class="glass-card p-5 rounded-xl border-l-4 border-red-500 text-white/60 mb-6">
+                    <strong class="text-red-400 block mb-2 text-sm"><i class="fas fa-exclamation-triangle"></i> 매일 반복되는 고통</strong>
+                    "퇴근하고 3시간 동안 해외 틱톡 뒤져서 영상 찾고... 막상 쿠팡에 그 제품이 없어서 못 쓰고... 이게 하루 이틀이 아니라 <strong class="text-white">매일</strong>이었습니다."
+                </div>
+                <p class="text-white/40 leading-relaxed keep-all mb-4">영상 편집은 30분이면 끝나는데, 소스 찾는 데 3시간...<strong class="text-white">너무 비효율적이라 그냥 제가 쓰려고 만들었습니다.</strong></p>
+                <div class="mb-8 pl-4 border-l-4 border-[#c4ff00]">
+                    <p class="text-white font-bold text-lg md:text-xl">"지금도 매일 씁니다. 진짜 편해요."</p>
+                    <p class="text-white/40 text-sm mt-1">저도 아직 현역 크리에이터입니다. 제가 안 쓸 거면 안 만들었습니다.</p>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-8">
+                    <img src="https://image2url.com/r2/default/images/1769511318377-c47b2e72-ea75-4e35-b564-d85821484ff5.png" class="w-full rounded-xl border border-white/10">
+                    <img src="https://image2url.com/r2/default/images/1769511348198-40bf1b95-abe7-444b-a30f-a3134382562d.png" class="w-full rounded-xl border border-white/10">
+                    <img src="https://image2url.com/r2/default/images/1769511363113-919a51e3-c556-4896-8186-5887442500cc.png" class="w-full rounded-xl border border-white/10">
+                    <img src="https://image2url.com/r2/default/images/1769511375503-e51b552b-53e1-440c-8f9e-f7a6e47f13e6.png" class="w-full rounded-xl border border-white/10">
+                </div>
+                <div class="mt-8"><button onclick="location.href='/proof'" class="btn-glow bg-white text-black font-bold px-6 py-3 rounded-xl flex items-center"><i class="fas fa-chart-line mr-2"></i> 실제 수익 내역 확인하기</button></div>
+            </div>
         </div>
-      </div>
-      
-      <!-- 스토리 -->
-      <div class="w-full md:w-2/3">
-        <span class="text-[#c4ff00] font-bold tracking-wider text-sm mb-4 block">FOUNDER STORY</span>
-        
-        <h2 class="text-2xl md:text-3xl font-black mb-6 text-white leading-snug">
-          "영상 편집은 30분,<br>
-          <span class="text-zinc-500">근데 소스 찾는 데 3시간,<br>쿠팡 상품 검색하는 데 1시간,</span><br>
-          시간이 너무 아까웠어요."
-        </h2>
-        
-        <div class="space-y-4 text-zinc-400 leading-relaxed">
-          <p>
-            2년간 숏폼으로 <strong class="text-white">12억 이상</strong> 벌었습니다.<br>
-            근데 그 과정이 너무 비효율적이었어요.
-          </p>
-          
-          <p>
-            매일 퇴근하고 해외 샤오홍슈, 인스타, 틱톡 3시간 뒤지고,<br>
-            찾아도 쿠팡에 없으면 그냥 버리고...<br>
-            <strong class="text-white">시간 낭비가 너무 심했습니다.</strong>
-          </p>
-          
-          <p>
-            그래서 <strong class="text-[#c4ff00]">제가 쓰려고</strong> 만들었습니다.<br>
-            영상 소스 + 쿠팡 링크, 한 곳에서 3분이면 끝.
-          </p>
-        </div>
-        
-        <div class="mt-8 pl-4 border-l-4 border-[#c4ff00]">
-          <p class="text-white font-bold text-lg">"저도 아직 현역입니다. 매일 씁니다."</p>
-          <p class="text-zinc-500 text-sm mt-1">안 쓸 거면 애초에 안 만들었어요.</p>
-        </div>
-        
-        <div class="mt-8">
-          <a href="/proof" class="inline-flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white font-bold px-6 py-3 rounded-xl transition">
-            <i class="fas fa-chart-line"></i> 실제 수익 내역 확인하기
-          </a>
-        </div>
-        
-      </div>
     </div>
-  </div>
 </section>
+<div class="section-divider"></div>
 
 <!-- Sourcing Section -->
 <section id="sourcing" class="py-24 bg-black relative overflow-hidden">
@@ -265,7 +236,7 @@
     <div class="max-w-7xl mx-auto px-4 relative z-10">
         <div class="flex flex-col md:flex-row items-center gap-12">
             <div class="w-full md:w-1/2 scroll-animate">
-                <span class="text-highlight font-bold tracking-widest text-sm uppercase mb-2 block">Videos Gallery</span>
+                <span class="text-highlight font-bold tracking-widest text-sm uppercase mb-2 block">THE SOURCING CLUB</span>
                 <h2 class="text-4xl md:text-5xl font-black mb-6 leading-tight keep-all tracking-tight">이제 힘든 건 머닝이 대신 해드릴게요.<br><span class="text-white/40">영상 소스 + 쿠팡 링크 제공</span></h2>
                 <div class="space-y-6 mb-8">
                     <div class="flex items-start"><div class="flex-shrink-0 w-12 h-12 rounded-2xl bg-[#c4ff00]/10 flex items-center justify-center text-highlight"><i class="fas fa-video"></i></div><div class="ml-4"><h4 class="text-xl font-bold text-white">해외 인기 소스 + 판매자 직촬 영상</h4><p class="text-white/40 text-sm">해외에서 터진 영상뿐만 아니라, 제품 판매자가 직접 촬영한 고화질 원본 영상까지 함께 제공합니다.</p></div></div>
@@ -297,7 +268,7 @@
     <div class="max-w-5xl mx-auto px-4">
         <div class="text-center mb-12 scroll-animate">
             <h2 class="text-3xl md:text-5xl font-black mt-2 mb-4 tracking-tight">그런데 나는 초보라<br>어떻게 하는지 모르겠다고요?</h2>
-            <p class="text-white/40 text-lg leading-relaxed"><span class="text-red-500 font-bold line-through">200만 원짜리 강의?</span> 이제 더 이상 듣지 마세요.<br>12억 수익 노하우를 꾹꾹 눌러 담은 전자책과 VOD 하나면 충분합니다.</p>
+            <p class="text-white/40 text-lg leading-relaxed"><span class="text-red-500 font-bold line-through">200만 원짜리 강의?</span> 이제 더 이상 듣지 마세요.<br>11억 수익 노하우를 꾹꾹 눌러 담은 전자책과 VOD 하나면 충분합니다.</p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div class="glass-card rounded-2xl overflow-hidden flex flex-col cursor-pointer scroll-animate" onclick="location.href='/store'">
@@ -306,7 +277,7 @@
                     <div>
                         <div class="flex justify-between items-center mb-4"><span class="bg-[#c4ff00] text-black text-xs font-bold px-3 py-1 rounded-full">입문용 전자책</span><span class="text-highlight font-bold">29,000원</span></div>
                         <h3 class="text-xl font-bold text-white mb-2">숏폼 편집 & 수익화 기초 가이드</h3>
-                        <p class="text-white/40 text-sm mb-6">"초보자도 쉽게 따라서 시작하는 방법" 등 기초부터 꼼꼼하게.</p>
+                        <p class="text-white/40 text-sm mb-6">"저작권 안 걸리게 편집하는 법", "팔리는 자막 넣는 법" 등 기초부터 꼼꼼하게.</p>
                     </div>
                     <button class="w-full py-3 border border-white/10 text-white rounded-xl hover:bg-[#c4ff00] hover:text-black hover:border-[#c4ff00] font-bold transition">즉시 다운로드</button>
                 </div>
@@ -317,8 +288,8 @@
                 <div class="p-8 flex-1 flex flex-col justify-between">
                     <div>
                         <div class="flex justify-between items-center mb-4"><span class="bg-white/10 text-white/50 text-xs font-bold px-3 py-1 rounded-full">실전 VOD 강의</span><span class="text-white/30 font-bold">Coming Soon</span></div>
-                        <h3 class="text-xl font-bold text-white mb-2">실전 편집 노하우 VOD 강의</h3>
-                        <p class="text-white/40 text-sm mb-6">도대체 전자책을 봐도 모르겠다..2년간의 편집 노하우 및 꿀팁까지!!</p>
+                        <h3 class="text-xl font-bold text-white mb-2">11억 수익 노하우 마스터 클래스</h3>
+                        <p class="text-white/40 text-sm mb-6">단순 부업을 넘어, 사업으로 확장하는 테크트리.</p>
                     </div>
                     <button class="w-full py-3 bg-white/5 text-white/30 rounded-xl font-bold cursor-not-allowed" disabled>준비 중입니다</button>
                 </div>
@@ -333,7 +304,7 @@
 <section id="review-board" class="py-24 bg-black">
     <div class="max-w-6xl mx-auto px-4">
         <div class="text-center mb-16 scroll-animate">
-            <h2 class="text-3xl md:text-5xl font-black mb-4 tracking-tight">머닝 크루들의<br><span class="text-highlight">수익 인증</span></h2>
+            <h2 class="text-3xl md:text-5xl font-black mb-4 tracking-tight">머닝 크루들의<br><span class="text-highlight">리얼 수익 인증</span></h2>
             <p class="text-white/40">혼자 달리면 힘들지만, 함께 달리면 멀리 갑니다.<br><span class="text-white font-bold">러닝 크루</span>처럼 서로 응원하며 수익을 만드는 머닝 크루의 생생한 후기.</p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
