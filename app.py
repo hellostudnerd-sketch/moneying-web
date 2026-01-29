@@ -2014,9 +2014,12 @@ def init_default_categories():
         if not existing:
             db.session.add(Category(**cat))
     db.session.commit()
-
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+        print("=== DB TABLES CREATED SUCCESSFULLY ===")
+    except Exception as e:
+        print(f"=== DB ERROR: {e} ===")
     init_default_categories()
 
 # 에러 핸들러
