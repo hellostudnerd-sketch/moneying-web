@@ -409,6 +409,7 @@ def is_subscriber():
     return bool(session.get("subscriber", False))
 
 def save_upload(file_storage):
+    print("R2_BUCKET:", os.getenv('R2_BUCKET'))  # 디버깅용
     if not file_storage or not file_storage.filename:
         return ""
     filename = secure_filename(file_storage.filename)
