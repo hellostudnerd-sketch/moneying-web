@@ -539,9 +539,21 @@ async function openDetailModal(item) {
   else { editBtn.classList.add("hidden"); editBtn.onclick = null; }
 
   const links = (item.links || []).filter(x => (x||"").trim().length > 0).slice(0,3);
+  const coupang = normalizeUrl(item.coupang_link || "");
   const group = document.getElementById('videoLinkGroup');
   group.innerHTML = "";
-  if (links.length === 0) { group.innerHTML = `<div class="text-zinc-600 text-xs font-bold">등록된 참고 링크가 없습니다.</div>`; }
+  
+  if (coupang) {
+    const coupangBtn = document.createElement("a");
+    coupangBtn.href = coupang;
+    coupangBtn.target = "_blank";
+    coupangBtn.rel = "noopener noreferrer";
+    coupangBtn.className = "bg-[#00a8ff] hover:bg-[#0095e6] text-white px-6 py-3 rounded-xl text-sm font-bold transition-all duration-150 flex items-center gap-2 shadow-lg";
+    coupangBtn.innerHTML = `🚀 쿠팡 링크`;
+    group.appendChild(coupangBtn);
+  }
+  
+  if (links.length === 0 && !coupang) { group.innerHTML = `<div class="text-zinc-600 text-xs font-bold">등록된 참고 링크가 없습니다.</div>`; }
   else { 
     links.forEach((u) => { 
       const platform = getPlatformInfo(u);
@@ -558,7 +570,6 @@ async function openDetailModal(item) {
   const images = (Array.isArray(item.images) ? item.images : []).slice(0,5);
   const rowContainer = document.getElementById('imageRowsContainer');
   rowContainer.innerHTML = "";
-  const coupang = normalizeUrl(item.coupang_link || "");
   const rowDiv = document.createElement("div");
   rowDiv.className = "glass-panel p-5 md:p-8 rounded-xl relative";
 
