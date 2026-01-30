@@ -25,6 +25,20 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET", "moneying-perfect-final-safe")
+
+# ============ 성능 최적화 ============
+from flask_compress import Compress
+from flask_caching import Cache
+
+# Gzip 압축 (응답 크기 50% 감소)
+Compress(app)
+
+# 캐싱 설정
+cache = Cache(app, config={
+    'CACHE_TYPE': 'simple',
+    'CACHE_DEFAULT_TIMEOUT': 300  # 5분
+})
+
 DATABASE_URL = os.getenv("DATABASE_URL")
 print(f"=== RAW DATABASE_URL: {DATABASE_URL} ===")
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
@@ -42,9 +56,13 @@ MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "")
 MAIL_FROM = os.getenv("MAIL_FROM", "noreply@moneying.co.kr")
 
 db = SQLAlchemy(app)
+
 @app.after_request
 def add_header(response):
-    if 'text/html' in response.content_type or 'application/json' in response.content_type:
+    # 정적 파일 캐싱 (CSS, JS, 이미지)
+    if request.path.startswith('/static/'):
+        response.headers["Cache-Control"] = "public, max-age=3600"  # 1시간
+    elif 'text/html' in response.content_type:
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
@@ -595,20 +613,24 @@ def update_session_status(user_id):
 # Public Routes
 # ----------------------------
 @app.route("/")
+@cache.cached(timeout=60)  # 1분 캐싱
 def index():
     return render_template("index.html")
 
 @app.route("/store")
+@cache.cached(timeout=300)  # 5분 캐싱
 def store():
     products = StoreProduct.query.filter_by(is_active=True).order_by(StoreProduct.id.desc()).all()
     return render_template("store.html", products=products)
 
 @app.route("/store/chrome-extension")
+@cache.cached(timeout=3600)  # 1시간 캐싱
 def store_chrome_extension():
     return render_template("store_chrome_extension.html")
 
 
 @app.route("/store/<int:product_id>")
+@cache.cached(timeout=300)  # 5분 캐싱
 def store_detail(product_id):
     product = StoreProduct.query.get_or_404(product_id)
     if not product.is_active and not is_admin():
@@ -779,26 +801,32 @@ def my_page():
     )
 
 @app.route("/profitguard")
+@cache.cached(timeout=3600)  # 1시간 캐싱
 def profitguard_page():
     return render_template("profitguard.html")
 
 @app.route("/proof")
+@cache.cached(timeout=3600)  # 1시간 캐싱
 def proof_page():
     return render_template("proof.html")
 
 @app.route("/subscribe-info")
+@cache.cached(timeout=3600)  # 1시간 캐싱
 def subscribe_info():
     return render_template("subscribe.html")
 
 @app.route("/terms")
+@cache.cached(timeout=86400)  # 24시간 캐싱
 def terms():
     return render_template("terms.html")
 
 @app.route("/privacy")
+@cache.cached(timeout=86400)  # 24시간 캐싱
 def privacy():
     return render_template("privacy.html")
 
 @app.route("/refund")
+@cache.cached(timeout=86400)  # 24시간 캐싱
 def refund():
     return render_template("refund.html")
 
@@ -2099,10 +2127,12 @@ def groupbuy_apply(item_id):
 YOUTUBE_API_KEY = "AIzaSyDRnCHasdEJ3ARExoAsfqmnZiwp1oPrjNQ"
 
 @app.route("/trend")
+@cache.cached(timeout=600)  # 10분 캐싱
 def trend_center():
     return render_template("trend.html")
 
 @app.route("/api/youtube/trending")
+@cache.cached(timeout=300, query_string=True)  # 5분 캐싱
 def api_youtube_trending():
     """한국 인기 급상승 영상"""
     import urllib.request
@@ -2138,6 +2168,7 @@ def api_youtube_trending():
         return jsonify({"ok": False, "error": str(e)})
 
 @app.route("/api/youtube/search")
+@cache.cached(timeout=300, query_string=True)  # 5분 캐싱
 def api_youtube_search():
     """키워드 검색"""
     import urllib.request
@@ -2195,6 +2226,7 @@ def api_youtube_search():
         return jsonify({"ok": False, "error": str(e)})
 
 @app.route("/api/youtube/category/<category_id>")
+@cache.cached(timeout=300, query_string=True)  # 5분 캐싱
 def api_youtube_category(category_id):
     """카테고리별 인기 영상"""
     import urllib.request
@@ -2230,6 +2262,7 @@ def api_youtube_category(category_id):
 
 
 @app.route("/api/gallery")
+@cache.cached(timeout=60, query_string=True)  # 1분 캐싱
 def api_gallery():
     page = request.args.get("page", 1, type=int)
     per_page = 30
@@ -2423,6 +2456,7 @@ def deal_close(post_id):
 # 고객지원
 # ----------------------------
 @app.route("/support")
+@cache.cached(timeout=3600)  # 1시간 캐싱
 def support():
     return render_template("support.html")
 
