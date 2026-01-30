@@ -6,3 +6,5 @@ gunicorn==21.2.0
 psycopg2-binary==2.9.9
 Pillow
 boto3
+Flask-Compress==1.14
+Flask-Caching==2.1.0
