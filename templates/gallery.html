@@ -64,7 +64,7 @@
 
 @media (max-width: 768px) {
   .capture-row {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
 }
@@ -543,16 +543,7 @@ async function openDetailModal(item) {
   const group = document.getElementById('videoLinkGroup');
   group.innerHTML = "";
   
-  if (coupang) {
-    const coupangBtn = document.createElement("a");
-    coupangBtn.href = coupang;
-    coupangBtn.target = "_blank";
-    coupangBtn.rel = "noopener noreferrer";
-    coupangBtn.className = "bg-[#00a8ff] hover:bg-[#0095e6] text-white px-6 py-3 rounded-xl text-sm font-bold transition-all duration-150 flex items-center gap-2 shadow-lg";
-    coupangBtn.innerHTML = `🚀 쿠팡 링크`;
-    group.appendChild(coupangBtn);
-  }
-  
+   
   if (links.length === 0 && !coupang) { group.innerHTML = `<div class="text-zinc-600 text-xs font-bold">등록된 참고 링크가 없습니다.</div>`; }
   else { 
     links.forEach((u) => { 
