@@ -231,7 +231,10 @@
 
 <div id="detailModal" class="fixed inset-0 z-[999] hidden items-center justify-center modal-backdrop backdrop-blur-xl md:p-4">
   <div id="detailBox" class="bg-zinc-950 w-full md:max-w-7xl h-full md:h-auto md:max-h-[92vh] md:rounded-2xl overflow-hidden shadow-2xl border border-zinc-800/50 relative flex flex-col">
-    <div class="absolute top-4 right-4 md:top-6 md:right-6 z-50 flex gap-2">
+    <div class="absolute top-4 left-4 md:top-6 md:left-6 z-50">
+  <span id="modalViews" class="text-zinc-400 text-xs bg-black/50 px-3 py-1.5 rounded-full backdrop-blur-sm">👁 0회</span>
+</div>
+<div class="absolute top-4 right-4 md:top-6 md:right-6 z-50 flex gap-2">
       <button id="modalBookmarkBtn" class="bookmark-btn bg-zinc-800/80 hover:bg-zinc-700 w-10 h-10 rounded-md flex items-center justify-center border border-zinc-700 transition text-white" title="찜하기">
         <i class="fas fa-heart text-lg"></i>
       </button>
@@ -247,12 +250,12 @@
       <div class="w-full max-w-3xl mx-auto mt-12 md:mt-4 mb-6">
         <div class="text-center px-4">
           <h2 id="modalTitle" class="text-2xl md:text-4xl font-black text-white mb-4 leading-[1.2] tracking-tight">제목</h2>
-          <div id="modalTags" class="flex flex-wrap justify-center gap-1.5 md:gap-2 mt-4 mb-4"></div>
-          <div id="modalViews" class="text-zinc-500 text-sm">👁 0회</div>
+          
+          
         </div>
        <div class="w-full flex flex-col items-center gap-4 mt-6">
   <p class="text-zinc-400 text-xs md:text-sm">아래 버튼을 눌러 원본 영상을 확인하세요.</p>
-  <div id="videoLinkGroup" class="flex flex-wrap justify-center gap-3"></div>
+  <div id="videoLinkGroup" class="flex justify-center gap-2 md:gap-3"></div>
 </div>
 <div class="mt-6 mb-2 text-center">
   <p class="text-zinc-500 text-xs md:text-sm">⚡ 캡처만 보고 빠르게 판단하세요.<br class="md:hidden"> 영상보는 시간 조차 아껴드립니다.</p>
@@ -531,14 +534,7 @@ async function openDetailModal(item) {
   document.getElementById('modalTitle').innerText = item.title || "";
   updateModalBookmarkBtn(item.id);
 
-  const tagContainer = document.getElementById('modalTags');
-  tagContainer.innerHTML = "";
-  (item.tags || []).forEach(tag => {
-    const span = document.createElement('span');
-    span.className = 'text-highlight text-[9px] md:text-[10px] font-black bg-highlight/10 px-3 py-1 rounded-sm border border-highlight/30 tracking-wider uppercase';
-    span.innerText = "#" + tag;
-    tagContainer.appendChild(span);
-  });
+  
 
   const editBtn = document.getElementById("editBtn");
   if (IS_ADMIN && item.id) { editBtn.classList.remove("hidden"); editBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/admin/posts/${item.id}/edit?next=/gallery`; }; }
@@ -558,7 +554,7 @@ async function openDetailModal(item) {
       a.href = normalizeUrl(u); 
       a.target = "_blank"; 
       a.rel = "noopener noreferrer"; 
-      a.className = `${platform.color} hover:opacity-80 text-white px-6 py-3 rounded-xl text-sm font-bold transition-all duration-150 flex items-center gap-2 shadow-lg`; 
+      a.className = `${platform.color} hover:opacity-80 text-white px-3 py-2 md:px-6 md:py-3 rounded-lg md:rounded-xl text-xs md:text-sm font-bold transition-all duration-150 flex items-center gap-1 md:gap-2 shadow-lg`; 
       a.innerHTML = `<i class="${platform.icon} text-lg"></i> ${platform.name}`; 
       group.appendChild(a); 
     }); 
