@@ -37,49 +37,127 @@
 
       <!-- 모바일 햄버거 -->
       <button id="mobileMenuBtn"
-              class="md:hidden text-gray-200 hover:text-white w-10 h-10 flex items-center justify-center"
+              class="md:hidden text-gray-200 hover:text-white w-12 h-12 flex items-center justify-center rounded-xl hover:bg-white/10 transition"
               aria-label="메뉴 열기">
-        <i class="fas fa-bars text-xl"></i>
+        <i id="menuIcon" class="fas fa-bars text-xl"></i>
       </button>
     </div>
   </div>
-
-  <!-- 모바일 메뉴 -->
-  <div id="mobileMenu" class="hidden md:hidden border-t border-zinc-800 bg-black/95">
-    <div class="px-4 py-4 flex flex-col gap-3">
-      <a href="/gallery" class="text-gray-200 font-bold">영상 갤러리</a>
-      <a href="/trend" class="text-gray-200 font-bold">트렌드</a>
-      <a href="/store" class="text-gray-200 font-bold">지식 스토어</a>
-      <a href="/profitguard" class="text-gray-200 font-bold">프로핏가드</a>
-      <a href="/link-requests" class="text-gray-200 font-bold">링크요청</a>
-      <a href="/community" class="text-gray-200 font-bold">커뮤니티</a>
-      <a href="/pricing" class="text-gray-200 font-bold">요금제</a>
-
-      <div class="h-px bg-zinc-800 my-2"></div>
-
-      {% if session.get("admin") %}
-        <a href="/admin" class="text-gray-200 font-bold">관리자 홈</a>
-        <a href="/admin/logout" class="text-gray-300">로그아웃</a>
-      {% elif session.get("user_id") %}
-        <a href="/notifications" class="text-gray-200 font-bold"><i class="fas fa-bell mr-2"></i>알림</a>
-        <a href="/my" class="text-gray-200 font-bold">내정보</a>
-        <a href="/logout" class="text-gray-300">로그아웃</a>
-      {% else %}
-        <a href="/login" class="text-gray-200 font-bold">로그인</a>
-      {% endif %}
-    </div>
-  </div>
 </nav>
+
+<!-- 모바일 메뉴 오버레이 -->
+<div id="mobileOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[998] hidden md:hidden opacity-0 transition-opacity duration-300"></div>
+
+<!-- 모바일 슬라이드 메뉴 -->
+<div id="mobileMenu" class="fixed top-0 right-0 h-full w-72 bg-zinc-950 border-l border-zinc-800 z-[999] md:hidden transform translate-x-full transition-transform duration-300 ease-out">
+  
+  <!-- 메뉴 헤더 -->
+  <div class="flex items-center justify-between px-5 h-16 border-b border-zinc-800">
+    <span class="text-white font-bold">메뉴</span>
+    <button id="mobileCloseBtn" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/10 transition text-gray-400 hover:text-white">
+      <i class="fas fa-times text-xl"></i>
+    </button>
+  </div>
+  
+  <!-- 메뉴 리스트 -->
+  <div class="px-3 py-4 flex flex-col gap-1">
+    <a href="/gallery" class="mobile-menu-item flex items-center gap-4 px-4 py-4 rounded-xl text-gray-200 hover:bg-white/5 active:bg-[#c4ff00]/20 active:text-[#c4ff00] transition-all">
+      <i class="fas fa-images w-5 text-center text-gray-500"></i>
+      <span class="font-semibold">영상 갤러리</span>
+    </a>
+    <a href="/trend" class="mobile-menu-item flex items-center gap-4 px-4 py-4 rounded-xl text-gray-200 hover:bg-white/5 active:bg-[#c4ff00]/20 active:text-[#c4ff00] transition-all">
+      <i class="fas fa-fire w-5 text-center text-gray-500"></i>
+      <span class="font-semibold">트렌드</span>
+    </a>
+    <a href="/store" class="mobile-menu-item flex items-center gap-4 px-4 py-4 rounded-xl text-gray-200 hover:bg-white/5 active:bg-[#c4ff00]/20 active:text-[#c4ff00] transition-all">
+      <i class="fas fa-store w-5 text-center text-gray-500"></i>
+      <span class="font-semibold">지식 스토어</span>
+    </a>
+    <a href="/profitguard" class="mobile-menu-item flex items-center gap-4 px-4 py-4 rounded-xl text-gray-200 hover:bg-white/5 active:bg-[#c4ff00]/20 active:text-[#c4ff00] transition-all">
+      <i class="fas fa-shield-alt w-5 text-center text-gray-500"></i>
+      <span class="font-semibold">프로핏가드</span>
+    </a>
+    <a href="/link-requests" class="mobile-menu-item flex items-center gap-4 px-4 py-4 rounded-xl text-gray-200 hover:bg-white/5 active:bg-[#c4ff00]/20 active:text-[#c4ff00] transition-all">
+      <i class="fas fa-link w-5 text-center text-gray-500"></i>
+      <span class="font-semibold">링크요청</span>
+    </a>
+    <a href="/community" class="mobile-menu-item flex items-center gap-4 px-4 py-4 rounded-xl text-gray-200 hover:bg-white/5 active:bg-[#c4ff00]/20 active:text-[#c4ff00] transition-all">
+      <i class="fas fa-users w-5 text-center text-gray-500"></i>
+      <span class="font-semibold">커뮤니티</span>
+    </a>
+    <a href="/pricing" class="mobile-menu-item flex items-center gap-4 px-4 py-4 rounded-xl text-gray-200 hover:bg-white/5 active:bg-[#c4ff00]/20 active:text-[#c4ff00] transition-all">
+      <i class="fas fa-tag w-5 text-center text-gray-500"></i>
+      <span class="font-semibold">요금제</span>
+    </a>
+
+    <div class="h-px bg-zinc-800 my-3 mx-2"></div>
+
+    {% if session.get("admin") %}
+      <a href="/admin" class="mobile-menu-item flex items-center gap-4 px-4 py-4 rounded-xl text-[#c4ff00] hover:bg-[#c4ff00]/10 transition-all">
+        <i class="fas fa-cog w-5 text-center"></i>
+        <span class="font-semibold">관리자 홈</span>
+      </a>
+      <a href="/admin/logout" class="mobile-menu-item flex items-center gap-4 px-4 py-4 rounded-xl text-gray-400 hover:bg-white/5 transition-all">
+        <i class="fas fa-sign-out-alt w-5 text-center"></i>
+        <span class="font-semibold">로그아웃</span>
+      </a>
+    {% elif session.get("user_id") %}
+      <a href="/notifications" class="mobile-menu-item flex items-center gap-4 px-4 py-4 rounded-xl text-gray-200 hover:bg-white/5 active:bg-[#c4ff00]/20 transition-all">
+        <i class="fas fa-bell w-5 text-center text-gray-500"></i>
+        <span class="font-semibold">알림</span>
+      </a>
+      <a href="/my" class="mobile-menu-item flex items-center gap-4 px-4 py-4 rounded-xl text-gray-200 hover:bg-white/5 active:bg-[#c4ff00]/20 transition-all">
+        <i class="fas fa-user w-5 text-center text-gray-500"></i>
+        <span class="font-semibold">내정보</span>
+      </a>
+      <a href="/logout" class="mobile-menu-item flex items-center gap-4 px-4 py-4 rounded-xl text-gray-400 hover:bg-white/5 transition-all">
+        <i class="fas fa-sign-out-alt w-5 text-center"></i>
+        <span class="font-semibold">로그아웃</span>
+      </a>
+    {% else %}
+      <a href="/login" class="mobile-menu-item flex items-center gap-4 px-4 py-4 rounded-xl bg-[#c4ff00] text-black hover:bg-[#d4ff40] transition-all">
+        <i class="fas fa-sign-in-alt w-5 text-center"></i>
+        <span class="font-bold">로그인</span>
+      </a>
+    {% endif %}
+  </div>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   var mobileBtn = document.getElementById("mobileMenuBtn");
   var mobileMenu = document.getElementById("mobileMenu");
-  if (mobileBtn && mobileMenu) {
-    mobileBtn.onclick = function() {
-      mobileMenu.classList.toggle("hidden");
-    };
+  var mobileOverlay = document.getElementById("mobileOverlay");
+  var mobileCloseBtn = document.getElementById("mobileCloseBtn");
+  var menuIcon = document.getElementById("menuIcon");
+  
+  function openMenu() {
+    mobileMenu.classList.remove("translate-x-full");
+    mobileOverlay.classList.remove("hidden");
+    setTimeout(() => mobileOverlay.classList.remove("opacity-0"), 10);
+    document.body.style.overflow = "hidden";
   }
+  
+  function closeMenu() {
+    mobileMenu.classList.add("translate-x-full");
+    mobileOverlay.classList.add("opacity-0");
+    setTimeout(() => mobileOverlay.classList.add("hidden"), 300);
+    document.body.style.overflow = "";
+  }
+  
+  if (mobileBtn) mobileBtn.onclick = openMenu;
+  if (mobileCloseBtn) mobileCloseBtn.onclick = closeMenu;
+  if (mobileOverlay) mobileOverlay.onclick = closeMenu;
+  
+  // 메뉴 항목 클릭 시 피드백
+  document.querySelectorAll('.mobile-menu-item').forEach(item => {
+    item.addEventListener('touchstart', function() {
+      this.style.transform = 'scale(0.98)';
+    });
+    item.addEventListener('touchend', function() {
+      this.style.transform = 'scale(1)';
+    });
+  });
   
   // 알림 개수 체크
   var notiBadge = document.getElementById("notiBadge");
