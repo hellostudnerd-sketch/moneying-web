@@ -197,39 +197,63 @@
 <!-- Founder Story -->
 <section id="founder" class="py-24 bg-black">
     <div class="max-w-4xl mx-auto px-4">
-        <div class="flex flex-col md:flex-row items-center gap-12" data-aos="fade-up">
-            <div class="w-2/3 mx-auto md:w-1/3">
+        <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12" data-aos="fade-up">
+            
+            <!-- 수익 원 (모바일: 작게) -->
+            <div class="w-2/3 md:w-1/3 mx-auto md:mx-0">
                 <div class="revenue-circle aspect-square bg-black rounded-full border-4 border-[#c4ff00] flex flex-col items-center justify-center relative group cursor-pointer overflow-hidden transform hover:scale-105 transition duration-300" onclick="location.href='/proof'">
                     <div class="absolute inset-0 flex items-center justify-center text-white bg-black/80 opacity-0 group-hover:opacity-100 transition z-20 backdrop-blur-sm">
                         <span class="border border-[#c4ff00] text-[#c4ff00] px-4 py-2 rounded-full text-sm">증빙 확인 🔍</span>
                     </div>
                     <div class="text-center z-10">
-                        <p class="text-white/40 text-sm font-bold mb-2 tracking-widest uppercase">Total Revenue</p>
-                        <h3 class="text-6xl md:text-7xl font-black text-white tracking-tighter leading-none mb-2">12<span class="text-highlight">억</span><span class="text-2xl text-highlight">+</span></h3>
-                        <p class="text-white/30 text-xs bg-white/5 px-3 py-1 rounded-full inline-block">2년 누적 수익</p>
+                        <p class="text-white/40 text-xs md:text-sm font-bold mb-2 tracking-widest uppercase">Total Revenue</p>
+                        <h3 class="text-5xl md:text-7xl font-black text-white tracking-tighter leading-none mb-2">12<span class="text-highlight">억</span><span class="text-xl md:text-2xl text-highlight">+</span></h3>
+                        <p class="text-white/30 text-[10px] md:text-xs bg-white/5 px-3 py-1 rounded-full inline-block">2년 누적 수익</p>
                     </div>
                 </div>
             </div>
-            <div class="w-full md:w-2/3 text-left">
-                <span class="text-[#c4ff00] font-bold tracking-wider text-sm mb-2 block">FOUNDER STORY</span>
-                <h2 class="text-3xl md:text-4xl font-black mb-6 text-white keep-all leading-tight">"2년간 2차 가공 숏폼으로<br> 12억 이상 벌었습니다.<br><span class="text-white/50">근데 솔직히 제일 힘든 건<br> 매일 새로운 영상 찾는 것과<br> 쿠팡에 제품 찾기였어요.</span>"</h2>
-                <p class="text-white/40 mb-6 leading-relaxed keep-all">수익 자랑하려는 게 아니에요. <br><strong class="text-white">그 돈 벌기까지 가장 힘들었던 게 뭔지</strong> 말씀드리고 싶었습니다.</p>
-                <div class="glass-card p-5 rounded-xl border-l-4 border-red-500 text-white/60 mb-6">
-                    <strong class="text-red-400 block mb-2 text-sm"><i class="fas fa-exclamation-triangle"></i> 매일 반복되는 고통</strong>
-                    "퇴근하고 3시간 동안 해외 인스타,틱톡, 샤오홍슈 뒤져서 영상 찾고... 막상 쿠팡에 그 제품이 없어서 못 쓰고... 이게 하루 이틀이 아니라 <strong class="text-white">매일</strong>이었습니다."
+            
+            <!-- 텍스트 카드 -->
+            <div class="w-full md:w-2/3">
+                <div class="glass-card rounded-2xl p-6 md:p-8">
+                    <span class="text-[#c4ff00] font-bold text-xs tracking-wider mb-4 block">FOUNDER STORY</span>
+                    
+                    <h2 class="text-xl md:text-3xl font-black text-white mb-2 leading-relaxed keep-all">
+                        "2년간 2차 가공 숏폼으로
+                    </h2>
+                    <h2 class="text-xl md:text-3xl font-black text-highlight mb-4 leading-relaxed keep-all">
+                        12억 이상 벌었습니다."
+                    </h2>
+                    
+                    <p class="text-white/50 text-sm md:text-base mb-6 leading-relaxed keep-all">
+                        근데 솔직히 제일 힘든 건 매일 새로운 영상 찾는 것과 쿠팡에 제품 찾기였어요.
+                    </p>
+                    
+                    <!-- 고통 박스 -->
+                    <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6">
+                        <p class="text-red-400 text-xs font-bold mb-2 flex items-center gap-2">
+                            <i class="fas fa-exclamation-triangle"></i> 매일 반복되는 고통
+                        </p>
+                        <p class="text-white/60 text-sm leading-relaxed keep-all">
+                            "퇴근하고 3시간 동안 해외 인스타, 틱톡, 샤오홍슈 뒤져서 영상 찾고... 막상 쿠팡에 그 제품이 없어서 못 쓰고... 이게 하루 이틀이 아니라 <strong class="text-white">매일</strong>이었습니다."
+                        </p>
+                    </div>
+                    
+                    <!-- 해결 박스 -->
+                    <div class="border-l-4 border-[#c4ff00] pl-4 py-2 mb-6">
+                        <p class="text-white font-bold text-base md:text-lg">"지금도 매일 씁니다. 진짜 편해요."</p>
+                        <p class="text-white/40 text-xs mt-1">저도 아직 현역 크리에이터입니다. 제가 안 쓸 거면 안 만들었습니다.</p>
+                    </div>
+                    
+                    <!-- CTA 버튼 -->
+                    <button onclick="location.href='/proof'" class="w-full md:w-auto btn-glow bg-white text-black font-bold px-6 py-3 rounded-xl flex items-center justify-center gap-2">
+                        <i class="fas fa-chart-line"></i> 실제 수익 내역 확인하기
+                    </button>
                 </div>
-                <p class="text-white/40 leading-relaxed keep-all mb-4">영상 편집은 30분이면 끝나는데, 소스 찾는 데 3시간...<br><strong class="text-white">너무 비효율적이라 그냥 제가 쓰려고 만들었습니다.</strong></p>
-                <div class="mb-8 pl-4 border-l-4 border-[#c4ff00]">
-                    <p class="text-white font-bold text-lg md:text-xl">"지금도 매일 씁니다. 진짜 편해요."</p>
-                    <p class="text-white/40 text-sm mt-1">저도 아직 현역 크리에이터입니다. 제가 안 쓸 거면 안 만들었습니다.</p>
-                </div>
-                
-                <div class="mt-8"><button onclick="location.href='/proof'" class="btn-glow bg-white text-black font-bold px-6 py-3 rounded-xl flex items-center"><i class="fas fa-chart-line mr-2"></i> 실제 수익 내역 확인하기</button></div>
             </div>
         </div>
     </div>
 </section>
-<div class="section-divider"></div>
 
 <!-- Sourcing Section -->
 <section id="sourcing" class="py-24 bg-black relative overflow-hidden">
