@@ -51,11 +51,11 @@
 
   <!-- 검색 -->
   <div class="mb-8">
-    <div class="flex gap-3">
-      <input type="text" id="searchInput" placeholder="키워드로 검색 (예: 다이소, 쿠팡, 리뷰)" 
-             class="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-zinc-500 focus:outline-none">
-      <button onclick="searchVideos()" class="bg-[#c4ff00] text-black font-bold px-6 py-3 rounded-xl hover:bg-white transition">
-        <i class="fas fa-search mr-2"></i>검색
+    <div class="flex gap-2 md:gap-3">
+      <input type="text" id="searchInput" placeholder="키워드 검색(예: 살림템,이케아)" 
+             class="flex-1 min-w-0 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm md:text-base focus:border-zinc-500 focus:outline-none">
+      <button onclick="searchVideos()" class="shrink-0 bg-[#c4ff00] text-black font-bold px-4 md:px-6 py-3 rounded-xl hover:bg-white transition text-sm md:text-base">
+        <i class="fas fa-search md:mr-2"></i><span class="hidden md:inline">검색</span>
       </button>
     </div>
   </div>
