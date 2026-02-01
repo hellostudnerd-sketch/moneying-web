@@ -782,6 +782,7 @@ def my_page():
     # 초대한 친구 수
     invited_count = User.query.filter_by(referred_by=user.id).count()
 
+    from datetime import datetime
     return render_template("my.html",
         user_email=user_email,
         subscriptions=user_subscriptions,
