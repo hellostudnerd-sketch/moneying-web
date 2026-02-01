@@ -6,9 +6,10 @@
     .text-gradient { background: linear-gradient(to right, #ffffff, #c4ff00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .feature-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
     .feature-card:hover { transform: translateY(-5px); border-color: #c4ff00; background: rgba(255,255,255,0.05); }
-    .price-card { background: #0f0f0f; border: 1px solid #333; transition: all 0.3s; }
-    .price-card:hover { border-color: #c4ff00; box-shadow: 0 0 30px rgba(163,230,53,0.1); }
-    .price-card.popular { border: 2px solid #c4ff00; background: linear-gradient(180deg, rgba(163,230,53,0.05) 0%, #0f0f0f 100%); transform: scale(1.05); z-index: 10; }
+    .price-card { background: #0f0f0f; border: 1px solid #333; transition: all 0.3s ease; }
+.price-card:hover { border-color: #c4ff00; box-shadow: 0 0 40px rgba(163,230,53,0.2); transform: translateY(-8px); }
+.price-card.popular { border: 2px solid #c4ff00; background: linear-gradient(180deg, rgba(163,230,53,0.05) 0%, #0f0f0f 100%); transform: scale(1.05); z-index: 10; }
+.price-card.popular:hover { transform: scale(1.05) translateY(-8px); box-shadow: 0 0 50px rgba(163,230,53,0.3); }
     .btn-glow { position: relative; overflow: hidden; transition: all 0.3s ease; }
     .btn-glow::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); transition: left 0.5s ease; }
     .btn-glow:hover::before { left: 100%; }
@@ -119,7 +120,7 @@
 <!-- Pricing Section -->
 <section id="pricing" class="py-24 bg-zinc-900 border-t border-zinc-800">
     <div class="max-w-5xl mx-auto px-4">
-        <div class="text-center mb-16"><span class="text-highlight font-bold tracking-widest text-sm uppercase">PRICING PLAN</span><h2 class="text-3xl md:text-5xl font-black mt-2 mb-4 leading-snug md:leading-normal">수익 방어 비용,<br class="md:hidden"> 커피 한 잔 값이면 충분합니다.</h2><p class="text-base md:text-xl text-white/60">나에게 맞는 플랜을 선택하세요</p>
+        <div class="text-center mb-16"><span class="text-highlight font-bold tracking-widest text-sm uppercase">PRICING PLAN</span><h2 class="text-3xl md:text-5xl font-black mt-2 mb-4 leading-snug md:leading-normal">수익 방어 비용,<br class="md:hidden"> 커피 한 잔 값이면 충분합니다.</h2><p class="text-base md:text-xl text-white/60 mb-8">나에게 맞는 플랜을 선택하세요</p></div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
             <!-- 라이트 -->
             <div class="price-card p-8 rounded-2xl flex flex-col">
