@@ -626,19 +626,16 @@ def serve_r2_file(filename):
     name, ext = os.path.splitext(filename)
     webp_filename = f"{name}.webp"
     
-    # R2 버킷 내 실제 경로
-    key = f"moneying-uploads/{webp_filename}"
-    
     try:
-        obj = s3.get_object(Bucket="moneying-uploads", Key=key)
+        obj = s3.get_object(Bucket="moneying-uploads", Key=webp_filename)
         return Response(
             obj['Body'].read(),
             content_type='image/webp',
             headers={'Cache-Control': 'public, max-age=31536000'}
         )
     except Exception as e:
-        print(f"R2 file error for {key}: {e}")
-        return f"File not found: {key}", 404
+        print(f"R2 file error for {webp_filename}: {e}")
+        return f"File not found: {webp_filename}", 404
 
 # ----------------------------
 # Public Routes
