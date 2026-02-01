@@ -27,17 +27,17 @@
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
     .post-card {
-      background: rgba(24, 24, 27, 0.6);
-      border: 1px solid rgba(255,255,255,0.05);
+      background: rgba(39, 39, 42, 0.5);
+      border: 1px solid rgba(255,255,255,0.08);
       transition: all 0.2s ease;
     }
     .post-card:hover {
       border-color: rgba(255,255,255,0.15);
-      background: rgba(39, 39, 42, 0.6);
+      background: rgba(50, 50, 55, 0.6);
     }
     
     .popular-card {
-      background: rgba(24, 24, 27, 0.8);
+      background: rgba(39, 39, 42, 0.5);
       border: 1px solid rgba(255,255,255,0.08);
       transition: all 0.2s ease;
     }
@@ -45,18 +45,13 @@
       border-color: rgba(255,255,255,0.2);
     }
     
-    .category-badge {
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-weight: 700;
-    }
-    .badge-notice { background: #3b82f6; color: white; }
-    .badge-deal { background: #f59e0b; color: black; }
-    .badge-revenue { background: #10b981; color: white; }
-    .badge-tips { background: #eab308; color: black; }
-    .badge-qna { background: #8b5cf6; color: white; }
-    .badge-free { background: #6b7280; color: white; }
+    /* 카테고리 색상 텍스트 */
+    .cat-notice { color: #60a5fa; }
+    .cat-deal { color: #fbbf24; }
+    .cat-revenue { color: #34d399; }
+    .cat-tips { color: #facc15; }
+    .cat-qna { color: #a78bfa; }
+    .cat-free { color: #9ca3af; }
 </style>
 {% endblock %}
 
@@ -71,13 +66,13 @@
   <div class="flex items-center gap-2 shrink-0">
     <!-- 카톡 오픈방 -->
     <a href="https://open.kakao.com/o/여기에링크" target="_blank"
-       class="bg-[#FEE500] text-[#3C1E1E] font-bold px-4 py-2.5 rounded-lg hover:bg-[#FDD800] transition flex items-center gap-2 text-sm">
+       class="bg-[#FEE500] text-[#3C1E1E] font-bold px-4 py-2.5 rounded-md hover:bg-[#FDD800] transition flex items-center gap-2 text-sm">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.83 1.89 5.29 4.68 6.68-.15.53-.53 1.94-.61 2.24-.1.37.14.37.29.27.12-.08 1.87-1.23 2.63-1.73.65.09 1.32.14 2.01.14 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/></svg>
       <span class="hidden md:inline">오픈방 입장</span><span class="md:hidden">오픈방</span>
     </a>
     <!-- 글쓰기 -->
     <a href="/community/write"
-       class="bg-[#c4ff00] text-black font-bold px-4 py-2.5 rounded-lg hover:bg-white transition flex items-center gap-2 text-sm">
+       class="bg-[#c4ff00] text-black font-bold px-4 py-2.5 rounded-md hover:bg-white transition flex items-center gap-2 text-sm">
       <i class="fas fa-pen"></i> 글쓰기
     </a>
   </div>
@@ -93,10 +88,10 @@
   <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
     {% for p in popular_posts[:3] %}
     <a href="/community/{{ p.id }}" class="popular-card rounded-xl p-4 block">
-      <span class="category-badge {% if p.category == 'notice' %}badge-notice{% elif p.category == 'deal' %}badge-deal{% elif p.category == 'revenue' %}badge-revenue{% elif p.category == 'tips' %}badge-tips{% elif p.category == 'qna' %}badge-qna{% else %}badge-free{% endif %}">
+      <span class="text-xs font-bold {% if p.category == 'notice' %}cat-notice{% elif p.category == 'deal' %}cat-deal{% elif p.category == 'revenue' %}cat-revenue{% elif p.category == 'tips' %}cat-tips{% elif p.category == 'qna' %}cat-qna{% else %}cat-free{% endif %}">
         {% if p.category == 'notice' %}📢 공지사항{% elif p.category == 'deal' %}🛍️ 공구/협찬{% elif p.category == 'revenue' %}💸 수익인증{% elif p.category == 'tips' %}💡 꿀팁공유{% elif p.category == 'qna' %}❓ 질문답변{% else %}💬 자유게시판{% endif %}
       </span>
-      <h3 class="text-white font-bold mt-3 mb-2 line-clamp-1">{{ p.title }}</h3>
+      <h3 class="text-white font-bold mt-2 mb-2 line-clamp-1">{{ p.title }}</h3>
       <p class="text-zinc-400 text-sm line-clamp-2 mb-3">{{ p.content[:80] }}{% if p.content|length > 80 %}...{% endif %}</p>
       <div class="flex items-center gap-3 text-xs text-zinc-500">
         <span class="text-[#c4ff00]">♡ {{ p.comments|length if p.comments else 0 }}</span>
@@ -120,26 +115,35 @@
 {% endif %}
 
 <!-- 카테고리 필터 + 검색 -->
-<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-  <div class="flex gap-2 overflow-x-auto no-scrollbar">
-    <button class="filter-btn active px-4 py-2 rounded-lg text-sm whitespace-nowrap" onclick="filterPosts('all', this)">전체</button>
-    <button class="filter-btn px-4 py-2 rounded-lg text-sm whitespace-nowrap" onclick="filterPosts('notice', this)">📢 공지사항</button>
-    <button class="filter-btn px-4 py-2 rounded-lg text-sm whitespace-nowrap" onclick="filterPosts('deal', this)">🛍️ 공구/협찬</button>
-    <button class="filter-btn px-4 py-2 rounded-lg text-sm whitespace-nowrap" onclick="filterPosts('revenue', this)">💸 수익인증</button>
-    <button class="filter-btn px-4 py-2 rounded-lg text-sm whitespace-nowrap" onclick="filterPosts('tips', this)">💡 꿀팁공유</button>
-    <button class="filter-btn px-4 py-2 rounded-lg text-sm whitespace-nowrap" onclick="filterPosts('qna', this)">❓ 질문답변</button>
-    <button class="filter-btn px-4 py-2 rounded-lg text-sm whitespace-nowrap" onclick="filterPosts('free', this)">💬 자유게시판</button>
+<div class="flex items-center gap-3 mb-6">
+  <div class="flex gap-2 overflow-x-auto no-scrollbar flex-1">
+    <button class="filter-btn active px-4 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('all', this)">전체</button>
+    <button class="filter-btn px-4 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('notice', this)">공지사항</button>
+    <button class="filter-btn px-4 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('deal', this)">공구/협찬</button>
+    <button class="filter-btn px-4 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('revenue', this)">수익인증</button>
+    <button class="filter-btn px-4 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('tips', this)">꿀팁공유</button>
+    <button class="filter-btn px-4 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('qna', this)">질문답변</button>
+    <button class="filter-btn px-4 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('free', this)">자유게시판</button>
   </div>
   
   <!-- 검색 -->
-  <form method="GET" action="/community" class="relative shrink-0">
-    <input type="text" name="q" value="{{ search or '' }}" placeholder="검색어 입력"
-           class="w-full md:w-48 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 pr-10 text-white text-sm placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none">
+  <form method="GET" action="/community" class="relative shrink-0 hidden md:block">
+    <input type="text" name="q" value="{{ search or '' }}" placeholder="검색"
+           class="w-32 bg-zinc-900 border border-zinc-700 rounded-full px-4 py-2 pr-9 text-white text-sm placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none">
     <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white">
       <i class="fas fa-search text-sm"></i>
     </button>
   </form>
 </div>
+
+<!-- 모바일 검색 -->
+<form method="GET" action="/community" class="relative mb-6 md:hidden">
+  <input type="text" name="q" value="{{ search or '' }}" placeholder="검색어 입력"
+         class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2.5 pr-10 text-white text-sm placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none">
+  <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white">
+    <i class="fas fa-search text-sm"></i>
+  </button>
+</form>
 
 <!-- 게시글 리스트 -->
 <div id="postListSection" class="space-y-3">
@@ -150,7 +154,7 @@
     
     <div class="flex items-start gap-3">
       <div class="flex-1 min-w-0">
-        <span class="category-badge {% if p.category == 'notice' %}badge-notice{% elif p.category == 'deal' %}badge-deal{% elif p.category == 'revenue' %}badge-revenue{% elif p.category == 'tips' %}badge-tips{% elif p.category == 'qna' %}badge-qna{% else %}badge-free{% endif %}">
+        <span class="text-xs font-bold {% if p.category == 'notice' %}cat-notice{% elif p.category == 'deal' %}cat-deal{% elif p.category == 'revenue' %}cat-revenue{% elif p.category == 'tips' %}cat-tips{% elif p.category == 'qna' %}cat-qna{% else %}cat-free{% endif %}">
           {% if p.category == 'notice' %}📢 공지사항{% elif p.category == 'deal' %}🛍️ 공구/협찬{% elif p.category == 'revenue' %}💸 수익인증{% elif p.category == 'tips' %}💡 꿀팁공유{% elif p.category == 'qna' %}❓ 질문답변{% else %}💬 자유게시판{% endif %}
         </span>
         
@@ -197,5 +201,3 @@ function filterPosts(category, btn) {
   });
 }
 </script>
-
-{% endblock %}
