@@ -1929,24 +1929,27 @@ def seller_upload():
         if not coupang_link:
             return jsonify({"ok": False, "error": "쿠팡 링크는 필수입니다."})
         
-        # images를 JSON 문자열로 저장
+       # images를 JSON 문자열로 저장
         images_str = json.dumps(images)
         links_str = json.dumps(links)
         
-        # links 분리
+        # links 분리 (기존 템플릿 호환)
         video_url = links[0] if len(links) > 0 else ""
         video_url2 = links[1] if len(links) > 1 else ""
         video_url3 = links[2] if len(links) > 2 else ""
         
         post = Post(
             title=title,
-            category="seller",  # 판매자 직촬로 고정
+            category="seller",
             images_json=images_str,
             links_json=links_str,
+            video_url=video_url,
+            video_url2=video_url2,
+            video_url3=video_url3,
             coupang_link=coupang_link,
             is_free=False,
             seller_id=user.id,
-            status="pending"  # 관리자 승인 대기
+            status="pending"
         )
         db.session.add(post)
         db.session.commit()
