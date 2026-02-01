@@ -2577,6 +2577,7 @@ def api_notifications_count():
     
     count = Notification.query.filter_by(user_id=session["user_id"], is_read=False).count()
     return jsonify({"count": count})
+    
 @app.route("/api/notifications/<int:noti_id>/delete", methods=["POST"])
 def api_notification_delete(noti_id):
     if not session.get("user_id"):
