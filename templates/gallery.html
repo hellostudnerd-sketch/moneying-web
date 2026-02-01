@@ -422,7 +422,7 @@ function appendGalleryItems(list) {
 function createGalleryCard(item) {
   const imgs = Array.isArray(item.images) ? item.images : [];
   const thumb = imgs.length ? (imgs[0] || "") : "";
-  const thumbUrl = thumb ? (thumb.startsWith("http") || thumb.startsWith("/r2/") ? thumb : `/static/uploads/${thumb}`) : "";
+  const thumbUrl = thumb ? (thumb.startsWith("http") ? thumb : thumb.startsWith("/r2/") ? thumb.replace(".webp", "_thumb.webp") : `/static/uploads/${thumb}`) : "";
   const viewCount = item.view_count || 0;
   const bookmarked = isBookmarked(item.id);
   const canAccess = IS_ADMIN || IS_SUBSCRIBER || IS_TRIAL || item.is_free;
@@ -678,7 +678,7 @@ async function openDetailModal(item) {
     html += `<div class="capture-row">`;
     images.forEach((img, i) => {
       const safeImg = (img || "").trim();
-      const url = safeImg.startsWith("http") || safeImg.startsWith("/r2/") ? safeImg : `/static/uploads/${safeImg}`;
+      const url = safeImg.startsWith("http") ? safeImg : safeImg.startsWith("/r2/") ? safeImg.replace(".webp", "_thumb.webp") : `/static/uploads/${safeImg}`;
       html += `<div class="capture-item aspect-shorts rounded-lg overflow-hidden ${i===0 ? "border-2 border-highlight" : "border border-white/10"} bg-zinc-900 transition-all duration-150 hover:border-white/30 relative"><img src="${url}" class="w-full h-full object-cover ${i===0 ? "opacity-95" : "opacity-80 hover:opacity-100"} transition-opacity duration-150">${i===0 ? `<div class="absolute top-3 left-3 bg-highlight text-black text-[8px] font-black px-2 py-0.5 rounded-sm shadow-md uppercase tracking-tighter">Main</div>` : ""}</div>`;
     });
     html += `</div>`;
