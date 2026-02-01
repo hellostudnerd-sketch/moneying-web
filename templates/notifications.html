@@ -1,22 +1,30 @@
 {% extends "base.html" %}
 {% block title %}알림 - MONEYING{% endblock %}
-
 {% block content %}
 <div class="max-w-2xl mx-auto">
-  <h1 class="text-3xl font-black mb-2">🔔 알림</h1>
-  <p class="text-zinc-400 mb-8">최근 활동 알림을 확인하세요.</p>
-
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="text-3xl font-black mb-2">🔔 알림</h1>
+      <p class="text-zinc-400">최근 활동 알림을 확인하세요.</p>
+    </div>
+    {% if notifications %}
+    <button onclick="deleteAllNotifications()" class="text-zinc-500 hover:text-red-400 text-sm transition">
+      <i class="fas fa-trash-alt mr-1"></i>전체 삭제
+    </button>
+    {% endif %}
+  </div>
+  
   {% if notifications %}
-  <div class="space-y-3">
+  <div class="space-y-3" id="notiList">
     {% for noti in notifications %}
-    <a href="{{ noti.link or '#' }}" 
-       class="block bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 hover:border-zinc-600 transition {% if not noti.is_read %}border-l-4 border-l-[#c4ff00]{% endif %}">
+    <div class="noti-item bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 hover:border-zinc-600 transition {% if not noti.is_read %}border-l-4 border-l-[#c4ff00]{% endif %}" data-id="{{ noti.id }}">
       <div class="flex items-start gap-3">
         <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0
           {% if noti.type == 'deal_approved' %}bg-green-500/20 text-green-400
           {% elif noti.type == 'deal_rejected' %}bg-red-500/20 text-red-400
           {% elif noti.type == 'reward' %}bg-yellow-500/20 text-yellow-400
           {% elif noti.type == 'comment' %}bg-blue-500/20 text-blue-400
+          {% elif noti.type == 'link_completed' %}bg-blue-500/20 text-blue-400
           {% else %}bg-zinc-700 text-zinc-400{% endif %}">
           {% if noti.type == 'deal_approved' %}
             <i class="fas fa-check"></i>
@@ -26,22 +34,24 @@
             <i class="fas fa-gift"></i>
           {% elif noti.type == 'comment' %}
             <i class="fas fa-comment"></i>
+          {% elif noti.type == 'link_completed' %}
+            <i class="fas fa-link"></i>
           {% else %}
             <i class="fas fa-bell"></i>
           {% endif %}
         </div>
-        <div class="flex-1 min-w-0">
+        <a href="{{ noti.link or '#' }}" class="flex-1 min-w-0">
           <p class="font-bold text-white">{{ noti.title }}</p>
           <p class="text-sm text-zinc-400 mt-1">{{ noti.message }}</p>
           <p class="text-xs text-zinc-500 mt-2">
             {{ noti.created_at.strftime('%Y.%m.%d %H:%M') if noti.created_at else '' }}
           </p>
-        </div>
-        {% if not noti.is_read %}
-        <span class="w-2 h-2 bg-[#c4ff00] rounded-full shrink-0"></span>
-        {% endif %}
+        </a>
+        <button onclick="deleteNotification({{ noti.id }})" class="text-zinc-600 hover:text-red-400 transition p-2">
+          <i class="fas fa-times"></i>
+        </button>
       </div>
-    </a>
+    </div>
     {% endfor %}
   </div>
   {% else %}
@@ -53,4 +63,30 @@
   </div>
   {% endif %}
 </div>
+
+<script>
+function deleteNotification(id) {
+  fetch(`/api/notifications/${id}/delete`, { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        document.querySelector(`.noti-item[data-id="${id}"]`).remove();
+        if (document.querySelectorAll('.noti-item').length === 0) {
+          location.reload();
+        }
+      }
+    });
+}
+
+function deleteAllNotifications() {
+  if (!confirm('모든 알림을 삭제하시겠습니까?')) return;
+  fetch('/api/notifications/delete-all', { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        location.reload();
+      }
+    });
+}
+</script>
 {% endblock %}
