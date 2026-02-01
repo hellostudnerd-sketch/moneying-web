@@ -621,14 +621,19 @@ def serve_r2_file(filename):
         aws_secret_access_key="f7001674ed1ee7f505a45f071891811db5e333c2a890f4f9f71a7f7be41c55f7"
     )
     
-    # R2 버킷 내 실제 경로: moneying-uploads/파일명
-    key = f"moneying-uploads/{filename}"
+    # 확장자를 .webp로 변환 (DB에 .png로 저장된 경우 대응)
+    import os
+    name, ext = os.path.splitext(filename)
+    webp_filename = f"{name}.webp"
+    
+    # R2 버킷 내 실제 경로
+    key = f"moneying-uploads/{webp_filename}"
     
     try:
         obj = s3.get_object(Bucket="moneying-uploads", Key=key)
         return Response(
             obj['Body'].read(),
-            content_type=obj.get('ContentType', 'image/webp'),
+            content_type='image/webp',
             headers={'Cache-Control': 'public, max-age=31536000'}
         )
     except Exception as e:
