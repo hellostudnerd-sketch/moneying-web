@@ -70,7 +70,7 @@
             <div class="relative h-56 bg-zinc-800 overflow-hidden">
                 {% if p.image %}
                     {% if p.image.startswith('http') %}<img src="{{ p.image }}" class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition duration-500">
-                    {% else %}<img src="/static/uploads/{{ p.image }}" class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition duration-500">{% endif %}
+                    {% else %}<img src="{% if p.image.startswith('/r2/') or p.image.startswith('http') %}{{ p.image }}{% else %}/static/uploads/{{ p.image }}{% endif %}" ...>{% endif %}
                 {% else %}<div class="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center"><i class="fas fa-box-open text-4xl text-zinc-600"></i></div>{% endif %}
                 {% if p.badge or p.price == 0 %}
                     {% if p.price == 0 %}<div class="absolute top-3 left-3 bg-[#c4ff00] text-black text-xs font-black px-2 py-1 rounded">무료</div>
