@@ -8,14 +8,14 @@
       </a>
 
       <!-- PC 메뉴 -->
-      <div class="hidden md:flex items-center gap-8">
-        <a href="/gallery" class="text-gray-300 hover:text-white text-sm font-medium transition">영상 갤러리</a>
-        <a href="/trend" class="text-gray-300 hover:text-white text-sm font-medium transition">트렌드</a>
-        <a href="/store" class="text-gray-300 hover:text-white text-sm font-medium transition">지식 스토어</a>
-        <a href="/profitguard" class="text-gray-300 hover:text-white text-sm font-medium transition">프로핏가드</a>
-        <a href="/link-requests" class="text-gray-300 hover:text-white text-sm font-medium transition">링크요청</a>
-        <a href="/community" class="text-gray-300 hover:text-white text-sm font-medium transition">커뮤니티</a>
-        <a href="/pricing" class="text-gray-300 hover:text-white text-sm font-medium transition">요금제</a>
+<div class="hidden md:flex items-center gap-8">
+  <a href="/gallery" class="nav-link text-sm font-medium transition {% if request.path.startswith('/gallery') %}text-[#c4ff00]{% else %}text-gray-300 hover:text-white{% endif %}">영상 갤러리</a>
+  <a href="/trend" class="nav-link text-sm font-medium transition {% if request.path.startswith('/trend') %}text-[#c4ff00]{% else %}text-gray-300 hover:text-white{% endif %}">트렌드</a>
+  <a href="/store" class="nav-link text-sm font-medium transition {% if request.path.startswith('/store') %}text-[#c4ff00]{% else %}text-gray-300 hover:text-white{% endif %}">지식 스토어</a>
+  <a href="/profitguard" class="nav-link text-sm font-medium transition {% if request.path.startswith('/profitguard') %}text-[#c4ff00]{% else %}text-gray-300 hover:text-white{% endif %}">프로핏가드</a>
+  <a href="/link-requests" class="nav-link text-sm font-medium transition {% if request.path.startswith('/link-requests') %}text-[#c4ff00]{% else %}text-gray-300 hover:text-white{% endif %}">링크요청</a>
+  <a href="/community" class="nav-link text-sm font-medium transition {% if request.path.startswith('/community') %}text-[#c4ff00]{% else %}text-gray-300 hover:text-white{% endif %}">커뮤니티</a>
+  <a href="/pricing" class="nav-link text-sm font-medium transition {% if request.path.startswith('/pricing') %}text-[#c4ff00]{% else %}text-gray-300 hover:text-white{% endif %}">요금제</a>
 
         <!-- 우측 액션 -->
         <div class="flex items-center gap-3">
