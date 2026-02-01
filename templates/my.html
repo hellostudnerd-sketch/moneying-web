@@ -87,7 +87,7 @@
       {% if session.get("is_trial") %}
   <div class="text-lg font-bold text-white mb-1">🎁 무료 체험 중</div>
   {% if trial_expires_at %}
-    {% set days_left = (trial_expires_at - now()).days %}
+    {% set days_left = (trial_expires_at - now).days %}
     <div class="text-2xl font-black text-[#c4ff00] my-2">D-{{ days_left if days_left > 0 else 0 }}</div>
     <div class="text-zinc-400 text-sm mb-4">{{ trial_expires_at.strftime('%m/%d') }} 만료 · 구독하고 계속 이용하세요</div>
   {% else %}
