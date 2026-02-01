@@ -88,7 +88,7 @@
             <div class="text-lg font-black text-zinc-600 w-6">{{ loop.index }}</div>
             {% set img_list = p.to_dict().images %}
             {% if img_list and img_list|length > 0 %}
-              <img src="/static/uploads/{{ img_list[0] }}" class="w-10 h-10 rounded object-cover">
+              <img src="{% if img_list[0].startswith('/r2/') or img_list[0].startswith('http') %}{{ img_list[0] }}{% else %}/static/uploads/{{ img_list[0] }}{% endif %}" class="w-10 h-10 rounded object-cover">
             {% else %}
               <div class="w-10 h-10 rounded bg-zinc-800"></div>
             {% endif %}
