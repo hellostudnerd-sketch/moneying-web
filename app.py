@@ -641,7 +641,6 @@ def serve_r2_file(filename):
 # Public Routes
 # ----------------------------
 @app.route("/")
-@cache.cached(timeout=60)  # 1분 캐싱
 def index():
     return render_template("index.html")
 
