@@ -2261,6 +2261,31 @@ def api_youtube_category(category_id):
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})
 
+@app.route("/api/youtube/video/<video_id>")
+@cache.cached(timeout=300)
+def api_youtube_video_detail(video_id):
+    """영상 상세 정보 (태그, 댓글 수)"""
+    import urllib.request
+    
+    url = f"https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id={video_id}&key={YOUTUBE_API_KEY}"
+    
+    try:
+        req = urllib.request.Request(url)
+        with urllib.request.urlopen(req) as response:
+            data = json.loads(response.read().decode())
+        
+        if data.get("items"):
+            item = data["items"][0]
+            tags = item.get("snippet", {}).get("tags", [])
+            comments = int(item.get("statistics", {}).get("commentCount", 0))
+            return jsonify({
+                "ok": True,
+                "tags": tags,
+                "comments": comments
+            })
+        return jsonify({"ok": False, "error": "not found"})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)})
 
 @app.route("/api/gallery")
 @cache.cached(timeout=60, query_string=True)  # 1분 캐싱
