@@ -621,16 +621,19 @@ def serve_r2_file(filename):
         aws_secret_access_key="f7001674ed1ee7f505a45f071891811db5e333c2a890f4f9f71a7f7be41c55f7"
     )
     
+    # R2 버킷 내 실제 경로: moneying-uploads/파일명
+    key = f"moneying-uploads/{filename}"
+    
     try:
-        obj = s3.get_object(Bucket="moneying-uploads", Key=filename)
+        obj = s3.get_object(Bucket="moneying-uploads", Key=key)
         return Response(
             obj['Body'].read(),
             content_type=obj.get('ContentType', 'image/webp'),
             headers={'Cache-Control': 'public, max-age=31536000'}
         )
     except Exception as e:
-        print(f"R2 file error for {filename}: {e}")
-        return f"File not found: {filename}", 404
+        print(f"R2 file error for {key}: {e}")
+        return f"File not found: {key}", 404
 
 # ----------------------------
 # Public Routes
