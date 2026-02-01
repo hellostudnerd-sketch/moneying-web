@@ -808,7 +808,9 @@ def my_page():
     
     # 초대한 친구 수
     invited_count = User.query.filter_by(referred_by=user.id).count()
-
+    # 내가 쓴 글 수
+    my_posts_count = CommunityPost.query.filter_by(author_email=user_email).count()
+    
     from datetime import datetime
     return render_template("my.html",
         user_email=user_email,
@@ -825,7 +827,8 @@ def my_page():
         user_seller_company=user_seller_company,
         user_seller_category=user_seller_category,
         referral_code=user.referral_code,
-        invited_count=invited_count
+        invited_count=invited_count,
+        my_posts_count=my_posts_count
     )
 
 @app.route("/profitguard")
