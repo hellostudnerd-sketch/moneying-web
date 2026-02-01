@@ -216,7 +216,7 @@
   // 변경 후
  // 변경 후
   function addPreviewThumb(filename) {
-    const url = filename.startsWith('http') ? filename : `/static/uploads/${filename}`;
+    const url = filename.startsWith('http') || filename.startsWith('/r2/') ? filename : `/static/uploads/${filename}`;
     const wrap = document.createElement("div");
     wrap.className = "relative aspect-[9/16] rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900 group";
     wrap.innerHTML = `
