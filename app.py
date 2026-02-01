@@ -1232,7 +1232,11 @@ def change_password():
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("index"))
+    response = redirect(url_for("index"))
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 # ----------------------------
