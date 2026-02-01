@@ -59,13 +59,22 @@
 <div class="mb-4">
   <p class="text-zinc-500 text-xs mb-1">영상 링크</p>
   <div class="flex gap-2 flex-wrap">
-    {% set links = (post.links_json | default('[]') | tojson | safe) if post.links_json else [] %}
-    {% for link in (post.links_json | default('[]')) | from_json %}
-    <a href="{{ link }}" target="_blank" class="px-2 py-1 bg-zinc-800 text-zinc-300 text-xs rounded hover:bg-zinc-700">
-      <i class="fas fa-external-link-alt mr-1"></i>링크 {{ loop.index }}
+    {% if post.video_url %}
+    <a href="{{ post.video_url }}" target="_blank" class="px-2 py-1 bg-zinc-800 text-zinc-300 text-xs rounded hover:bg-zinc-700">
+      <i class="fas fa-external-link-alt mr-1"></i>링크 1
     </a>
-    {% endfor %}
-    {% if not post.links_json or post.links_json == '[]' %}
+    {% endif %}
+    {% if post.video_url2 %}
+    <a href="{{ post.video_url2 }}" target="_blank" class="px-2 py-1 bg-zinc-800 text-zinc-300 text-xs rounded hover:bg-zinc-700">
+      <i class="fas fa-external-link-alt mr-1"></i>링크 2
+    </a>
+    {% endif %}
+    {% if post.video_url3 %}
+    <a href="{{ post.video_url3 }}" target="_blank" class="px-2 py-1 bg-zinc-800 text-zinc-300 text-xs rounded hover:bg-zinc-700">
+      <i class="fas fa-external-link-alt mr-1"></i>링크 3
+    </a>
+    {% endif %}
+    {% if not post.video_url and not post.video_url2 and not post.video_url3 %}
     <span class="text-zinc-500 text-xs">없음</span>
     {% endif %}
   </div>
