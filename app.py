@@ -629,8 +629,8 @@ def serve_r2_file(filename):
             headers={'Cache-Control': 'public, max-age=31536000'}
         )
     except Exception as e:
-        print(f"R2 file error: {e}")
-        return "File not found", 404
+        print(f"R2 file error for {filename}: {e}")
+        return f"File not found: {filename}", 404
 
 # ----------------------------
 # Public Routes
