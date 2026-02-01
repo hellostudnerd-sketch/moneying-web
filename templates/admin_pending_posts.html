@@ -17,7 +17,7 @@
         <div class="grid grid-cols-3 gap-2 w-48">
           {% for img in post.to_dict().images[:3] %}
           <div class="aspect-[9/16] rounded-lg overflow-hidden bg-zinc-800">
-            <img src="/static/uploads/{{ img }}" class="w-full h-full object-cover" alt="">
+            <img src="{% if img.startswith('/r2/') or img.startswith('http') %}{{ img }}{% else %}/static/uploads/{{ img }}{% endif %}" class="w-full h-full object-cover" alt="">
           </div>
           {% else %}
           <div class="aspect-[9/16] rounded-lg bg-zinc-800 flex items-center justify-center col-span-3">
