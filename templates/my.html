@@ -85,8 +85,14 @@
   <div class="bg-gradient-to-r from-[#c4ff00]/10 to-purple-500/10 border border-[#c4ff00]/30 rounded-2xl p-5 mb-4">
     <div class="text-center">
       {% if session.get("is_trial") %}
-        <div class="text-lg font-bold text-white mb-1">체험 기간이 곧 끝나요!</div>
-        <div class="text-zinc-400 text-sm mb-4">구독하고 계속 이용하세요</div>
+  <div class="text-lg font-bold text-white mb-1">🎁 무료 체험 중</div>
+  {% if trial_expires_at %}
+    {% set days_left = (trial_expires_at - now()).days %}
+    <div class="text-2xl font-black text-[#c4ff00] my-2">D-{{ days_left if days_left > 0 else 0 }}</div>
+    <div class="text-zinc-400 text-sm mb-4">{{ trial_expires_at.strftime('%m/%d') }} 만료 · 구독하고 계속 이용하세요</div>
+  {% else %}
+    <div class="text-zinc-400 text-sm mb-4">구독하고 계속 이용하세요</div>
+  {% endif %}
       {% elif can_use_trial %}
         <div class="text-lg font-bold text-white mb-1">3일 무료체험 해보세요!</div>
         <div class="text-zinc-400 text-sm mb-4">결제 없이 모든 기능을 체험</div>
