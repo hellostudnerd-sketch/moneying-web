@@ -128,7 +128,7 @@
 </div>
 
 <script>
-const productData = { {% for p in products %}{{ p.id }}: { title: "{{ p.title|e }}", category: "{{ p.category }}", price: {{ p.price }}, priceText: "{{ '{:,}'.format(p.price) }}원", description: `{{ p.description|e|replace('\n', '\\n') }}`, {% if p.image %}{% if p.image.startswith('http') %}image: "{{ p.image }}",{% else %}image: "/static/uploads/{{ p.image }}",{% endif %}{% else %}image: "",{% endif %} fileUrl: "{{ p.file_url or '' }}" },{% endfor %} };
+const productData = { {% for p in products %}{{ p.id }}: { title: "{{ p.title|e }}", category: "{{ p.category }}", price: {{ p.price }}, priceText: "{{ '{:,}'.format(p.price) }}원", description: `{{ p.description|e|replace('\n', '\\n') }}`, {% if p.image %}{% if p.image.startswith('http') %}image: "{{ p.image }}",{% elif p.image.startswith('/r2/') %}image: "{{ p.image }}",{% else %}image: "/static/uploads/{{ p.image }}",{% endif %}{% else %}image: "",{% endif %} fileUrl: "{{ p.file_url or '' }}" },{% endfor %} };
 let currentFilters = { type: 'all', topic: 'all' };
 function setFilter(key, value, btn) { currentFilters[key] = value; const g = btn.parentElement; if (key === 'type') { g.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); } else { g.querySelectorAll('.topic-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); } applyFilters(); }
 function applyFilters() { document.querySelectorAll('.product-card').forEach(item => { item.style.display = (currentFilters.type === 'all' || item.dataset.type === currentFilters.type) && (currentFilters.topic === 'all' || item.dataset.topic === currentFilters.topic) ? 'flex' : 'none'; }); }
