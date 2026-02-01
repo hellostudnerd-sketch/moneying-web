@@ -205,17 +205,28 @@
     </div>
   </div>
 
-  <!-- 카테고리 필터 -->
-  <div class="flex gap-2 overflow-x-auto no-scrollbar mb-8">
-    <button class="filter-btn active px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="all" onclick="filterGallery('all', this)">전체보기</button>
-    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="popular" onclick="filterGallery('popular', this)">인기순</button>
-    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="bookmark" onclick="filterGallery('bookmark', this)">찜한 영상</button>
-    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="recent" onclick="filterGallery('recent', this)">최근 본</button>
-    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="seller" onclick="filterGallery('seller', this)">판매자 직촬</button>
-    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="beauty" onclick="filterGallery('beauty', this)">Beauty</button>
-    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="living" onclick="filterGallery('living', this)">Living</button>
-    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="food" onclick="filterGallery('food', this)">Food</button>
-    <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="tech" onclick="filterGallery('tech', this)">Tech</button>
+  <!-- 카테고리 필터 + 검색 -->
+  <div class="flex items-center gap-3 mb-8">
+    <div class="flex gap-2 overflow-x-auto no-scrollbar flex-1">
+      <button class="filter-btn active px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="all" onclick="filterGallery('all', this)">전체보기</button>
+      <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="popular" onclick="filterGallery('popular', this)">인기순</button>
+      <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="bookmark" onclick="filterGallery('bookmark', this)">찜한 영상</button>
+      <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="recent" onclick="filterGallery('recent', this)">최근 본</button>
+      <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="seller" onclick="filterGallery('seller', this)">판매자 직촬</button>
+      <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="beauty" onclick="filterGallery('beauty', this)">Beauty</button>
+      <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="living" onclick="filterGallery('living', this)">Living</button>
+      <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="food" onclick="filterGallery('food', this)">Food</button>
+      <button class="filter-btn px-5 py-2 rounded-full text-sm whitespace-nowrap" data-cat="tech" onclick="filterGallery('tech', this)">Tech</button>
+    </div>
+    
+    <!-- 검색 (PC) -->
+    <div class="relative shrink-0 hidden md:block">
+      <input type="text" id="gallerySearch" placeholder="검색" onkeyup="searchGallery(this.value)"
+             class="w-32 focus:w-48 bg-zinc-900 border border-zinc-700 rounded-full px-4 py-2 pr-9 text-white text-sm placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none transition-all duration-300">
+      <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white">
+        <i class="fas fa-search text-sm"></i>
+      </button>
+    </div>
   </div>
 
   <div id="gallery-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6"></div>
@@ -470,6 +481,21 @@ function handleScroll() {
   if (scrollY + windowHeight >= docHeight - 500) loadGallery();
 }
 
+// ===== 검색 =====
+function searchGallery(query) {
+  const cards = document.querySelectorAll('.gallery-card');
+  const q = query.toLowerCase().trim();
+  
+  cards.forEach(card => {
+    const title = card.querySelector('.text-white')?.textContent?.toLowerCase() || '';
+    if (q === '' || title.includes(q)) {
+      card.style.display = '';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+  
 // ===== 필터 =====
 function filterGallery(category, btn) {
   currentFilter = category;
@@ -665,6 +691,7 @@ function closeDetailModal() {
   document.body.style.overflow = ''; 
   currentModalItem = null; 
 }
+  
 // ===== 엑셀 다운로드 =====
 function exportBookmarksToExcel() {
   const bookmarks = getBookmarks();
