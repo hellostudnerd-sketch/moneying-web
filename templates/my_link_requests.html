@@ -11,6 +11,16 @@
     <p class="text-zinc-400 mt-1 text-sm">총 {{ requests|length }}건</p>
   </div>
 
+  {% if request.args.get('success') %}
+  <div class="bg-green-500/20 border border-green-500/30 rounded-xl p-4 mb-6 flex items-center gap-3">
+    <span class="text-2xl">✅</span>
+    <div>
+      <div class="text-green-400 font-bold">요청 완료!</div>
+      <div class="text-green-400/70 text-sm">1~3일 내에 쿠팡 링크가 등록됩니다.</div>
+    </div>
+  </div>
+  {% endif %}
+  
   {% if requests|length == 0 %}
   <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-10 text-center">
     <div class="text-4xl mb-4">🔗</div>
