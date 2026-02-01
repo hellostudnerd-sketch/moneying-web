@@ -178,29 +178,29 @@
 
     <div class="flex gap-2 shrink-0">
       <!-- 엑셀 다운로드 버튼 (찜한 영상 탭일 때만 표시) -->
-      <button id="excelDownloadBtn" onclick="exportBookmarksToExcel()" class="hidden bg-[#c4ff00] text-black font-bold px-4 py-2 rounded-xl hover:bg-white transition flex items-center gap-2">
+      <button id="excelDownloadBtn" onclick="exportBookmarksToExcel()" class="hidden bg-[#c4ff00] text-black font-bold px-4 py-2 rounded-md hover:bg-white transition flex items-center gap-2">
         <i class="fas fa-file-excel"></i> <span class="hidden md:inline">엑셀 다운로드</span><span class="md:hidden">엑셀</span>
       </button>
       {% if session.get("admin") %}
-        <a href="/admin/gallery/bulk" class="bg-zinc-700 text-white font-bold px-4 py-2 rounded-xl hover:bg-zinc-600 transition">📦 대량등록</a>
-        <a href="/admin/upload" class="bg-highlight text-black font-black px-4 py-2 rounded-xl hover:bg-white transition">+ 게시물 추가</a>
+        <a href="/admin/gallery/bulk" class="bg-zinc-700 text-white font-bold px-4 py-2 rounded-md hover:bg-zinc-600 transition">📦 대량등록</a>
+        <a href="/admin/upload" class="bg-highlight text-black font-black px-4 py-2 rounded-md hover:bg-white transition">+ 게시물 추가</a>
       {% elif session.get("is_seller") %}
-        <a href="/seller/upload" class="bg-purple-600 text-white font-bold px-4 py-2 rounded-xl hover:bg-purple-500 transition">📸 직촬 업로드</a>
+        <a href="/seller/upload" class="bg-purple-600 text-white font-bold px-4 py-2 rounded-md hover:bg-purple-500 transition">📸 직촬 업로드</a>
         {% if session.get("subscriber") or session.get("is_trial") %}
-        <span class="bg-zinc-800 text-zinc-400 font-bold px-4 py-2 rounded-xl border border-zinc-700">
+        <span class="bg-zinc-800 text-zinc-400 font-bold px-4 py-2 rounded-md border border-zinc-700">
           {% if session.get("is_trial") %}🎁 체험중{% else %}✅ 구독중{% endif %}
         </span>
         {% endif %}
       {% elif session.get("subscriber") or session.get("is_trial") %}
-        <span class="bg-zinc-800 text-zinc-400 font-bold px-4 py-2 rounded-xl border border-zinc-700">
+        <span class="bg-zinc-800 text-zinc-400 font-bold px-4 py-2 rounded-md border border-zinc-700">
           {% if session.get("is_trial") %}🎁 체험중{% else %}✅ 구독중{% endif %}
         </span>
       {% elif session.get("user_id") %}
-        <a href="/free-trial" class="bg-zinc-800 text-white font-bold px-4 py-2 rounded-xl border border-zinc-700 hover:border-highlight hover:text-highlight transition">🎁 3일 무료체험</a>
-        <a href="/pricing" class="bg-highlight text-black font-black px-4 py-2 rounded-xl hover:bg-white transition">구독하기</a>
+        <a href="/free-trial" class="bg-zinc-800 text-white font-bold px-4 py-2 rounded-md border border-zinc-700 hover:border-highlight hover:text-highlight transition">🎁 3일 무료체험</a>
+        <a href="/pricing" class="bg-highlight text-black font-black px-4 py-2 rounded-md hover:bg-white transition">구독하기</a>
       {% else %}
-        <a href="/login?next=/gallery" class="bg-zinc-800 text-white font-bold px-4 py-2 rounded-xl border border-zinc-700 hover:border-highlight hover:text-highlight transition">🎁 3일 무료체험</a>
-        <a href="/pricing" class="bg-highlight text-black font-black px-4 py-2 rounded-xl hover:bg-white transition">구독하기</a>
+        <a href="/login?next=/gallery" class="bg-zinc-800 text-white font-bold px-4 py-2 rounded-md border border-zinc-700 hover:border-highlight hover:text-highlight transition">🎁 3일 무료체험</a>
+        <a href="/pricing" class="bg-highlight text-black font-black px-4 py-2 rounded-md hover:bg-white transition">구독하기</a>
       {% endif %}
     </div>
   </div>
@@ -281,8 +281,8 @@
       <button type="button" id="subCloseBtn" class="text-zinc-400 hover:text-white text-2xl leading-none">×</button>
     </div>
     <div class="px-6 pb-6 flex flex-col gap-3">
-      <a href="/pricing" class="bg-lime-400 text-black font-black py-3 rounded-xl text-center hover:bg-white transition">요금제 보러가기</a>
-      <button type="button" id="subLaterBtn" class="bg-zinc-900 hover:bg-zinc-800 text-white font-bold py-3 rounded-xl border border-zinc-800">지금은 그냥 둘러볼게요</button>
+      <a href="/pricing" class="bg-lime-400 text-black font-black py-3 rounded-md text-center hover:bg-white transition">요금제 보러가기</a>
+      <button type="button" id="subLaterBtn" class="bg-zinc-900 hover:bg-zinc-800 text-white font-bold py-3 rounded-md border border-zinc-800">지금은 그냥 둘러볼게요</button>
     </div>
   </div>
 </div>
@@ -622,7 +622,7 @@ async function openDetailModal(item) {
       a.href = normalizeUrl(u); 
       a.target = "_blank"; 
       a.rel = "noopener noreferrer"; 
-      a.className = `${platform.color} hover:opacity-80 text-white px-3 py-2 md:px-6 md:py-3 rounded-lg md:rounded-xl text-xs md:text-sm font-bold transition-all duration-150 flex items-center gap-1 md:gap-2 shadow-lg`; 
+      a.className = `${platform.color} hover:opacity-80 text-white px-3 py-2 md:px-6 md:py-3 rounded-lg md:rounded-md text-xs md:text-sm font-bold transition-all duration-150 flex items-center gap-1 md:gap-2 shadow-lg`; 
       a.innerHTML = `<i class="${platform.icon} text-lg"></i> ${platform.name}`; 
       group.appendChild(a); 
     }); 
@@ -632,11 +632,11 @@ async function openDetailModal(item) {
   const rowContainer = document.getElementById('imageRowsContainer');
   rowContainer.innerHTML = "";
   const rowDiv = document.createElement("div");
-  rowDiv.className = "glass-panel p-5 md:p-8 rounded-xl relative";
+  rowDiv.className = "glass-panel p-5 md:p-8 rounded-md relative";
 
-  let html = coupang ? `<div class="absolute top-5 right-5 z-10 hidden md:block"><a href="${coupang}" target="_blank" rel="noopener noreferrer" class="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 border border-zinc-600 transition">🚀 쿠팡 링크 보기</a></div>` : "";
+  let html = coupang ? `<div class="absolute top-5 right-5 z-10 hidden md:block"><a href="${coupang}" target="_blank" rel="noopener noreferrer" class="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2.5 rounded-md font-bold text-sm flex items-center gap-2 border border-zinc-600 transition">🚀 쿠팡 링크 보기</a></div>` : "";
   html += `<div class="flex items-center gap-3 mb-6"><div class="w-9 h-9 bg-highlight rounded-lg flex items-center justify-center text-black font-black text-sm shadow-lg">📸</div><div><h4 class="text-white font-black text-base md:text-lg">하이라이트 캡처</h4><p class="text-zinc-500 text-sm font-bold">최대 5장의 핵심 장면</p></div></div>`;
-  html += coupang ? `<div class="md:hidden w-full mb-5"><a href="${coupang}" target="_blank" rel="noopener noreferrer" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-3 rounded-xl font-bold flex justify-center items-center gap-2 text-sm border border-zinc-600 transition">🚀 쿠팡 링크 보기</a></div>` : "";
+  html += coupang ? `<div class="md:hidden w-full mb-5"><a href="${coupang}" target="_blank" rel="noopener noreferrer" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-3 rounded-md font-bold flex justify-center items-center gap-2 text-sm border border-zinc-600 transition">🚀 쿠팡 링크 보기</a></div>` : "";
 
   if (images.length === 0) { html += `<div class="text-zinc-600 text-sm font-bold">등록된 이미지가 없습니다.</div>`; }
   else {
