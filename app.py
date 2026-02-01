@@ -2577,7 +2577,27 @@ def api_notifications_count():
     
     count = Notification.query.filter_by(user_id=session["user_id"], is_read=False).count()
     return jsonify({"count": count})
+@app.route("/api/notifications/<int:noti_id>/delete", methods=["POST"])
+def api_notification_delete(noti_id):
+    if not session.get("user_id"):
+        return jsonify({"ok": False, "error": "login_required"})
+    
+    noti = Notification.query.get_or_404(noti_id)
+    if noti.user_id != session["user_id"]:
+        return jsonify({"ok": False, "error": "no_permission"})
+    
+    db.session.delete(noti)
+    db.session.commit()
+    return jsonify({"ok": True})
 
+@app.route("/api/notifications/delete-all", methods=["POST"])
+def api_notifications_delete_all():
+    if not session.get("user_id"):
+        return jsonify({"ok": False, "error": "login_required"})
+    
+    Notification.query.filter_by(user_id=session["user_id"]).delete()
+    db.session.commit()
+    return jsonify({"ok": True})
 
 if __name__ == "__main__":
     app.run(debug=True)
