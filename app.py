@@ -978,8 +978,7 @@ def link_request_new():
             requester_email=user_email, kakao_nickname=kakao_nickname
         ))
         db.session.commit()
-        flash("링크요청이 접수되었습니다!", "success")
-        return redirect(url_for("link_requests"))
+        return redirect(url_for("my_link_requests", success=1))
 
     return render_template("link_request_new.html", monthly_used=monthly_used, monthly_limit=monthly_limit)
 
