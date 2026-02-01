@@ -1,5 +1,13 @@
 {% extends "base.html" %}
-{% block title %}내가 쓴 글 - MONEYING{% endblock %}
+{% block title %}나의 활동 - MONEYING{% endblock %}
+
+{% block head_extra %}
+<style>
+  .tab-btn { background: rgba(39, 39, 42, 0.5); border: 1px solid rgba(255,255,255,0.1); color: #a1a1aa; }
+  .tab-btn:hover { background: rgba(63, 63, 70, 0.6); color: #fff; }
+  .tab-btn.active { background: #fff; border-color: #fff; color: #000; }
+</style>
+{% endblock %}
 
 {% block content %}
 
@@ -16,47 +24,76 @@
     <button onclick="showTab('applications')" id="tab-applications" class="tab-btn px-4 py-2 rounded-full text-sm font-bold transition">공구/협찬 신청 ({{ applications|length }})</button>
   </div>
 
-  {% if posts|length == 0 %}
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-10 text-center">
-    <div class="text-4xl mb-4">✏️</div>
-    <div class="text-zinc-400 font-bold mb-4">아직 작성한 글이 없어요</div>
-    <a href="/community/write" class="inline-block bg-[#c4ff00] text-black font-bold px-6 py-3 rounded-xl hover:bg-white transition">
-      글쓰기
-    </a>
-  </div>
-  {% else %}
-  
-  <div class="space-y-2">
-    {% for post in posts %}
-    <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl px-4 py-3 hover:border-zinc-700 transition flex items-center gap-3">
-      
-      <!-- 왼쪽: 아이콘 + 제목 -->
-      <a href="/community/{{ post.id }}" class="flex-1 min-w-0 flex items-center gap-3 group">
-        <span class="text-lg shrink-0">
-          {% if post.category == 'notice' %}📢{% elif post.category == 'deal' %}🛍️{% elif post.category == 'revenue' %}💸{% elif post.category == 'tips' %}💡{% elif post.category == 'qna' %}❓{% else %}🗣{% endif %}
-        </span>
-        <div class="min-w-0">
-          <h3 class="text-white font-medium group-hover:text-[#c4ff00] transition truncate">{{ post.title }}</h3>
-          <span class="text-zinc-500 text-xs">{{ post.created_at.strftime('%m/%d') }}</span>
-        </div>
+  <!-- 내가 쓴 글 섹션 -->
+  <div id="section-posts">
+    {% if posts|length == 0 %}
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-10 text-center">
+      <div class="text-4xl mb-4">✏️</div>
+      <div class="text-zinc-400 font-bold mb-4">아직 작성한 글이 없어요</div>
+      <a href="/community/write" class="inline-block bg-[#c4ff00] text-black font-bold px-6 py-3 rounded-xl hover:bg-white transition">
+        글쓰기
       </a>
-      
-      <!-- 오른쪽: 버튼들 -->
-      <div class="flex items-center gap-2 shrink-0">
-        <a href="/community/{{ post.id }}/edit" class="text-zinc-500 hover:text-[#c4ff00] text-xs transition">수정</a>
-        <button onclick="deletePost({{ post.id }})" class="text-zinc-500 hover:text-red-500 text-xs transition">삭제</button>
-      </div>
-      
     </div>
-    {% endfor %}
-  </div>
-  
-  {% endif %}
+    {% else %}
+    <div class="space-y-2">
+      {% for post in posts %}
+      <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl px-4 py-3 hover:border-zinc-700 transition flex items-center gap-3">
+        <a href="/community/{{ post.id }}" class="flex-1 min-w-0 flex items-center gap-3 group">
+          <span class="text-lg shrink-0">
+            {% if post.category == 'notice' %}📢{% elif post.category == 'deal' %}🛍️{% elif post.category == 'revenue' %}💸{% elif post.category == 'tips' %}💡{% elif post.category == 'qna' %}❓{% else %}🗣{% endif %}
+          </span>
+          <div class="min-w-0">
+            <h3 class="text-white font-medium group-hover:text-[#c4ff00] transition truncate">{{ post.title }}</h3>
+            <span class="text-zinc-500 text-xs">{{ post.created_at.strftime('%m/%d') }}</span>
+          </div>
+        </a>
+        <div class="flex items-center gap-2 shrink-0">
+          <a href="/community/{{ post.id }}/edit" class="text-zinc-500 hover:text-[#c4ff00] text-xs transition">수정</a>
+          <button onclick="deletePost({{ post.id }})" class="text-zinc-500 hover:text-red-500 text-xs transition">삭제</button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
 
-  <div class="mt-6">
-    <a href="/community/write" class="block w-full bg-[#c4ff00] text-black font-bold py-4 rounded-xl text-center hover:bg-white transition">
-      새 글 쓰기
-    </a>
+    <div class="mt-6">
+      <a href="/community/write" class="block w-full bg-[#c4ff00] text-black font-bold py-4 rounded-xl text-center hover:bg-white transition">
+        새 글 쓰기
+      </a>
+    </div>
+  </div>
+
+  <!-- 공구/협찬 신청 섹션 -->
+  <div id="section-applications" class="hidden">
+    {% if applications|length == 0 %}
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-10 text-center">
+      <div class="text-4xl mb-4">🛍️</div>
+      <div class="text-zinc-400 font-bold mb-4">신청 내역이 없어요</div>
+      <a href="/community" class="inline-block bg-[#c4ff00] text-black font-bold px-6 py-3 rounded-xl hover:bg-white transition">
+        공구/협찬 둘러보기
+      </a>
+    </div>
+    {% else %}
+    <div class="space-y-2">
+      {% for app in applications %}
+      <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl px-4 py-3 hover:border-zinc-700 transition">
+        <a href="/community/{{ app.post_id }}" class="flex items-center gap-3 group">
+          <span class="text-lg shrink-0">🛍️</span>
+          <div class="flex-1 min-w-0">
+            <h3 class="text-white font-medium group-hover:text-[#c4ff00] transition truncate">{{ app.post.title if app.post else '삭제된 글' }}</h3>
+            <span class="text-zinc-500 text-xs">{{ app.created_at.strftime('%m/%d') }} 신청</span>
+          </div>
+          <span class="shrink-0 text-xs font-bold px-2 py-1 rounded-full
+            {% if app.status == 'approved' %}bg-green-500/20 text-green-400
+            {% elif app.status == 'rejected' %}bg-red-500/20 text-red-400
+            {% else %}bg-zinc-700 text-zinc-400{% endif %}">
+            {% if app.status == 'approved' %}승인{% elif app.status == 'rejected' %}거절{% else %}대기중{% endif %}
+          </span>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
   </div>
 
 </div>
@@ -77,6 +114,16 @@
 </div>
 
 <script>
+function showTab(tab) {
+  document.getElementById('section-posts').classList.add('hidden');
+  document.getElementById('section-applications').classList.add('hidden');
+  document.getElementById('tab-posts').classList.remove('active');
+  document.getElementById('tab-applications').classList.remove('active');
+  
+  document.getElementById('section-' + tab).classList.remove('hidden');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
 function deletePost(postId) {
   document.getElementById('deleteForm').action = `/community/${postId}/delete`;
   document.getElementById('deleteModal').classList.remove('hidden');
