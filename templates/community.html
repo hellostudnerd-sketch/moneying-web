@@ -79,14 +79,13 @@
 </div>
 
 <!-- 실시간 인기글 -->
-{% set popular_posts = posts|sort(attribute='comments|length', reverse=true)|list %}
-{% if popular_posts|length > 0 %}
+{% if posts|length > 0 %}
 <div class="mb-8">
   <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
     <span class="text-xl">🔥</span> 실시간 인기글
   </h2>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-    {% for p in popular_posts[:3] %}
+    {% for p in posts[:3] %}
     <a href="/community/{{ p.id }}" class="popular-card rounded-xl p-4 block">
       <span class="text-xs font-bold {% if p.category == 'notice' %}cat-notice{% elif p.category == 'deal' %}cat-deal{% elif p.category == 'revenue' %}cat-revenue{% elif p.category == 'tips' %}cat-tips{% elif p.category == 'qna' %}cat-qna{% else %}cat-free{% endif %}">
         {% if p.category == 'notice' %}📢 공지사항{% elif p.category == 'deal' %}🛍️ 공구/협찬{% elif p.category == 'revenue' %}💸 수익인증{% elif p.category == 'tips' %}💡 꿀팁공유{% elif p.category == 'qna' %}❓ 질문답변{% else %}💬 자유게시판{% endif %}
@@ -201,3 +200,4 @@ function filterPosts(category, btn) {
   });
 }
 </script>
+{% endblock %}
