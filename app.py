@@ -2365,7 +2365,12 @@ def my_posts():
         author_email=session.get("user_email")
     ).order_by(CommunityPost.created_at.desc()).all()
     
-    return render_template("my_posts.html", posts=posts)
+    # 공구/협찬 신청 내역
+    applications = DealApplication.query.filter_by(
+        user_id=session.get("user_id")
+    ).order_by(DealApplication.created_at.desc()).all()
+    
+    return render_template("my_posts.html", posts=posts, applications=applications)
 
 
 # ----------------------------
