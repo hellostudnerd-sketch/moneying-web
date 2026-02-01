@@ -1018,7 +1018,22 @@ def link_request_detail(request_id):
             abort(403)
         it.coupang_url = (request.form.get("coupang_url") or "").strip()
         db.session.commit()
-        return redirect(url_for("link_request_detail", request_id=request_id))
+        
+        # 신청자에게 알림
+        if it.coupang_url:
+            user = User.query.filter_by(email=it.requester_email).first()
+            if user:
+                noti = Notification(
+                    user_id=user.id,
+                    type="link_completed",
+                    title="링크요청 완료",
+                    message=f"'{it.title}' 요청의 쿠팡 링크가 등록되었습니다!",
+                    link="/my/link-requests"
+                )
+                db.session.add(noti)
+                db.session.commit()
+        
+        return redirect(url_for("admin_link_requests"))
     return render_template("link_request_detail.html", it=it)
 
 
