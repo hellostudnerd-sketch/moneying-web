@@ -468,14 +468,14 @@ def save_upload(file_storage):
     img = Image.open(file_storage)
     if img.mode in ('RGBA', 'P'):
         img = img.convert('RGB')
-    img.thumbnail((1200, 1200), Image.LANCZOS)
     
-    buffer = BytesIO()
-    img.save(buffer, 'WEBP', quality=80)
-    buffer.seek(0)
+    # 원본용 (1200px)
+    img_original = img.copy()
+    img_original.thumbnail((1200, 1200), Image.LANCZOS)
     
-    # R2 업로드
-    new_name = f"{uuid.uuid4().hex}.webp"
+    # 썸네일용 (400px)
+    img_thumb = img.copy()
+    img_thumb.thumbnail((400, 400), Image.LANCZOS)
     
     s3 = boto3.client('s3',
         endpoint_url="https://b6f9c47a567f57911cab3c58f07cfc61.r2.cloudflarestorage.com",
@@ -483,23 +483,22 @@ def save_upload(file_storage):
         aws_secret_access_key="f7001674ed1ee7f505a45f071891811db5e333c2a890f4f9f71a7f7be41c55f7"
     )
     
-    s3.upload_fileobj(
-        buffer,
-        "moneying-uploads",
-        new_name,
-        ExtraArgs={'ContentType': 'image/webp'}
-    )
+    file_id = uuid.uuid4().hex
     
-    # R2 Public URL 반환
-    return f"/r2/{new_name}"
-
-def parse_json_list_field(field_name: str):
-    raw = (request.form.get(field_name) or "[]").strip()
-    try:
-        v = json.loads(raw)
-        return v if isinstance(v, list) else []
-    except Exception:
-        return []
+    # 원본 업로드
+    buffer_original = BytesIO()
+    img_original.save(buffer_original, 'WEBP', quality=80)
+    buffer_original.seek(0)
+    s3.upload_fileobj(buffer_original, "moneying-uploads", f"{file_id}.webp", ExtraArgs={'ContentType': 'image/webp'})
+    
+    # 썸네일 업로드
+    buffer_thumb = BytesIO()
+    img_thumb.save(buffer_thumb, 'WEBP', quality=70)
+    buffer_thumb.seek(0)
+    s3.upload_fileobj(buffer_thumb, "moneying-uploads", f"{file_id}_thumb.webp", ExtraArgs={'ContentType': 'image/webp'})
+    
+    # R2 Public URL 반환 (원본)
+    return f"/r2/{file_id}.webp"
 
 
 # ----------------------------
