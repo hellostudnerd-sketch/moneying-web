@@ -1931,6 +1931,7 @@ def seller_upload():
         
         # images를 JSON 문자열로 저장
         images_str = json.dumps(images)
+        links_str = json.dumps(links)
         
         # links 분리
         video_url = links[0] if len(links) > 0 else ""
@@ -1941,9 +1942,7 @@ def seller_upload():
             title=title,
             category="seller",  # 판매자 직촬로 고정
             images_json=images_str,
-            video_url=video_url,
-            video_url2=video_url2,
-            video_url3=video_url3,
+            links_json=links_str,
             coupang_link=coupang_link,
             is_free=False,
             seller_id=user.id,
