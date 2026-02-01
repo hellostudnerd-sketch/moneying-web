@@ -222,6 +222,19 @@
     <div class="text-zinc-500 font-bold">찜한 영상이 없습니다</div>
     <p class="text-zinc-600 text-sm mt-2">마음에 드는 영상에 하트를 눌러보세요!</p>
   </div>
+  
+  <!-- 찜 목록 엑셀 다운로드 영역 -->
+  <div id="bookmarkExportArea" class="hidden mb-6">
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <p class="text-white font-bold">💡 찜한 영상을 엑셀로 한 번에 받아보세요!</p>
+        <p class="text-zinc-500 text-sm mt-1">제목, 원본 링크, 쿠팡 링크가 포함됩니다.</p>
+      </div>
+      <button onclick="exportBookmarksToExcel()" class="shrink-0 bg-[#c4ff00] text-black font-bold px-5 py-2.5 rounded-xl hover:bg-white transition flex items-center gap-2">
+        <i class="fas fa-file-excel"></i> 엑셀 다운로드
+      </button>
+    </div>
+  </div>
   <div id="emptyRecent" class="hidden text-center py-20">
     <div class="text-4xl mb-4">🕐</div>
     <div class="text-zinc-500 font-bold">최근 본 영상이 없습니다</div>
@@ -421,7 +434,7 @@ function createGalleryCard(item) {
       ${adminEditBtn}
       <img src="${thumbUrl}" class="w-full h-full object-cover transition-all duration-150" alt="${titleSafe}" loading="lazy">
       <button class="card-bookmark-btn absolute top-2 ${IS_ADMIN ? 'right-12' : 'right-2'} z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-black/80 flex items-center justify-center border border-white/10 transition ${bookmarked ? 'text-red-500' : 'text-white/60 hover:text-red-400'}" onclick="event.stopPropagation(); handleCardBookmark(${item.id}, this);" title="${bookmarked ? '찜 해제' : '찜하기'}"><i class="fas fa-heart text-sm"></i></button>
-      ${item.is_free ? `<div class="absolute top-2 left-2 px-2 py-1 rounded bg-red-500 text-white text-xs font-bold">무료</div>` : ''}
+      ${item.is_free ? `<div class="absolute top-2 left-2 px-2 py-1 rounded bg-red-500 text-white text-xs font-bold">무료</div>` : (viewCount >= 50 ? `<div class="absolute top-2 left-2 px-2 py-1 rounded bg-orange-500 text-white text-xs font-bold flex items-center gap-1">🔥 HOT</div>` : '')}
       ${!canAccess ? `<div class="absolute inset-0 bg-black/40 flex items-center justify-center"><span class="text-2xl">🔒</span></div>` : ''}
     </div>
     <div class="mt-2 px-1">
@@ -473,6 +486,7 @@ function filterGallery(category, btn) {
   document.getElementById('emptyState').classList.add('hidden');
   document.getElementById('emptyBookmark').classList.add('hidden');
   document.getElementById('emptyRecent').classList.add('hidden');
+  document.getElementById('bookmarkExportArea').classList.add('hidden');
 
   if (category === 'bookmark') renderBookmarkedItems();
   else if (category === 'recent') renderRecentItems();
@@ -484,8 +498,18 @@ function renderBookmarkedItems() {
   const bookmarks = getBookmarks();
   const bookmarkedPosts = allPosts.filter(p => bookmarks.includes(p.id));
   const grid = document.getElementById('gallery-grid');
+  const exportArea = document.getElementById('bookmarkExportArea');
   grid.innerHTML = '';
-  if (bookmarkedPosts.length === 0) { document.getElementById('emptyBookmark').classList.remove('hidden'); return; }
+  
+  if (bookmarkedPosts.length === 0) { 
+    document.getElementById('emptyBookmark').classList.remove('hidden'); 
+    exportArea.classList.add('hidden');
+    return; 
+  }
+  
+  document.getElementById('emptyBookmark').classList.add('hidden');
+  exportArea.classList.remove('hidden');
+  
   bookmarkedPosts.sort((a, b) => bookmarks.indexOf(a.id) - bookmarks.indexOf(b.id));
   bookmarkedPosts.forEach(item => grid.appendChild(createGalleryCard(item)));
 }
@@ -596,7 +620,38 @@ function closeDetailModal() {
   document.body.style.overflow = ''; 
   currentModalItem = null; 
 }
-
+// ===== 엑셀 다운로드 =====
+function exportBookmarksToExcel() {
+  const bookmarks = getBookmarks();
+  const bookmarkedPosts = allPosts.filter(p => bookmarks.includes(p.id));
+  
+  if (bookmarkedPosts.length === 0) {
+    alert('찜한 영상이 없습니다.');
+    return;
+  }
+  
+  // CSV 데이터 생성
+  let csv = '\uFEFF제목,원본링크,쿠팡링크,카테고리\n';
+  
+  bookmarkedPosts.forEach(item => {
+    const title = (item.title || '').replace(/,/g, ' ');
+    const links = (item.links || []).filter(x => x).join(' | ').replace(/,/g, ' ');
+    const coupang = (item.coupang_link || '').replace(/,/g, ' ');
+    const category = (item.category || '').replace(/,/g, ' ');
+    csv += `"${title}","${links}","${coupang}","${category}"\n`;
+  });
+  
+  // 다운로드
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `moneying_찜목록_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 // ===== 초기화 =====
 window.addEventListener("load", () => {
   loadGallery();
