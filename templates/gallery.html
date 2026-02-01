@@ -177,6 +177,10 @@
     </div>
 
     <div class="flex gap-2 shrink-0">
+      <!-- 엑셀 다운로드 버튼 (찜한 영상 탭일 때만 표시) -->
+      <button id="excelDownloadBtn" onclick="exportBookmarksToExcel()" class="hidden bg-[#c4ff00] text-black font-bold px-4 py-2 rounded-xl hover:bg-white transition flex items-center gap-2">
+        <i class="fas fa-file-excel"></i> <span class="hidden md:inline">엑셀 다운로드</span><span class="md:hidden">엑셀</span>
+      </button>
       {% if session.get("admin") %}
         <a href="/admin/gallery/bulk" class="bg-zinc-700 text-white font-bold px-4 py-2 rounded-xl hover:bg-zinc-600 transition">📦 대량등록</a>
         <a href="/admin/upload" class="bg-highlight text-black font-black px-4 py-2 rounded-xl hover:bg-white transition">+ 게시물 추가</a>
@@ -223,18 +227,7 @@
     <p class="text-zinc-600 text-sm mt-2">마음에 드는 영상에 하트를 눌러보세요!</p>
   </div>
   
-  <!-- 찜 목록 엑셀 다운로드 영역 -->
-  <div id="bookmarkExportArea" class="hidden mb-6">
-    <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      <div>
-        <p class="text-white font-bold">💡 찜한 영상을 엑셀로 한 번에 받아보세요!</p>
-        <p class="text-zinc-500 text-sm mt-1">제목, 원본 링크, 쿠팡 링크가 포함됩니다.</p>
-      </div>
-      <button onclick="exportBookmarksToExcel()" class="shrink-0 bg-[#c4ff00] text-black font-bold px-5 py-2.5 rounded-xl hover:bg-white transition flex items-center gap-2">
-        <i class="fas fa-file-excel"></i> 엑셀 다운로드
-      </button>
-    </div>
-  </div>
+  
   <div id="emptyRecent" class="hidden text-center py-20">
     <div class="text-4xl mb-4">🕐</div>
     <div class="text-zinc-500 font-bold">최근 본 영상이 없습니다</div>
@@ -486,7 +479,7 @@ function filterGallery(category, btn) {
   document.getElementById('emptyState').classList.add('hidden');
   document.getElementById('emptyBookmark').classList.add('hidden');
   document.getElementById('emptyRecent').classList.add('hidden');
-  document.getElementById('bookmarkExportArea').classList.add('hidden');
+  document.getElementById('excelDownloadBtn').classList.add('hidden');
 
   if (category === 'bookmark') renderBookmarkedItems();
   else if (category === 'recent') renderRecentItems();
@@ -498,17 +491,17 @@ function renderBookmarkedItems() {
   const bookmarks = getBookmarks();
   const bookmarkedPosts = allPosts.filter(p => bookmarks.includes(p.id));
   const grid = document.getElementById('gallery-grid');
-  const exportArea = document.getElementById('bookmarkExportArea');
+  const excelBtn = document.getElementById('excelDownloadBtn');
   grid.innerHTML = '';
   
   if (bookmarkedPosts.length === 0) { 
     document.getElementById('emptyBookmark').classList.remove('hidden'); 
-    exportArea.classList.add('hidden');
+    excelBtn.classList.add('hidden');
     return; 
   }
   
   document.getElementById('emptyBookmark').classList.add('hidden');
-  exportArea.classList.remove('hidden');
+  excelBtn.classList.remove('hidden');
   
   bookmarkedPosts.sort((a, b) => bookmarks.indexOf(a.id) - bookmarks.indexOf(b.id));
   bookmarkedPosts.forEach(item => grid.appendChild(createGalleryCard(item)));
@@ -630,15 +623,18 @@ function exportBookmarksToExcel() {
     return;
   }
   
-  // CSV 데이터 생성
-  let csv = '\uFEFF제목,원본링크,쿠팡링크,카테고리\n';
+  // CSV 데이터 생성 (원본링크 3개 각각 열로)
+  let csv = '\uFEFF제목,원본링크1,원본링크2,원본링크3,쿠팡링크,카테고리\n';
   
   bookmarkedPosts.forEach(item => {
     const title = (item.title || '').replace(/,/g, ' ');
-    const links = (item.links || []).filter(x => x).join(' | ').replace(/,/g, ' ');
-    const coupang = (item.coupang_link || '').replace(/,/g, ' ');
-    const category = (item.category || '').replace(/,/g, ' ');
-    csv += `"${title}","${links}","${coupang}","${category}"\n`;
+    const links = (item.links || []).filter(x => x);
+    const link1 = links[0] || '';
+    const link2 = links[1] || '';
+    const link3 = links[2] || '';
+    const coupang = item.coupang_link || '';
+    const category = item.category || '';
+    csv += `"${title}","${link1}","${link2}","${link3}","${coupang}","${category}"\n`;
   });
   
   // 다운로드
