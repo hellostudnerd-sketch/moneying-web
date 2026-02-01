@@ -2372,6 +2372,17 @@ def my_posts():
     
     return render_template("my_posts.html", posts=posts, applications=applications)
 
+@app.route("/my/link-requests")
+def my_link_requests():
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    
+    user_email = session.get("user_email")
+    requests = LinkRequest.query.filter_by(
+        requester_email=user_email
+    ).order_by(LinkRequest.created_at.desc()).all()
+    
+    return render_template("my_link_requests.html", requests=requests)
 
 # ----------------------------
 # 리워드
