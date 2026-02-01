@@ -491,7 +491,7 @@ def save_upload(file_storage):
     )
     
     # R2 Public URL 반환
-    return f"https://pub-a2e6030a78b240aea6b998d958ae5b83.r2.dev/{new_name}"
+    return f"/r2/{new_name}"
 
 def parse_json_list_field(field_name: str):
     raw = (request.form.get(field_name) or "[]").strip()
@@ -607,7 +607,30 @@ def update_session_status(user_id):
             session["subscriber"] = True
         else:
             session["subscriber"] = False
-
+# ----------------------------
+# R2 이미지 프록시
+# ----------------------------
+@app.route("/r2/<path:filename>")
+def serve_r2_file(filename):
+    import boto3
+    from flask import Response
+    
+    s3 = boto3.client('s3',
+        endpoint_url="https://b6f9c47a567f57911cab3c58f07cfc61.r2.cloudflarestorage.com",
+        aws_access_key_id="bd378a5b4a8c51dece8aeeec96c846e5",
+        aws_secret_access_key="f7001674ed1ee7f505a45f071891811db5e333c2a890f4f9f71a7f7be41c55f7"
+    )
+    
+    try:
+        obj = s3.get_object(Bucket="moneying-uploads", Key=filename)
+        return Response(
+            obj['Body'].read(),
+            content_type=obj.get('ContentType', 'image/webp'),
+            headers={'Cache-Control': 'public, max-age=31536000'}
+        )
+    except Exception as e:
+        print(f"R2 file error: {e}")
+        return "File not found", 404
 
 # ----------------------------
 # Public Routes
