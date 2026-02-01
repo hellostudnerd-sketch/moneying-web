@@ -7,8 +7,13 @@
 
   <div class="mb-6">
     <a href="/my" class="text-zinc-500 hover:text-white transition text-sm">← 내정보</a>
-    <h1 class="text-2xl font-black mt-4">내가 쓴 글</h1>
-    <p class="text-zinc-400 mt-1 text-sm">총 {{ posts|length }}개</p>
+    <h1 class="text-2xl font-black mt-4">나의 활동</h1>
+  </div>
+
+  <!-- 탭 -->
+  <div class="flex gap-2 mb-6">
+    <button onclick="showTab('posts')" id="tab-posts" class="tab-btn active px-4 py-2 rounded-full text-sm font-bold transition">내가 쓴 글 ({{ posts|length }})</button>
+    <button onclick="showTab('applications')" id="tab-applications" class="tab-btn px-4 py-2 rounded-full text-sm font-bold transition">공구/협찬 신청 ({{ applications|length }})</button>
   </div>
 
   {% if posts|length == 0 %}
