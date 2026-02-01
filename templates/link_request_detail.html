@@ -11,21 +11,15 @@
     </div>
 
     <div class="flex gap-2">
-      <button onclick="history.back()"
-              class="px-4 py-2 rounded-lg bg-zinc-800 text-gray-200 hover:bg-zinc-700 transition">
-        ← 뒤로가기
-      </button>
-
-      <!-- ✅ 관리자면 관리자 목록으로, 유저면 유저 목록으로 -->
       {% if session.get("admin") %}
         <a href="{{ url_for('admin_link_requests') }}"
-           class="px-4 py-2 rounded-lg bg-zinc-900 text-gray-200 border border-zinc-800 hover:bg-zinc-800 transition">
-          목록
+           class="px-4 py-2 rounded-lg bg-zinc-800 text-gray-200 hover:bg-zinc-700 transition">
+          ← 목록으로
         </a>
       {% else %}
-        <a href="{{ url_for('link_requests') }}"
-           class="px-4 py-2 rounded-lg bg-zinc-900 text-gray-200 border border-zinc-800 hover:bg-zinc-800 transition">
-          목록
+        <a href="{{ url_for('my_link_requests') }}"
+           class="px-4 py-2 rounded-lg bg-zinc-800 text-gray-200 hover:bg-zinc-700 transition">
+          ← 목록으로
         </a>
       {% endif %}
     </div>
