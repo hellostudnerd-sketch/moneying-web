@@ -60,6 +60,11 @@
     <p class="text-zinc-400 mt-2">함께 성장하는 숏폼 수익화 커뮤니티</p>
   </div>
   <div class="flex items-center gap-2 shrink-0">
+    <!-- 카톡 오픈방 -->
+    <a href="https://open.kakao.com/o/여기에링크" target="_blank"
+       class="bg-yellow-400 text-black font-bold px-3 py-2 rounded-xl hover:bg-yellow-300 transition flex items-center gap-1 text-sm">
+      <i class="fas fa-comment"></i> <span class="hidden md:inline">오픈방</span>
+    </a>
     <!-- 검색 -->
     <form method="GET" action="/community" class="relative">
       <input type="text" name="q" value="{{ search or '' }}" placeholder="검색"
