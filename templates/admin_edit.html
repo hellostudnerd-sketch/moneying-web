@@ -175,7 +175,7 @@
         wrap.className = "relative w-40 h-64 rounded-xl overflow-hidden border border-zinc-800 bg-black";
 
         const img = document.createElement("img");
-        img.src = fn.startsWith("http") ? fn : ("/static/uploads/" + fn);
+        img.src = fn.startsWith("http") || fn.startsWith("/r2/") ? fn : ("/static/uploads/" + fn);
         img.className = "w-full h-full object-cover opacity-90";
         wrap.appendChild(img);
 
