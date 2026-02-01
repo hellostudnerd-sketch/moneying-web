@@ -487,35 +487,87 @@ function filterGallery(category, btn) {
   else loadGallery(true);
 }
 
-function renderBookmarkedItems() {
+async function renderBookmarkedItems() {
   const bookmarks = getBookmarks();
-  const bookmarkedPosts = allPosts.filter(p => bookmarks.includes(p.id));
   const grid = document.getElementById('gallery-grid');
   const excelBtn = document.getElementById('excelDownloadBtn');
   grid.innerHTML = '';
   
-  if (bookmarkedPosts.length === 0) { 
+  if (bookmarks.length === 0) { 
     document.getElementById('emptyBookmark').classList.remove('hidden'); 
     excelBtn.classList.add('hidden');
     return; 
   }
   
-  document.getElementById('emptyBookmark').classList.add('hidden');
-  excelBtn.classList.remove('hidden');
-  
-  bookmarkedPosts.sort((a, b) => bookmarks.indexOf(a.id) - bookmarks.indexOf(b.id));
-  bookmarkedPosts.forEach(item => grid.appendChild(createGalleryCard(item)));
+  // 전체 데이터 다시 로드
+  showLoadingSpinner();
+  try {
+    const res = await fetch(`/api/gallery?page=1&per_page=100&t=${Date.now()}`);
+    const data = await res.json();
+    const allData = data.posts || [];
+    
+    const bookmarkedPosts = allData.filter(p => bookmarks.includes(p.id));
+    
+    hideLoadingSpinner();
+    
+    if (bookmarkedPosts.length === 0) { 
+      document.getElementById('emptyBookmark').classList.remove('hidden'); 
+      excelBtn.classList.add('hidden');
+      return; 
+    }
+    
+    document.getElementById('emptyBookmark').classList.add('hidden');
+    excelBtn.classList.remove('hidden');
+    
+    bookmarkedPosts.sort((a, b) => bookmarks.indexOf(a.id) - bookmarks.indexOf(b.id));
+    bookmarkedPosts.forEach(item => grid.appendChild(createGalleryCard(item)));
+    
+    // allPosts 업데이트 (엑셀 다운로드용)
+    allPosts = allData;
+  } catch (e) {
+    hideLoadingSpinner();
+    console.error('Bookmark load error:', e);
+  }
 }
 
-function renderRecentItems() {
+async function renderRecentItems() {
   const recent = getRecentViewed();
-  const recentPosts = allPosts.filter(p => recent.includes(p.id));
   const grid = document.getElementById('gallery-grid');
   grid.innerHTML = '';
-  if (recentPosts.length === 0) { document.getElementById('emptyRecent').classList.remove('hidden'); return; }
-  recentPosts.sort((a, b) => recent.indexOf(a.id) - recent.indexOf(b.id));
-  recentPosts.forEach(item => grid.appendChild(createGalleryCard(item)));
+  
+  if (recent.length === 0) { 
+    document.getElementById('emptyRecent').classList.remove('hidden'); 
+    return; 
+  }
+  
+  // 전체 데이터 다시 로드
+  showLoadingSpinner();
+  try {
+    const res = await fetch(`/api/gallery?page=1&per_page=100&t=${Date.now()}`);
+    const data = await res.json();
+    const allData = data.posts || [];
+    
+    const recentPosts = allData.filter(p => recent.includes(p.id));
+    
+    hideLoadingSpinner();
+    
+    if (recentPosts.length === 0) { 
+      document.getElementById('emptyRecent').classList.remove('hidden'); 
+      return; 
+    }
+    
+    document.getElementById('emptyRecent').classList.add('hidden');
+    recentPosts.sort((a, b) => recent.indexOf(a.id) - recent.indexOf(b.id));
+    recentPosts.forEach(item => grid.appendChild(createGalleryCard(item)));
+    
+    // allPosts 업데이트
+    allPosts = allData;
+  } catch (e) {
+    hideLoadingSpinner();
+    console.error('Recent load error:', e);
+  }
 }
+
 
 function renderPopularItems() {
   const grid = document.getElementById('gallery-grid');
