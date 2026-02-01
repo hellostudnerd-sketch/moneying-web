@@ -139,7 +139,7 @@ function renderPreview() {
     const div = document.createElement("div");
     div.className = "relative aspect-[9/16] rounded-lg overflow-hidden border border-zinc-700 group";
     // 변경 후
-const imgUrl = fn.startsWith('http') ? fn : `/static/uploads/${fn}`;
+const imgUrl = fn.startsWith('http') || fn.startsWith('/r2/') ? fn : `/static/uploads/${fn}`;
 div.innerHTML = `
   <img src="${imgUrl}" class="w-full h-full object-cover"/>
       ${i === 0 ? '<span class="absolute top-1 left-1 bg-[#a3e635] text-black text-[10px] font-black px-1.5 py-0.5 rounded">MAIN</span>' : ''}
