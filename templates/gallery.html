@@ -701,6 +701,20 @@ async function openDetailModal(item) {
   
   rowContainer.innerHTML = html;
 }
+
+function updateModalBookmarkBtn(id) {
+  const btn = document.getElementById('modalBookmarkBtn');
+  if (isBookmarked(id)) { btn.classList.add('active'); btn.title = '찜 해제'; }
+  else { btn.classList.remove('active'); btn.title = '찜하기'; }
+}
+
+function closeDetailModal() { 
+  const modal = document.getElementById('detailModal'); 
+  modal.classList.add('hidden'); 
+  modal.classList.remove('flex'); 
+  document.body.style.overflow = ''; 
+  currentModalItem = null; 
+}
   
 // ===== 엑셀 다운로드 =====
 function exportBookmarksToExcel() {
