@@ -2506,7 +2506,24 @@ def my_rewards():
         invited_users=invited_users,
         revenue_posts=revenue_posts
     )
-
+@app.route("/my/nickname", methods=["GET", "POST"])
+def my_nickname():
+    if "user_id" not in session:
+        return redirect(url_for("login", next="/my/nickname"))
+    
+    user = User.query.get(session["user_id"])
+    if not user:
+        return redirect(url_for("login"))
+    
+    if request.method == "POST":
+        new_nickname = (request.form.get("nickname") or "").strip()
+        if new_nickname:
+            user.nickname = new_nickname
+            db.session.commit()
+            return redirect(url_for("my_page"))
+        return render_template("my_nickname.html", user=user, error="닉네임을 입력해주세요")
+    
+    return render_template("my_nickname.html", user=user)
 
 # ----------------------------
 # 결제 내역
