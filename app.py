@@ -1918,10 +1918,10 @@ def api_upload_video():
     
     f.save(temp_input)
     
-    try:
+   try:
         # FFmpeg로 720p, 60초 제한 압축
         subprocess.run([
-            'ffmpeg', '-i', temp_input,
+            '/usr/bin/ffmpeg', '-i', temp_input,
             '-vf', 'scale=-2:720',
             '-t', '60',
             '-c:v', 'libx264', '-preset', 'fast', '-crf', '28',
@@ -1932,7 +1932,7 @@ def api_upload_video():
         
         # 썸네일 생성 (첫 프레임)
         subprocess.run([
-            'ffmpeg', '-i', temp_input,
+            '/usr/bin/ffmpeg', '-i', temp_input,
             '-vf', 'scale=400:-2',
             '-frames:v', '1',
             '-y', temp_thumb
