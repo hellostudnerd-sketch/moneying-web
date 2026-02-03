@@ -256,7 +256,7 @@
   </div>
 
 <div id="detailModal" class="fixed inset-0 z-[999] hidden items-center justify-center modal-backdrop backdrop-blur-xl p-4">
-  <div id="detailBox" class="bg-zinc-950 w-full max-w-md md:max-h-[85vh] rounded-2xl overflow-hidden shadow-2xl border border-zinc-800/50 relative flex flex-col">
+  <div id="detailBox" class="bg-zinc-950 w-full max-w-md max-h-[100dvh] md:max-h-[85vh] rounded-2xl overflow-hidden shadow-2xl border border-zinc-800/50 relative flex flex-col">
     <!-- 헤더 -->
     <div class="flex items-center justify-between p-4 border-b border-zinc-800/50">
       <span id="modalViews" class="text-zinc-400 text-sm">👁 0회</span>
@@ -661,7 +661,7 @@ async function openDetailModal(item) {
     html += `
       <video 
         src="${previewVideo}" 
-        class="w-full aspect-[9/16] bg-black rounded-lg object-contain"
+        class="w-full aspect-[9/16] max-h-[50vh] md:max-h-none bg-black rounded-lg object-contain"
         controls
         controlsList="nodownload"
         disablePictureInPicture
