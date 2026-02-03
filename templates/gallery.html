@@ -276,7 +276,7 @@
     <div class="flex-1 overflow-y-auto p-4">
       <div class="flex items-center justify-center gap-3 mb-4">
         <h2 id="modalTitle" class="text-xl md:text-2xl font-black text-white">제목</h2>
-        <a id="modalCoupangBtn" href="#" target="_blank" rel="noopener noreferrer" class="hidden bg-[#d32f2f] hover:bg-[#b71c1c] text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all items-center gap-1.5 shadow-md whitespace-nowrap"><img src="/static/coupang-logo.png" class="w-4 h-4 object-contain"> 쿠팡</a>
+        <a id="modalCoupangBtn" href="#" target="_blank" rel="noopener noreferrer" class="hidden bg-[#d32f2f] hover:bg-[#b71c1c] text-white px-4 py-2 rounded-lg text-sm font-bold transition-all items-center gap-2 shadow-md whitespace-nowrap"><img src="/static/coupang-logo.png" class="w-5 h-5 object-contain brightness-0 invert"> 쿠팡</a>
       </div>
       <div id="videoLinkGroup" class="hidden"></div>
       <div id="imageRowsContainer"></div>
@@ -663,7 +663,7 @@ async function openDetailModal(item) {
     html += `<div class="flex justify-center gap-3 mb-5">`;
     links.forEach((u) => {
       const platform = getPlatformInfo(u);
-      html += `<a href="${normalizeUrl(u)}" target="_blank" rel="noopener noreferrer" class="${platform.color} hover:opacity-80 w-11 h-11 rounded-full flex items-center justify-center shadow-md transition-all" title="${platform.name}"><i class="${platform.icon} text-white text-lg"></i></a>`;
+      html += `<a href="${normalizeUrl(u)}" target="_blank" rel="noopener noreferrer" class="${platform.color} hover:opacity-80 w-12 h-12 rounded-full flex items-center justify-center shadow-md transition-all" title="${platform.name}"><i class="${platform.icon} text-white text-xl"></i></a>`;
     });
     html += `</div>`;
   }
