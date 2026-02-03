@@ -274,7 +274,10 @@
     </div>
     <!-- 컨텐츠 -->
     <div class="flex-1 overflow-y-auto p-4">
-      <h2 id="modalTitle" class="text-xl md:text-2xl font-black text-white text-center mb-4">제목</h2>
+      <div class="flex items-center justify-center gap-3 mb-4">
+        <h2 id="modalTitle" class="text-xl md:text-2xl font-black text-white">제목</h2>
+        <a id="modalCoupangBtn" href="#" target="_blank" rel="noopener noreferrer" class="hidden bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md"><i class="fas fa-rocket"></i> 쿠팡</a>
+      </div>
       <div id="videoLinkGroup" class="hidden"></div>
       <div id="imageRowsContainer"></div>
     </div>
@@ -641,11 +644,31 @@ async function openDetailModal(item) {
   const rowContainer = document.getElementById('imageRowsContainer');
   rowContainer.innerHTML = "";
   
-  // PC: 영상 왼쪽 + 버튼 오른쪽 / 모바일: 영상 위 + 버튼 아래
-  let html = `<div class="flex flex-col md:flex-row md:gap-6 md:items-start md:justify-center">`;
+  // 쿠팡 버튼 처리 (제목 옆)
+  const coupangBtn = document.getElementById('modalCoupangBtn');
+  if (coupang) {
+    coupangBtn.href = coupang;
+    coupangBtn.classList.remove('hidden');
+    coupangBtn.classList.add('flex');
+  } else {
+    coupangBtn.classList.add('hidden');
+    coupangBtn.classList.remove('flex');
+  }
+
+  let html = `<div class="max-w-xs mx-auto">`;
   
-  // 영상 영역
-  html += `<div class="w-full md:w-64 flex-shrink-0">`;
+  // 원형 플랫폼 버튼들
+  if (links.length > 0) {
+    html += `<p class="text-zinc-500 text-xs text-center mb-3">원본 영상 보기</p>`;
+    html += `<div class="flex justify-center gap-3 mb-5">`;
+    links.forEach((u) => {
+      const platform = getPlatformInfo(u);
+      html += `<a href="${normalizeUrl(u)}" target="_blank" rel="noopener noreferrer" class="${platform.color} hover:opacity-80 w-11 h-11 rounded-full flex items-center justify-center shadow-md transition-all" title="${platform.name}"><i class="${platform.icon} text-white text-lg"></i></a>`;
+    });
+    html += `</div>`;
+  }
+  
+  // 영상
   if (previewVideo) {
     html += `
       <video 
@@ -669,31 +692,7 @@ async function openDetailModal(item) {
         </div>`;
     }
   }
-  html += `</div>`;
   
-  // 버튼 영역 (PC: 오른쪽 / 모바일: 아래)
-  html += `<div class="mt-4 md:mt-0 md:w-40 flex flex-col gap-3">`;
-  
-  // 원본 링크
-  if (links.length > 0) {
-    html += `<p class="text-zinc-400 text-xs mb-1 hidden md:block">원본 영상 보기</p>`;
-    html += `<div class="flex flex-row md:flex-col gap-2 flex-wrap justify-center md:justify-start">`;
-    links.forEach((u) => {
-      const platform = getPlatformInfo(u);
-      html += `<a href="${normalizeUrl(u)}" target="_blank" rel="noopener noreferrer" class="${platform.color} hover:opacity-80 text-white px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 shadow-md" title="${platform.name}"><i class="${platform.icon}"></i> ${platform.name}</a>`;
-    });
-    html += `</div>`;
-  }
-  
-  // 쿠팡 링크
-  if (coupang) {
-    html += `<div class="mt-2 md:mt-4">`;
-    html += `<p class="text-zinc-400 text-xs mb-1 hidden md:block">제품 구매 링크</p>`;
-    html += `<a href="${coupang}" target="_blank" rel="noopener noreferrer" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 shadow-md justify-center md:justify-start" title="쿠팡"><i class="fas fa-rocket"></i> 쿠팡</a>`;
-    html += `</div>`;
-  }
-  
-  html += `</div>`;
   html += `</div>`;
   
   rowContainer.innerHTML = html;
