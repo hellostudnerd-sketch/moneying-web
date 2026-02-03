@@ -1939,9 +1939,13 @@ def api_upload_video():
         ], check=True, capture_output=True)
         
         # R2에 업로드
-        with open(temp_output, 'rb') as vf:
-            s3.upload_fileobj(vf, "moneying-uploads", f"{file_id}.mp4", 
-                ExtraArgs={'ContentType': 'video/mp4'})
+        import boto3
+        s3 = boto3.client('s3',
+            endpoint_url='https://bab76efc12234256a7112f5c09eb9a21.r2.cloudflarestorage.com',
+            aws_access_key_id=os.getenv('R2_ACCESS_KEY_ID'),
+            aws_secret_access_key=os.getenv('R2_SECRET_ACCESS_KEY'),
+            region_name='auto'
+        )
         
         with open(temp_thumb, 'rb') as tf:
             s3.upload_fileobj(tf, "moneying-uploads", f"{file_id}_thumb.webp",
