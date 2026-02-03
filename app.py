@@ -1950,8 +1950,8 @@ def api_upload_video():
             s3.upload_fileobj(tf, "moneying-uploads", f"{file_id}_thumb.webp",
                 ExtraArgs={'ContentType': 'image/webp'})
         
-        video_url = f"https://pub-bab76efc12234256a7112f5c09eb9a21.r2.dev/{file_id}.mp4"
-        thumb_url = f"https://pub-bab76efc12234256a7112f5c09eb9a21.r2.dev/{file_id}_thumb.webp"
+        video_url = f"/r2/{file_id}.mp4"
+        thumb_url = f"/r2/{file_id}_thumb.webp"
         
         return jsonify({
             "ok": True, 
