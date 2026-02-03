@@ -670,7 +670,8 @@ async function openDetailModal(item) {
         poster="${previewVideo.replace('.mp4', '_thumb.webp')}"
       ></video>`;
     if (coupang) {
-      html += `<div class="flex justify-end mt-3"><a href="${coupang}" target="_blank" rel="noopener noreferrer" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 shadow-md">🚀 쿠팡 상품링크</a></div>`;
+      html += `<p class="text-zinc-400 text-sm text-center mt-4 mb-2">👇 아래 제품링크를 확인하세요</p>`;
+      html += `<div class="flex justify-end"><a href="${coupang}" target="_blank" rel="noopener noreferrer" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 shadow-md">🚀 쿠팡 상품링크</a></div>`;
     }
     html += `<div class="h-4"></div>`;
   } else {
