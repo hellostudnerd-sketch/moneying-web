@@ -1118,9 +1118,7 @@ def kakao_callback():
     token_response = requests.post(token_url, data=token_data)
     token_json = token_response.json()
     
-    if not access_token:
-    return redirect(url_for("login"))
-    
+       
     access_token = token_json.get("access_token")
     
     # 사용자 정보 가져오기
