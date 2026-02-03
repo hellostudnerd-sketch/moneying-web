@@ -1930,10 +1930,10 @@ def api_upload_video():
             '-y', temp_output
         ], check=True, capture_output=True)
         
-        # 썸네일 생성 (첫 프레임)
+        # 썸네일 생성 (첫 프레임, 9:16 비율)
         subprocess.run([
             '/usr/bin/ffmpeg', '-i', temp_input,
-            '-vf', 'scale=400:-2',
+            '-vf', 'scale=720:1280:force_original_aspect_ratio=decrease,pad=720:1280:(ow-iw)/2:(oh-ih)/2',
             '-frames:v', '1',
             '-y', temp_thumb
         ], check=True, capture_output=True)
