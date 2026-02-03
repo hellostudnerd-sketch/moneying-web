@@ -620,28 +620,34 @@ def update_session_status(user_id):
 def serve_r2_file(filename):
     import boto3
     from flask import Response
-    
+
     s3 = boto3.client('s3',
         endpoint_url="https://b6f9c47a567f57911cab3c58f07cfc61.r2.cloudflarestorage.com",
         aws_access_key_id="bd378a5b4a8c51dece8aeeec96c846e5",
         aws_secret_access_key="f7001674ed1ee7f505a45f071891811db5e333c2a890f4f9f71a7f7be41c55f7"
     )
-    
-    # 확장자를 .webp로 변환 (DB에 .png로 저장된 경우 대응)
+
     import os
     name, ext = os.path.splitext(filename)
-    webp_filename = f"{name}.webp"
     
+    # mp4는 그대로, 나머지는 webp로 변환
+    if ext.lower() == '.mp4':
+        key = filename
+        content_type = 'video/mp4'
+    else:
+        key = f"{name}.webp"
+        content_type = 'image/webp'
+
     try:
-        obj = s3.get_object(Bucket="moneying-uploads", Key=webp_filename)
+        obj = s3.get_object(Bucket="moneying-uploads", Key=key)
         return Response(
             obj['Body'].read(),
-            content_type='image/webp',
+            content_type=content_type,
             headers={'Cache-Control': 'public, max-age=31536000'}
         )
     except Exception as e:
-        print(f"R2 file error for {webp_filename}: {e}")
-        return f"File not found: {webp_filename}", 404
+        print(f"R2 file error for {key}: {e}")
+        return f"File not found: {key}", 404
 
 # ----------------------------
 # Public Routes
