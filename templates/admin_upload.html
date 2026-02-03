@@ -402,7 +402,7 @@
   });
   
   // 썸네일 변경
-  changeThumbBtn.addEventListener("click", () => thumbInput.click());
+  thumbChangeBtn.addEventListener("click", () => thumbInput.click());
   thumbInput.addEventListener("change", async (e) => {
     const file = e.target.files[0];
     if (!file) return;
