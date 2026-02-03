@@ -256,7 +256,7 @@
   </div>
 
 <div id="detailModal" class="fixed inset-0 z-[999] hidden items-center justify-center modal-backdrop backdrop-blur-xl md:p-4">
-  <div id="detailBox" class="bg-zinc-950 w-full md:max-w-7xl h-full md:h-auto md:max-h-[92vh] md:rounded-2xl overflow-hidden shadow-2xl border border-zinc-800/50 relative flex flex-col">
+  <div id="detailBox" class="bg-zinc-950 w-full md:max-w-lg h-full md:h-auto md:max-h-[90vh] md:rounded-2xl overflow-hidden shadow-2xl border border-zinc-800/50 relative flex flex-col">
     <div class="absolute top-4 left-4 md:top-6 md:left-6 z-50">
   <span id="modalViews" class="text-zinc-400 text-sm bg-black/50 px-3 py-1.5 rounded-full backdrop-blur-sm">👁 0회</span>
 </div>
@@ -656,6 +656,10 @@ async function openDetailModal(item) {
       const platform = getPlatformInfo(u);
       html += `<a href="${normalizeUrl(u)}" target="_blank" rel="noopener noreferrer" class="${platform.color} hover:opacity-80 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 shadow-md" title="${platform.name}"><i class="${platform.icon} text-base"></i> ${platform.name}</a>`;
     });
+    // 쿠팡 버튼도 같이 추가
+    if (coupang) {
+      html += `<a href="${coupang}" target="_blank" rel="noopener noreferrer" class="bg-blue-600 hover:opacity-80 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 shadow-md" title="쿠팡"><i class="fas fa-rocket text-base"></i> 쿠팡</a>`;
+    }
     html += `</div>`;
   }
   
@@ -686,11 +690,7 @@ async function openDetailModal(item) {
     }
   }
   
-  // 쿠팡 링크
-  if (coupang) {
-    html += `<a href="${coupang}" target="_blank" rel="noopener noreferrer" class="block w-full bg-[#c4ff00] hover:bg-white text-black px-4 py-2.5 rounded-lg text-sm font-bold transition-all text-center">쿠팡 링크 보기</a>`;
-  }
-  
+
   html += `</div>`;
   
   rowContainer.innerHTML = html;
