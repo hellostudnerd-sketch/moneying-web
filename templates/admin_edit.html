@@ -117,8 +117,12 @@
               <div id="videoPreviewArea" class="flex-1 flex flex-col {{ '' if post and post.preview_video else 'hidden' }}">
                 <video id="videoPreview" src="{{ post.preview_video if post and post.preview_video else '' }}" 
                   class="w-full aspect-[9/16] bg-black rounded-lg object-contain" controls></video>
-                <button type="button" id="videoDeleteBtn" class="mt-3 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-bold">삭제</button>
+                <div class="mt-3 flex gap-2">
+                  <button type="button" id="captureThumbBtn" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-bold">📸 이 장면을 썸네일로</button>
+                  <button type="button" id="videoDeleteBtn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-bold">삭제</button>
+                </div>
               </div>
+              <canvas id="captureCanvas" class="hidden"></canvas>
             </div>
             
             <!-- 오른쪽: 썸네일 -->
@@ -180,6 +184,9 @@
     const thumbSection = document.getElementById("thumbSection");
     const thumbPreview = document.getElementById("thumbPreview");
     const thumbInput = document.getElementById("thumbInput");
+    const thumbPlaceholder = document.getElementById("thumbPlaceholder");
+    const captureThumbBtn = document.getElementById("captureThumbBtn");
+    const captureCanvas = document.getElementById("captureCanvas");
 
     function normalizeUrl(u) {
       if (!u) return "";
@@ -270,8 +277,7 @@
       }
     }
 
-    const thumbPlaceholder = document.getElementById("thumbPlaceholder");
-
+    
     // 영상 삭제
     videoDeleteBtn.addEventListener("click", () => {
       previewVideoInput.value = "";
@@ -287,6 +293,77 @@
       thumbPlaceholder.classList.remove("hidden");
     });
 
+    // 현재 장면 캡처해서 썸네일로
+    captureThumbBtn.addEventListener("click", async () => {
+      const video = videoPreview;
+      if (!video.src || video.readyState < 2) {
+        alert("영상을 먼저 로드해주세요.");
+        return;
+      }
+      
+      // 캔버스에 현재 프레임 그리기
+      const canvas = captureCanvas;
+      canvas.width = 720;
+      canvas.height = 1280;
+      const ctx = canvas.getContext("2d");
+      
+      // 영상 비율 계산해서 중앙 정렬
+      const videoRatio = video.videoWidth / video.videoHeight;
+      const canvasRatio = 720 / 1280;
+      let drawWidth, drawHeight, drawX, drawY;
+      
+      if (videoRatio > canvasRatio) {
+        drawHeight = 1280;
+        drawWidth = drawHeight * videoRatio;
+        drawX = (720 - drawWidth) / 2;
+        drawY = 0;
+      } else {
+        drawWidth = 720;
+        drawHeight = drawWidth / videoRatio;
+        drawX = 0;
+        drawY = (1280 - drawHeight) / 2;
+      }
+      
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, 720, 1280);
+      ctx.drawImage(video, drawX, drawY, drawWidth, drawHeight);
+      
+      // Blob으로 변환
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          alert("캡처 실패");
+          return;
+        }
+        
+        const fd = new FormData();
+        fd.append("file", blob, "thumb_capture.webp");
+        
+        captureThumbBtn.innerText = "업로드 중...";
+        captureThumbBtn.disabled = true;
+        
+        try {
+          const res = await fetch("/api/upload_file", { method: "POST", body: fd });
+          const data = await res.json();
+          
+          if (!res.ok) throw new Error(data.error || "업로드 실패");
+          
+          const thumbUrl = data.filename.startsWith("/") ? data.filename : "/static/uploads/" + data.filename;
+          thumbPreview.src = thumbUrl;
+          thumbPreview.classList.remove("hidden");
+          thumbPlaceholder.classList.add("hidden");
+          images = [thumbUrl];
+          imagesJsonInput.value = JSON.stringify(images);
+          
+          msg.innerText = "✅ 썸네일 캡처 완료!";
+        } catch (e) {
+          alert("썸네일 업로드 실패: " + e.message);
+        } finally {
+          captureThumbBtn.innerText = "📸 이 장면을 썸네일로";
+          captureThumbBtn.disabled = false;
+        }
+      }, "image/webp", 0.9);
+    });
+    
     // 썸네일 변경
     thumbInput.addEventListener("change", async (e) => {
       if (e.target.files.length === 0) return;
