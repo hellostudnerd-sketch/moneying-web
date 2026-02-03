@@ -138,6 +138,8 @@ class User(db.Model):
     seller_applied_at = db.Column(db.DateTime, nullable=True)
     seller_approved_at = db.Column(db.DateTime, nullable=True)
 
+# 카카오 로그인
+    kakao_id = db.Column(db.String(50), nullable=True)
 
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
