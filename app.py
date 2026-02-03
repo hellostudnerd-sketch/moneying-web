@@ -1996,6 +1996,11 @@ def api_save_post():
     title = (request.form.get("title") or "").strip()
     if not title:
         return jsonify({"ok": False, "error": "title_required"}), 400
+    
+    # 자동 넘버링: 다음 번호 계산
+    last_post = Post.query.order_by(Post.id.desc()).first()
+    next_num = (last_post.id + 1) if last_post else 1
+    title = f"{next_num}. {title}"
     images = parse_json_list_field("images_json")
     if not images:
         return jsonify({"ok": False, "error": "images_required"}), 400
