@@ -168,13 +168,17 @@
 <script>
   const videoDropzone = document.getElementById("videoDropzone");
   const videoInput = document.getElementById("videoInput");
-  const videoPreview = document.getElementById("videoPreview");
+  const videoUploadArea = document.getElementById("videoUploadArea");
+  const videoPreviewArea = document.getElementById("videoPreviewArea");
   const previewVideo = document.getElementById("previewVideo");
   const removeVideoBtn = document.getElementById("removeVideo");
   const thumbSection = document.getElementById("thumbSection");
   const thumbImg = document.getElementById("thumbImg");
   const thumbInput = document.getElementById("thumbInput");
-  const changeThumbBtn = document.getElementById("changeThumb");
+  const thumbChangeBtn = document.getElementById("thumbChangeBtn");
+  const thumbPlaceholder = document.getElementById("thumbPlaceholder");
+  const captureThumbBtn = document.getElementById("captureThumbBtn");
+  const captureCanvas = document.getElementById("captureCanvas");
   const uploadProgress = document.getElementById("uploadProgress");
   const progressBar = document.getElementById("progressBar");
   const progressText = document.getElementById("progressText");
@@ -298,10 +302,13 @@
       
       // 미리보기 표시
       previewVideo.src = uploadedVideoUrl;
+      videoUploadArea.classList.add("hidden");
+      videoPreviewArea.classList.remove("hidden");
       thumbImg.src = uploadedThumbUrl;
-      videoPreview.classList.remove("hidden");
-      thumbSection.classList.remove("hidden");
-      videoDropzone.classList.add("hidden");
+      thumbImg.classList.remove("hidden");
+      thumbPlaceholder.classList.add("hidden");
+      thumbSection.classList.remove("opacity-50");
+      thumbChangeBtn.classList.remove("hidden");
       
       setTimeout(() => {
         uploadProgress.classList.add("hidden");
@@ -319,11 +326,81 @@
     uploadedThumbUrl = "";
     previewVideo.src = "";
     thumbImg.src = "";
-    videoPreview.classList.add("hidden");
-    thumbSection.classList.add("hidden");
-    videoDropzone.classList.remove("hidden");
+    videoPreviewArea.classList.add("hidden");
+    videoUploadArea.classList.remove("hidden");
+    thumbImg.classList.add("hidden");
+    thumbPlaceholder.classList.remove("hidden");
+    thumbSection.classList.add("opacity-50");
+    thumbChangeBtn.classList.add("hidden");
   });
 
+
+
+  // 현재 장면 캡처해서 썸네일로
+  captureThumbBtn.addEventListener("click", async () => {
+    const video = previewVideo;
+    if (!video.src || video.readyState < 2) {
+      alert("영상을 먼저 로드해주세요.");
+      return;
+    }
+    
+    const canvas = captureCanvas;
+    canvas.width = 720;
+    canvas.height = 1280;
+    const ctx = canvas.getContext("2d");
+    
+    const videoRatio = video.videoWidth / video.videoHeight;
+    const canvasRatio = 720 / 1280;
+    let drawWidth, drawHeight, drawX, drawY;
+    
+    if (videoRatio > canvasRatio) {
+      drawHeight = 1280;
+      drawWidth = drawHeight * videoRatio;
+      drawX = (720 - drawWidth) / 2;
+      drawY = 0;
+    } else {
+      drawWidth = 720;
+      drawHeight = drawWidth / videoRatio;
+      drawX = 0;
+      drawY = (1280 - drawHeight) / 2;
+    }
+    
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, 720, 1280);
+    ctx.drawImage(video, drawX, drawY, drawWidth, drawHeight);
+    
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        alert("캡처 실패");
+        return;
+      }
+      
+      const fd = new FormData();
+      fd.append("file", blob, "thumb_capture.webp");
+      
+      captureThumbBtn.innerText = "업로드 중...";
+      captureThumbBtn.disabled = true;
+      
+      try {
+        const res = await fetch("/api/upload_file", { method: "POST", body: fd });
+        const data = await res.json();
+        
+        if (!res.ok) throw new Error(data.error || "업로드 실패");
+        
+        const thumbUrl = data.filename.startsWith("/") ? data.filename : "/r2/" + data.filename;
+        thumbImg.src = thumbUrl;
+        uploadedThumbUrl = thumbUrl;
+        
+        msg.innerText = "✅ 썸네일 캡처 완료!";
+      } catch (e) {
+        alert("썸네일 업로드 실패: " + e.message);
+      } finally {
+        captureThumbBtn.innerText = "📸 이 장면을 썸네일로";
+        captureThumbBtn.disabled = false;
+      }
+    }, "image/webp", 0.9);
+  });
+  
   // 썸네일 변경
   changeThumbBtn.addEventListener("click", () => thumbInput.click());
   thumbInput.addEventListener("change", async (e) => {
@@ -347,7 +424,7 @@
   });
 
   // 드래그앤드롭
-  videoDropzone.addEventListener("click", () => videoInput.click());
+  videoUploadArea.addEventListener("click", () => videoInput.click());
   videoInput.addEventListener("change", (e) => {
     if (e.target.files[0]) uploadVideo(e.target.files[0]);
     videoInput.value = "";
