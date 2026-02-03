@@ -632,13 +632,9 @@ async function openDetailModal(item) {
   addRecentViewed(item.id);
   const newViewCount = await incrementViewCount(item.id);
   document.getElementById('modalViews').innerText = `👁 ${newViewCount}회`;
-  const card = document.querySelector(`.gallery-card[data-id="${item.id}"] .view-count`);
-  if (card) card.innerText = newViewCount;
 
   document.getElementById('modalTitle').innerText = item.title || "";
   updateModalBookmarkBtn(item.id);
-
-  
 
   const editBtn = document.getElementById("editBtn");
   if (IS_ADMIN && item.id) { editBtn.classList.remove("hidden"); editBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/admin/posts/${item.id}/edit?next=/gallery`; }; }
@@ -646,60 +642,70 @@ async function openDetailModal(item) {
 
   const links = (item.links || []).filter(x => (x||"").trim().length > 0).slice(0,3);
   const coupang = normalizeUrl(item.coupang_link || "");
+  const previewVideo = item.preview_video || "";
+  
+  // 기존 videoLinkGroup 숨기기
   const group = document.getElementById('videoLinkGroup');
   group.innerHTML = "";
+  group.style.display = "none";
   
-   
-  if (links.length === 0 && !coupang) { group.innerHTML = `<div class="text-zinc-600 text-xs font-bold">등록된 참고 링크가 없습니다.</div>`; }
-  else { 
-    links.forEach((u) => { 
-      const platform = getPlatformInfo(u);
-      const a = document.createElement("a"); 
-      a.href = normalizeUrl(u); 
-      a.target = "_blank"; 
-      a.rel = "noopener noreferrer"; 
-      a.className = `${platform.color} hover:opacity-80 text-white px-3 py-2 md:px-6 md:py-3 rounded-lg md:rounded-md text-xs md:text-sm font-bold transition-all duration-150 flex items-center gap-1 md:gap-2 shadow-lg`; 
-      a.innerHTML = `<i class="${platform.icon} text-lg"></i> ${platform.name}`; 
-      group.appendChild(a); 
-    }); 
-  }
-
-  const images = (Array.isArray(item.images) ? item.images : []).slice(0,5);
   const rowContainer = document.getElementById('imageRowsContainer');
   rowContainer.innerHTML = "";
-  const rowDiv = document.createElement("div");
-  rowDiv.className = "glass-panel p-5 md:p-8 rounded-md relative";
-
-  let html = coupang ? `<div class="absolute top-5 right-5 z-10 hidden md:block"><a href="${coupang}" target="_blank" rel="noopener noreferrer" class="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2.5 rounded-md font-bold text-sm flex items-center gap-2 border border-zinc-600 transition">🚀 쿠팡 링크 보기</a></div>` : "";
-  html += `<div class="flex items-center gap-3 mb-6"><div class="w-9 h-9 bg-highlight rounded-lg flex items-center justify-center text-black font-black text-sm shadow-lg">📸</div><div><h4 class="text-white font-black text-base md:text-lg">하이라이트 캡처</h4><p class="text-zinc-500 text-sm font-bold">최대 5장의 핵심 장면</p></div></div>`;
-  html += coupang ? `<div class="md:hidden w-full mb-5"><a href="${coupang}" target="_blank" rel="noopener noreferrer" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-3 rounded-md font-bold flex justify-center items-center gap-2 text-sm border border-zinc-600 transition">🚀 쿠팡 링크 보기</a></div>` : "";
-
-  if (images.length === 0) { html += `<div class="text-zinc-600 text-sm font-bold">등록된 이미지가 없습니다.</div>`; }
-  else {
-    html += `<div class="capture-row">`;
-    images.forEach((img, i) => {
-      const safeImg = (img || "").trim();
-      const url = safeImg.startsWith("http") ? safeImg : safeImg.startsWith("/r2/") ? safeImg.replace(".webp", "_thumb.webp") : `/static/thumbnails/${safeImg.replace('.png', '_thumb.webp')}`;
-      html += `<div class="capture-item aspect-shorts rounded-lg overflow-hidden ${i===0 ? "border-2 border-highlight" : "border border-white/10"} bg-zinc-900 transition-all duration-150 hover:border-white/30 relative"><img src="${url}" class="w-full h-full object-cover ${i===0 ? "opacity-95" : "opacity-80 hover:opacity-100"} transition-opacity duration-150">${i===0 ? `<div class="absolute top-3 left-3 bg-highlight text-black text-[8px] font-black px-2 py-0.5 rounded-sm shadow-md uppercase tracking-tighter">Main</div>` : ""}</div>`;
+  
+  let html = `<div class="max-w-md mx-auto">`;
+  
+  // 미리보기 영상
+  if (previewVideo) {
+    html += `
+      <div class="mb-6">
+        <video 
+          src="${previewVideo}" 
+          class="w-full aspect-[9/16] bg-black rounded-xl object-contain"
+          controls
+          controlsList="nodownload"
+          playsinline
+          poster="${previewVideo.replace('.mp4', '_thumb.webp')}"
+        ></video>
+      </div>`;
+  } else {
+    // 영상 없으면 썸네일 표시
+    const images = (Array.isArray(item.images) ? item.images : []);
+    if (images.length > 0) {
+      const thumb = images[0];
+      const thumbUrl = thumb.startsWith("http") ? thumb : thumb.startsWith("/r2/") ? thumb : `/static/thumbnails/${thumb.replace('.png', '_thumb.webp')}`;
+      html += `
+        <div class="mb-6">
+          <div class="w-full aspect-[9/16] bg-zinc-900 rounded-xl overflow-hidden flex items-center justify-center border border-zinc-800">
+            <img src="${thumbUrl}" class="w-full h-full object-cover" />
+          </div>
+          <p class="text-zinc-500 text-xs text-center mt-2">미리보기 영상 준비중</p>
+        </div>`;
+    }
+  }
+  
+  // 원본 링크 버튼들
+  if (links.length > 0) {
+    html += `<div class="flex flex-col gap-3 mb-4">`;
+    links.forEach((u) => {
+      const platform = getPlatformInfo(u);
+      html += `<a href="${normalizeUrl(u)}" target="_blank" rel="noopener noreferrer" class="${platform.color} hover:opacity-90 text-white px-6 py-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-3 shadow-lg"><i class="${platform.icon} text-xl"></i> ${platform.name} 원본 보기</a>`;
     });
     html += `</div>`;
   }
-  rowDiv.innerHTML = html;
-  rowContainer.appendChild(rowDiv);
-}
-
-function updateModalBookmarkBtn(id) {
-  const btn = document.getElementById('modalBookmarkBtn');
-  if (isBookmarked(id)) { btn.classList.add('active'); btn.title = '찜 해제'; }
-  else { btn.classList.remove('active'); btn.title = '찜하기'; }
-}
-
-function closeDetailModal() { 
-  const modal = document.getElementById('detailModal'); 
-  modal.classList.add('hidden'); 
-  modal.classList.remove('flex'); 
-  document.body.style.overflow = ''; 
-  currentModalItem = null; 
+  
+  // 쿠팡 링크
+  if (coupang) {
+    html += `<a href="${coupang}" target="_blank" rel="noopener noreferrer" class="block w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-6 py-4 rounded-xl text-sm font-bold transition-all text-center shadow-lg mt-4">🚀 쿠팡 파트너스 링크</a>`;
+  }
+  
+  // 링크 없을 때
+  if (links.length === 0 && !coupang) {
+    html += `<div class="text-zinc-500 text-sm text-center py-4">등록된 링크가 없습니다.</div>`;
+  }
+  
+  html += `</div>`;
+  
+  rowContainer.innerHTML = html;
 }
   
 // ===== 엑셀 다운로드 =====
