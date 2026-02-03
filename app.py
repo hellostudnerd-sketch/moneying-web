@@ -1993,7 +1993,8 @@ def api_save_post():
         images_json=json.dumps(images, ensure_ascii=False),
         tags_json=json.dumps(parse_json_list_field("tags_json"), ensure_ascii=False),
         links_json=json.dumps(parse_json_list_field("links_json"), ensure_ascii=False),
-        is_free=request.form.get("is_free") == "1"
+        is_free=request.form.get("is_free") == "1",
+        preview_video=(request.form.get("preview_video") or "").strip()
     )
     db.session.add(p)
     db.session.commit()
