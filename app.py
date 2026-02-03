@@ -1892,6 +1892,78 @@ def api_upload_file():
         return jsonify({"ok": False, "error": "invalid_file"}), 400
     return jsonify({"ok": True, "filename": saved, "url": saved})
 
+@app.route("/api/upload_video", methods=["POST"])
+def api_upload_video():
+    if not is_admin() and not session.get("is_seller"):
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    
+    f = request.files.get("file")
+    if not f:
+        return jsonify({"ok": False, "error": "no_file"}), 400
+    
+    # 영상 파일 확인
+    allowed_ext = {'mp4', 'mov', 'avi', 'webm', 'mkv'}
+    ext = f.filename.rsplit('.', 1)[-1].lower() if '.' in f.filename else ''
+    if ext not in allowed_ext:
+        return jsonify({"ok": False, "error": "invalid_format"}), 400
+    
+    import subprocess
+    import tempfile
+    
+    # 임시 파일 저장
+    file_id = str(uuid.uuid4())
+    temp_input = f"/tmp/{file_id}_input.{ext}"
+    temp_output = f"/tmp/{file_id}_output.mp4"
+    temp_thumb = f"/tmp/{file_id}_thumb.webp"
+    
+    f.save(temp_input)
+    
+    try:
+        # FFmpeg로 720p, 60초 제한 압축
+        subprocess.run([
+            'ffmpeg', '-i', temp_input,
+            '-vf', 'scale=-2:720',
+            '-t', '60',
+            '-c:v', 'libx264', '-preset', 'fast', '-crf', '28',
+            '-c:a', 'aac', '-b:a', '128k',
+            '-movflags', '+faststart',
+            '-y', temp_output
+        ], check=True, capture_output=True)
+        
+        # 썸네일 생성 (첫 프레임)
+        subprocess.run([
+            'ffmpeg', '-i', temp_input,
+            '-vf', 'scale=400:-2',
+            '-frames:v', '1',
+            '-y', temp_thumb
+        ], check=True, capture_output=True)
+        
+        # R2에 업로드
+        with open(temp_output, 'rb') as vf:
+            s3.upload_fileobj(vf, "moneying-uploads", f"{file_id}.mp4", 
+                ExtraArgs={'ContentType': 'video/mp4'})
+        
+        with open(temp_thumb, 'rb') as tf:
+            s3.upload_fileobj(tf, "moneying-uploads", f"{file_id}_thumb.webp",
+                ExtraArgs={'ContentType': 'image/webp'})
+        
+        video_url = f"https://pub-bab76efc12234256a7112f5c09eb9a21.r2.dev/{file_id}.mp4"
+        thumb_url = f"https://pub-bab76efc12234256a7112f5c09eb9a21.r2.dev/{file_id}_thumb.webp"
+        
+        return jsonify({
+            "ok": True, 
+            "video_url": video_url,
+            "thumb_url": thumb_url
+        })
+        
+    except subprocess.CalledProcessError as e:
+        return jsonify({"ok": False, "error": "compress_failed"}), 500
+    finally:
+        # 임시 파일 삭제
+        for tmp in [temp_input, temp_output, temp_thumb]:
+            if os.path.exists(tmp):
+                os.remove(tmp)
+
 @app.route("/api/upload_public", methods=["POST"])
 def api_upload_public():
     if not session.get("user_id"):
