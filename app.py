@@ -1140,10 +1140,10 @@ def kakao_callback():
     user = User.query.filter_by(email=email).first()
     if not user:
         user = User(
-            email=email,
-            password=secrets.token_hex(16),  # 랜덤 비밀번호
-            kakao_id=kakao_id
-        )
+    email=email,
+    pw_hash=secrets.token_hex(16),
+    kakao_id=kakao_id
+)
         db.session.add(user)
         db.session.commit()
     elif not user.kakao_id:
