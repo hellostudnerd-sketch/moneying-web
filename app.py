@@ -1118,9 +1118,8 @@ def kakao_callback():
     token_response = requests.post(token_url, data=token_data)
     token_json = token_response.json()
     
-    # 디버깅용
-    if "access_token" not in token_json:
-        return f"토큰 에러: {token_json}", 400
+    if not access_token:
+    return redirect(url_for("login"))
     
     access_token = token_json.get("access_token")
     
