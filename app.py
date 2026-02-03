@@ -142,7 +142,8 @@ class User(db.Model):
 
 # 카카오 로그인
     kakao_id = db.Column(db.String(50), nullable=True)
-
+    nickname = db.Column(db.String(50), nullable=True)
+    
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(50), unique=True, nullable=False)  # beauty, living 등
