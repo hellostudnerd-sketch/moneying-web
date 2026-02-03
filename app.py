@@ -1104,7 +1104,7 @@ def kakao_login():
 def kakao_callback():
     code = request.args.get("code")
     if not code:
-        return redirect(url_for("login"))
+        return "에러: code 없음", 400
     
     # 토큰 받기
     token_url = "https://kauth.kakao.com/oauth/token"
@@ -1116,10 +1116,12 @@ def kakao_callback():
     }
     token_response = requests.post(token_url, data=token_data)
     token_json = token_response.json()
-    access_token = token_json.get("access_token")
     
-    if not access_token:
-        return redirect(url_for("login"))
+    # 디버깅용
+    if "access_token" not in token_json:
+        return f"토큰 에러: {token_json}", 400
+    
+    access_token = token_json.get("access_token")
     
     # 사용자 정보 가져오기
     user_info_url = "https://kapi.kakao.com/v2/user/me"
