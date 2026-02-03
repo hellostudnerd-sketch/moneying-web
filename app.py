@@ -1918,7 +1918,7 @@ def api_upload_video():
     
     f.save(temp_input)
     
-   try:
+    try:
         # FFmpeg로 720p, 60초 제한 압축
         subprocess.run([
             '/usr/bin/ffmpeg', '-i', temp_input,
