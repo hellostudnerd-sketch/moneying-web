@@ -255,33 +255,28 @@
     <p class="text-zinc-600 text-sm mt-2">영상을 클릭해서 상세 정보를 확인해보세요!</p>
   </div>
 
-<div id="detailModal" class="fixed inset-0 z-[999] hidden items-center justify-center modal-backdrop backdrop-blur-xl md:p-4">
-  <div id="detailBox" class="bg-zinc-950 w-full md:max-w-lg h-full md:h-auto md:max-h-[90vh] md:rounded-2xl overflow-hidden shadow-2xl border border-zinc-800/50 relative flex flex-col">
-    <div class="absolute top-4 left-4 md:top-6 md:left-6 z-50">
-  <span id="modalViews" class="text-zinc-400 text-sm bg-black/50 px-3 py-1.5 rounded-full backdrop-blur-sm">👁 0회</span>
-</div>
-<div class="absolute top-4 right-4 md:top-6 md:right-6 z-50 flex gap-2">
-      <button id="modalBookmarkBtn" class="bookmark-btn bg-zinc-800/80 hover:bg-zinc-700 w-10 h-10 rounded-md flex items-center justify-center border border-zinc-700 transition text-white" title="찜하기">
-        <i class="fas fa-heart text-lg"></i>
-      </button>
-      <button id="editBtn" class="hidden bg-zinc-800/80 hover:bg-highlight hover:text-black w-10 h-10 rounded-md flex items-center justify-center border border-zinc-700 transition" title="수정">
-        <i class="fas fa-pen text-sm"></i>
-      </button>
-      <button type="button" id="detailCloseBtn" class="bg-zinc-900/80 hover:bg-red-500 w-10 h-10 rounded-md flex items-center justify-center border border-zinc-800 transition" title="닫기">
-        <i class="fas fa-times text-lg"></i>
-      </button>
-    </div>
-
-    <div class="flex-1 overflow-y-auto p-4 md:p-10">
-      <div class="w-full max-w-3xl mx-auto mt-12 md:mt-4 mb-6">
-        <div class="text-center px-4">
-          <h2 id="modalTitle" class="text-2xl md:text-4xl font-black text-white mb-4 leading-[1.2] tracking-tight">제목</h2>
-          
-          
-        </div>
-       <div id="videoLinkGroup" class="hidden"></div>
+<div id="detailModal" class="fixed inset-0 z-[999] hidden items-center justify-center modal-backdrop backdrop-blur-xl p-4">
+  <div id="detailBox" class="bg-zinc-950 w-full max-w-md md:max-h-[85vh] rounded-2xl overflow-hidden shadow-2xl border border-zinc-800/50 relative flex flex-col">
+    <!-- 헤더 -->
+    <div class="flex items-center justify-between p-4 border-b border-zinc-800/50">
+      <span id="modalViews" class="text-zinc-500 text-xs">👁 0회</span>
+      <div class="flex gap-2">
+        <button id="modalBookmarkBtn" class="bookmark-btn w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-white transition" title="찜하기">
+          <i class="fas fa-heart text-sm"></i>
+        </button>
+        <button id="editBtn" class="hidden w-8 h-8 rounded-lg bg-zinc-800 hover:bg-highlight hover:text-black flex items-center justify-center text-white transition" title="수정">
+          <i class="fas fa-pen text-xs"></i>
+        </button>
+        <button type="button" id="detailCloseBtn" class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-red-500 flex items-center justify-center text-white transition" title="닫기">
+          <i class="fas fa-times text-sm"></i>
+        </button>
       </div>
-      <div id="imageRowsContainer" class="space-y-6"></div>
+    </div>
+    <!-- 컨텐츠 -->
+    <div class="flex-1 overflow-y-auto p-4">
+      <h2 id="modalTitle" class="text-lg font-bold text-white text-center mb-3">제목</h2>
+      <div id="videoLinkGroup" class="hidden"></div>
+      <div id="imageRowsContainer"></div>
     </div>
   </div>
 </div>
