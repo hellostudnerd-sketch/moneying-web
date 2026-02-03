@@ -171,6 +171,8 @@ class Post(db.Model):
     video_url = db.Column(db.Text, nullable=True, default="")
     video_url2 = db.Column(db.Text, nullable=True, default="")
     video_url3 = db.Column(db.Text, nullable=True, default="")
+    video_url3 = db.Column(db.Text, nullable=True, default="")
+    preview_video = db.Column(db.Text, nullable=True, default="")  # 미리보기 영상 R2 URL
     
     # 판매자 관련
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
