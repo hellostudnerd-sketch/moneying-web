@@ -1924,7 +1924,7 @@ def api_upload_video():
             '/usr/bin/ffmpeg', '-i', temp_input,
             '-vf', 'scale=-2:720',
             '-t', '60',
-            '-c:v', 'libx264', '-preset', 'fast', '-crf', '28',
+            '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28',
             '-c:a', 'aac', '-b:a', '128k',
             '-movflags', '+faststart',
             '-y', temp_output
