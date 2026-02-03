@@ -706,7 +706,13 @@ function updateModalBookmarkBtn(id) {
 }
 
 function closeDetailModal() { 
-  const modal = document.getElementById('detailModal'); 
+  const modal = document.getElementById('detailModal');
+  // 영상 정지
+  const video = modal.querySelector('video');
+  if (video) {
+    video.pause();
+    video.currentTime = 0;
+  }
   modal.classList.add('hidden'); 
   modal.classList.remove('flex'); 
   document.body.style.overflow = ''; 
