@@ -1088,6 +1088,73 @@ def register():
         return redirect(url_for("index"))
     return render_template("register.html")
 
+# 카카오 로그인
+KAKAO_REST_API_KEY = "2098f6c23db3ab01d76b5c0d41c98ab2"
+KAKAO_REDIRECT_URI = "https://moneying.biz/auth/kakao/callback"
+
+@app.route("/auth/kakao")
+def kakao_login():
+    kakao_auth_url = f"https://kauth.kakao.com/oauth/authorize?client_id={KAKAO_REST_API_KEY}&redirect_uri={KAKAO_REDIRECT_URI}&response_type=code"
+    return redirect(kakao_auth_url)
+
+@app.route("/auth/kakao/callback")
+def kakao_callback():
+    code = request.args.get("code")
+    if not code:
+        return redirect(url_for("login"))
+    
+    # 토큰 받기
+    token_url = "https://kauth.kakao.com/oauth/token"
+    token_data = {
+        "grant_type": "authorization_code",
+        "client_id": KAKAO_REST_API_KEY,
+        "redirect_uri": KAKAO_REDIRECT_URI,
+        "code": code
+    }
+    token_response = requests.post(token_url, data=token_data)
+    token_json = token_response.json()
+    access_token = token_json.get("access_token")
+    
+    if not access_token:
+        return redirect(url_for("login"))
+    
+    # 사용자 정보 가져오기
+    user_info_url = "https://kapi.kakao.com/v2/user/me"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    user_response = requests.get(user_info_url, headers=headers)
+    user_json = user_response.json()
+    
+    kakao_id = str(user_json.get("id"))
+    kakao_account = user_json.get("kakao_account", {})
+    email = kakao_account.get("email")
+    nickname = kakao_account.get("profile", {}).get("nickname", "")
+    
+    # 이메일 없으면 카카오ID로 대체
+    if not email:
+        email = f"kakao_{kakao_id}@moneying.biz"
+    
+    # 기존 유저 확인 또는 생성
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        user = User(
+            email=email,
+            password=secrets.token_hex(16),  # 랜덤 비밀번호
+            kakao_id=kakao_id
+        )
+        db.session.add(user)
+        db.session.commit()
+    elif not user.kakao_id:
+        user.kakao_id = kakao_id
+        db.session.commit()
+    
+    # 로그인 처리
+    session.clear()
+    session["user_id"] = user.id
+    session["user_email"] = user.email
+    update_session_status(user.id)
+    
+    return redirect(url_for("index"))
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if session.get("admin"):
