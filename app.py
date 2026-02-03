@@ -196,6 +196,7 @@ class Post(db.Model):
             "view_count": self.view_count or 0,
             "is_free": self.is_free or False,
             "created_at": self.created_at.isoformat() if self.created_at else None,
+            "preview_video": self.preview_video or "",
         }
 
 
