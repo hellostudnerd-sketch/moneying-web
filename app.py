@@ -1092,7 +1092,7 @@ def register():
     return render_template("register.html")
 
 # 카카오 로그인
-KAKAO_REST_API_KEY = "2098f6c23db3ab01d76b5c0d41c98ab2"
+KAKAO_REST_API_KEY = "d6d95667f32febebb7515351c3713fde"
 KAKAO_REDIRECT_URI = "https://moneying.biz/auth/kakao/callback"
 
 @app.route("/auth/kakao")
