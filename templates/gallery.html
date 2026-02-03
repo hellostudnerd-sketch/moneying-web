@@ -651,10 +651,10 @@ async function openDetailModal(item) {
   // 원본 링크 버튼들 (영상 위)
   if (links.length > 0) {
     html += `<p class="text-zinc-400 text-xs text-center mb-3">아래 원본영상을 확인해보세요</p>`;
-    html += `<div class="flex justify-center gap-2 mb-4 flex-wrap">`;
+    html += `<div class="flex justify-center gap-3 mb-5 flex-wrap">`;
     links.forEach((u) => {
       const platform = getPlatformInfo(u);
-      html += `<a href="${normalizeUrl(u)}" target="_blank" rel="noopener noreferrer" class="${platform.color} hover:opacity-80 text-white px-3 py-2 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 shadow-md" title="${platform.name}"><i class="${platform.icon}"></i> ${platform.name}</a>`;
+      html += `<a href="${normalizeUrl(u)}" target="_blank" rel="noopener noreferrer" class="${platform.color} hover:opacity-80 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 shadow-md" title="${platform.name}"><i class="${platform.icon} text-base"></i> ${platform.name}</a>`;
     });
     html += `</div>`;
   }
