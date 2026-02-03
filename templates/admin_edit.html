@@ -18,12 +18,10 @@
     <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
       <form id="postForm">
         <input type="hidden" name="post_id" value="{{ post.id if post else '' }}"/>
-
-        <!-- ✅ 서버가 기대하는 json 필드들 -->
         <input type="hidden" name="images_json" id="images_json"/>
         <input type="hidden" name="links_json" id="links_json"/>
         <input type="hidden" name="tags_json" id="tags_json"/>
-        
+        <input type="hidden" name="preview_video" id="preview_video" value="{{ post.preview_video if post else '' }}"/>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -90,28 +88,52 @@
           </label>
         </div>
 
-        <!-- 이미지 드래그앤드롭 -->
+        <!-- 미리보기 영상 업로드 -->
         <div class="mt-8">
-          <label class="text-sm font-black text-zinc-300">하이라이트 이미지 (최대 5장)</label>
-
-          <div id="dropzone"
-               class="mt-3 border-2 border-dashed border-zinc-700 rounded-2xl p-6 bg-zinc-950/40">
-            <div class="text-center">
-              <div class="text-sm font-black">여기로 드래그&드롭</div>
-              <div class="text-[11px] text-zinc-500 mt-2">또는 클릭해서 선택 (jpg/png/webp/gif)</div>
-              <input id="fileInput" type="file" accept="image/*" multiple class="hidden"/>
-              <button type="button" id="pickBtn"
-                      class="mt-4 bg-lime-400 text-black font-black px-4 py-2 rounded-lg">
-                이미지 선택
+          <label class="text-sm font-black text-zinc-300">미리보기 영상 업로드</label>
+          <p class="text-xs text-zinc-500 mt-1">720p로 자동 압축, 최대 60초</p>
+          
+          <div id="videoDropzone" class="mt-3 border-2 border-dashed border-zinc-700 rounded-2xl p-6 bg-zinc-950/40">
+            <div id="videoUploadArea" class="text-center">
+              <div class="text-sm font-black">영상을 드래그&드롭</div>
+              <div class="text-[11px] text-zinc-500 mt-2">또는 클릭해서 선택 (mp4/mov/webm)</div>
+              <input id="videoInput" type="file" accept="video/*" class="hidden"/>
+              <button type="button" id="videoPickBtn" class="mt-4 bg-purple-500 text-white font-black px-4 py-2 rounded-lg">
+                영상 선택
               </button>
             </div>
-
-            <div class="mt-6 overflow-x-auto">
-              <div id="previewRow" class="flex gap-3 w-max"></div>
+            
+            <!-- 업로드 진행 -->
+            <div id="videoProgress" class="hidden mt-4">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                <span class="text-sm text-zinc-400">영상 압축 및 업로드 중...</span>
+              </div>
             </div>
-
-            <div class="mt-3 text-[11px] text-zinc-500">
-              * 첫 번째 이미지가 카드 대표(썸네일)처럼 사용됩니다.
+            
+            <!-- 업로드된 영상 미리보기 -->
+            <div id="videoPreviewArea" class="mt-4 {{ '' if post and post.preview_video else 'hidden' }}">
+              <p class="text-sm font-black mb-2">업로드된 영상</p>
+              <div class="flex gap-4 items-start">
+                <video id="videoPreview" src="{{ post.preview_video if post and post.preview_video else '' }}" 
+                  class="w-48 aspect-[9/16] bg-black rounded-lg object-contain" controls></video>
+                <button type="button" id="videoDeleteBtn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-bold">삭제</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 썸네일 변경 -->
+          <div id="thumbSection" class="mt-4 {{ '' if post and post.preview_video else 'hidden' }}">
+            <div class="flex items-center justify-between">
+              <p class="text-sm font-black">썸네일</p>
+              <label class="text-xs text-purple-400 cursor-pointer hover:underline">
+                변경
+                <input type="file" id="thumbInput" accept="image/*" class="hidden" />
+              </label>
+            </div>
+            <div class="mt-2">
+              <img id="thumbPreview" src="{{ post.preview_video.replace('.mp4', '_thumb.webp') if post and post.preview_video else '' }}" 
+                class="w-24 aspect-[9/16] object-cover rounded-lg border border-zinc-700" />
             </div>
           </div>
         </div>
@@ -135,14 +157,24 @@
     let images = [...existing];
     let uploading = false;
 
-    const dropzone = document.getElementById("dropzone");
-    const fileInput = document.getElementById("fileInput");
-    const pickBtn = document.getElementById("pickBtn");
-    const previewRow = document.getElementById("previewRow");
     const imagesJsonInput = document.getElementById("images_json");
     const linksJsonInput  = document.getElementById("links_json");
     const tagsJsonInput   = document.getElementById("tags_json");
+    const previewVideoInput = document.getElementById("preview_video");
     const msg = document.getElementById("msg");
+
+    // 영상 업로드 관련
+    const videoDropzone = document.getElementById("videoDropzone");
+    const videoInput = document.getElementById("videoInput");
+    const videoPickBtn = document.getElementById("videoPickBtn");
+    const videoProgress = document.getElementById("videoProgress");
+    const videoUploadArea = document.getElementById("videoUploadArea");
+    const videoPreviewArea = document.getElementById("videoPreviewArea");
+    const videoPreview = document.getElementById("videoPreview");
+    const videoDeleteBtn = document.getElementById("videoDeleteBtn");
+    const thumbSection = document.getElementById("thumbSection");
+    const thumbPreview = document.getElementById("thumbPreview");
+    const thumbInput = document.getElementById("thumbInput");
 
     function normalizeUrl(u) {
       if (!u) return "";
@@ -168,94 +200,108 @@
       return merged;
     }
 
-    function renderPreviews() {
-      previewRow.innerHTML = "";
-      images.slice(0,5).forEach((fn, idx) => {
-        const wrap = document.createElement("div");
-        wrap.className = "relative w-40 h-64 rounded-xl overflow-hidden border border-zinc-800 bg-black";
+    // 영상 업로드
+    videoPickBtn.addEventListener("click", () => videoInput.click());
+    
+    videoInput.addEventListener("change", (e) => {
+      if (e.target.files.length > 0) uploadVideo(e.target.files[0]);
+    });
 
-        const img = document.createElement("img");
-        img.src = fn.startsWith("http") || fn.startsWith("/r2/") ? fn : ("/static/uploads/" + fn);
-        img.className = "w-full h-full object-cover opacity-90";
-        wrap.appendChild(img);
-
-        const badge = document.createElement("div");
-        badge.className = "absolute top-2 left-2 bg-black/60 border border-zinc-700 text-[10px] font-black px-2 py-1 rounded";
-        badge.innerText = idx === 0 ? "대표" : ("#" + (idx+1));
-        wrap.appendChild(badge);
-
-        const del = document.createElement("button");
-        del.type = "button";
-        del.className = "absolute top-2 right-2 w-8 h-8 rounded-lg bg-red-500/90 font-black";
-        del.innerText = "×";
-        del.onclick = () => {
-          images.splice(idx, 1);
-          renderPreviews();
-        };
-        wrap.appendChild(del);
-
-        previewRow.appendChild(wrap);
-      });
-
-      imagesJsonInput.value = JSON.stringify(images.slice(0,5));
-    }
-
-    async function uploadOne(file) {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/upload_file", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "upload failed");
-      return data.filename;
-    }
-
-    async function handleFiles(fileList) {
-      if (uploading) return;
-      const files = Array.from(fileList || []);
-      if (!files.length) return;
-
-      const room = 5 - images.length;
-      const pick = files.slice(0, room);
-      if (pick.length === 0) {
-        alert("이미지는 최대 5장까지입니다.");
-        return;
+    videoDropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      videoDropzone.classList.add("border-purple-500");
+    });
+    
+    videoDropzone.addEventListener("dragleave", () => {
+      videoDropzone.classList.remove("border-purple-500");
+    });
+    
+    videoDropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      videoDropzone.classList.remove("border-purple-500");
+      const files = e.dataTransfer.files;
+      if (files.length > 0 && files[0].type.startsWith("video/")) {
+        uploadVideo(files[0]);
       }
+    });
 
+    async function uploadVideo(file) {
+      if (uploading) return;
       uploading = true;
-      pickBtn.innerText = "업로드 중...";
-      pickBtn.disabled = true;
-
+      
+      videoUploadArea.classList.add("hidden");
+      videoProgress.classList.remove("hidden");
+      
+      const fd = new FormData();
+      fd.append("video", file);
+      
       try {
-        for (const f of pick) {
-          const fn = await uploadOne(f);
-          images.push(fn);
-          renderPreviews();
-        }
+        const res = await fetch("/api/upload_video", { method: "POST", body: fd });
+        const data = await res.json();
+        
+        if (!res.ok) throw new Error(data.error || "업로드 실패");
+        
+        previewVideoInput.value = data.video_url;
+        videoPreview.src = data.video_url;
+        thumbPreview.src = data.thumb_url;
+        
+        // 썸네일을 images에 추가
+        images = [data.thumb_url];
+        imagesJsonInput.value = JSON.stringify(images);
+        
+        videoPreviewArea.classList.remove("hidden");
+        thumbSection.classList.remove("hidden");
+        videoProgress.classList.add("hidden");
+        
+        msg.innerText = "✅ 영상 업로드 완료!";
       } catch (e) {
-        alert("업로드 실패: " + e.message);
+        alert("영상 업로드 실패: " + e.message);
+        videoUploadArea.classList.remove("hidden");
+        videoProgress.classList.add("hidden");
       } finally {
         uploading = false;
-        pickBtn.innerText = "이미지 선택";
-        pickBtn.disabled = false;
       }
     }
 
-    pickBtn.addEventListener("click", () => fileInput.click());
-    fileInput.addEventListener("change", (e) => handleFiles(e.target.files));
-
-    dropzone.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      dropzone.classList.add("border-lime-400");
-    });
-    dropzone.addEventListener("dragleave", () => {
-      dropzone.classList.remove("border-lime-400");
-    });
-    dropzone.addEventListener("drop", (e) => {
-      e.preventDefault();
-      dropzone.classList.remove("border-lime-400");
-      handleFiles(e.dataTransfer.files);
+    // 영상 삭제
+    videoDeleteBtn.addEventListener("click", () => {
+      previewVideoInput.value = "";
+      videoPreview.src = "";
+      thumbPreview.src = "";
+      images = [];
+      imagesJsonInput.value = "[]";
+      
+      videoPreviewArea.classList.add("hidden");
+      thumbSection.classList.add("hidden");
+      videoUploadArea.classList.remove("hidden");
     });
 
+    // 썸네일 변경
+    thumbInput.addEventListener("change", async (e) => {
+      if (e.target.files.length === 0) return;
+      
+      const file = e.target.files[0];
+      const fd = new FormData();
+      fd.append("file", file);
+      
+      try {
+        const res = await fetch("/api/upload_file", { method: "POST", body: fd });
+        const data = await res.json();
+        
+        if (!res.ok) throw new Error(data.error || "썸네일 업로드 실패");
+        
+        const thumbUrl = data.filename.startsWith("/") ? data.filename : "/static/uploads/" + data.filename;
+        thumbPreview.src = thumbUrl;
+        images = [thumbUrl];
+        imagesJsonInput.value = JSON.stringify(images);
+        
+        msg.innerText = "✅ 썸네일 변경 완료!";
+      } catch (e) {
+        alert("썸네일 업로드 실패: " + e.message);
+      }
+    });
+
+    // 폼 제출
     document.getElementById("postForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       if (uploading) return alert("업로드가 끝난 뒤 저장하세요.");
@@ -266,10 +312,7 @@
       const link3 = normalizeUrl(document.getElementById("link3").value);
 
       if (!title) return alert("제목은 필수입니다.");
-      if (images.length === 0) return alert("이미지는 최소 1장 필요합니다.");
 
-      // ✅ json 필드 채우기 (서버가 이걸 저장함)
-      imagesJsonInput.value = JSON.stringify(images.slice(0,5));
       linksJsonInput.value  = JSON.stringify([link1, link2, link3].filter(Boolean));
       tagsJsonInput.value   = JSON.stringify(autoTagsFromTitle(title));
 
@@ -299,7 +342,8 @@
       setTimeout(() => window.location.href = (data?.redirect || "{{ next_url }}" || "/admin/posts"), 400);
     });
     
-    renderPreviews();
+    // 초기화
+    imagesJsonInput.value = JSON.stringify(images);
   </script>
 </body>
 </html>
