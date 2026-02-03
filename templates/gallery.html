@@ -646,15 +646,26 @@ async function openDetailModal(item) {
   const rowContainer = document.getElementById('imageRowsContainer');
   rowContainer.innerHTML = "";
   
-  let html = `<div class="max-w-md mx-auto">`;
+  let html = `<div class="max-w-sm mx-auto">`;
+  
+  // 원본 링크 버튼들 (영상 위)
+  if (links.length > 0) {
+    html += `<p class="text-zinc-400 text-xs text-center mb-3">아래 원본영상을 확인해보세요</p>`;
+    html += `<div class="flex justify-center gap-2 mb-4">`;
+    links.forEach((u) => {
+      const platform = getPlatformInfo(u);
+      html += `<a href="${normalizeUrl(u)}" target="_blank" rel="noopener noreferrer" class="w-11 h-11 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center transition-all" title="${platform.name}"><i class="${platform.icon} text-white text-lg"></i></a>`;
+    });
+    html += `</div>`;
+  }
   
   // 미리보기 영상
   if (previewVideo) {
     html += `
-      <div class="mb-6">
+      <div class="mb-4">
         <video 
           src="${previewVideo}" 
-          class="w-full aspect-[9/16] bg-black rounded-xl object-contain"
+          class="w-full aspect-[9/16] bg-black rounded-lg object-contain"
           controls
           controlsList="nodownload"
           playsinline
@@ -662,39 +673,22 @@ async function openDetailModal(item) {
         ></video>
       </div>`;
   } else {
-    // 영상 없으면 썸네일 표시
     const images = (Array.isArray(item.images) ? item.images : []);
     if (images.length > 0) {
       const thumb = images[0];
       const thumbUrl = thumb.startsWith("http") ? thumb : thumb.startsWith("/r2/") ? thumb : `/static/thumbnails/${thumb.replace('.png', '_thumb.webp')}`;
       html += `
-        <div class="mb-6">
-          <div class="w-full aspect-[9/16] bg-zinc-900 rounded-xl overflow-hidden flex items-center justify-center border border-zinc-800">
+        <div class="mb-4">
+          <div class="w-full aspect-[9/16] bg-zinc-900 rounded-lg overflow-hidden border border-zinc-800">
             <img src="${thumbUrl}" class="w-full h-full object-cover" />
           </div>
-          <p class="text-zinc-500 text-xs text-center mt-2">미리보기 영상 준비중</p>
         </div>`;
     }
   }
   
-  // 원본 링크 버튼들
-  if (links.length > 0) {
-    html += `<div class="flex flex-col gap-3 mb-4">`;
-    links.forEach((u) => {
-      const platform = getPlatformInfo(u);
-      html += `<a href="${normalizeUrl(u)}" target="_blank" rel="noopener noreferrer" class="${platform.color} hover:opacity-90 text-white px-6 py-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-3 shadow-lg"><i class="${platform.icon} text-xl"></i> ${platform.name} 원본 보기</a>`;
-    });
-    html += `</div>`;
-  }
-  
   // 쿠팡 링크
   if (coupang) {
-    html += `<a href="${coupang}" target="_blank" rel="noopener noreferrer" class="block w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-6 py-4 rounded-xl text-sm font-bold transition-all text-center shadow-lg mt-4">🚀 쿠팡 파트너스 링크</a>`;
-  }
-  
-  // 링크 없을 때
-  if (links.length === 0 && !coupang) {
-    html += `<div class="text-zinc-500 text-sm text-center py-4">등록된 링크가 없습니다.</div>`;
+    html += `<a href="${coupang}" target="_blank" rel="noopener noreferrer" class="block w-full bg-[#c4ff00] hover:bg-white text-black px-4 py-2.5 rounded-lg text-sm font-bold transition-all text-center">쿠팡 링크 보기</a>`;
   }
   
   html += `</div>`;
