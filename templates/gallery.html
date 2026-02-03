@@ -423,7 +423,7 @@ function appendGalleryItems(list) {
 function createGalleryCard(item) {
   const imgs = Array.isArray(item.images) ? item.images : [];
   const thumb = imgs.length ? (imgs[0] || "") : "";
-  const thumbUrl = thumb ? (thumb.startsWith("http") ? thumb : thumb.startsWith("/r2/") ? thumb.replace(".webp", "_thumb.webp") : `/static/thumbnails/${thumb.replace('.png', '_thumb.webp')}`) : "";
+  const thumbUrl = thumb ? (thumb.startsWith("http") ? thumb : thumb.startsWith("/r2/") ? (thumb.includes("_thumb") ? thumb : thumb.replace(".webp", "_thumb.webp")) : `/static/thumbnails/${thumb.replace('.png', '_thumb.webp')}`) : "";
   const viewCount = item.view_count || 0;
   const bookmarked = isBookmarked(item.id);
   const canAccess = IS_ADMIN || IS_SUBSCRIBER || IS_TRIAL || item.is_free;
