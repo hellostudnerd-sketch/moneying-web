@@ -429,11 +429,11 @@
     if (e.target.files[0]) uploadVideo(e.target.files[0]);
     videoInput.value = "";
   });
-  videoDropzone.addEventListener("dragover", (e) => { e.preventDefault(); videoDropzone.classList.add("dragover"); });
-  videoDropzone.addEventListener("dragleave", () => videoDropzone.classList.remove("dragover"));
+  videoDropzone.addEventListener("dragover", (e) => { e.preventDefault(); videoDropzone.classList.add("border-[#a3e635]"); });
+  videoDropzone.addEventListener("dragleave", () => videoDropzone.classList.remove("border-[#a3e635]"));
   videoDropzone.addEventListener("drop", (e) => {
     e.preventDefault();
-    videoDropzone.classList.remove("dragover");
+    videoDropzone.classList.remove("border-[#a3e635]");
     if (e.dataTransfer.files[0]) uploadVideo(e.dataTransfer.files[0]);
   });
 
