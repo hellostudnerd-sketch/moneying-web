@@ -1588,6 +1588,15 @@ def admin_upload():
     ).order_by(Category.sort_order).all()
     return render_template("admin_upload.html", categories=categories)
 
+def parse_json_list_field(field_name: str):
+    raw = (request.form.get(field_name) or "[]").strip()
+    try:
+        v = json.loads(raw)
+        return v if isinstance(v, list) else []
+    except Exception:
+        return []
+
+
 @app.route("/admin/posts/<int:post_id>/edit", methods=["GET", "POST"])
 def admin_edit(post_id):
     if not is_admin():
