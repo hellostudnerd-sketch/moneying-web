@@ -1952,10 +1952,14 @@ def api_upload_video():
             aws_secret_access_key="f7001674ed1ee7f505a45f071891811db5e333c2a890f4f9f71a7f7be41c55f7"
         )
         
+        with open(temp_output, 'rb') as vf:
+            s3.upload_fileobj(vf, "moneying-uploads", f"{file_id}.mp4",
+                ExtraArgs={'ContentType': 'video/mp4'})
+
         with open(temp_thumb, 'rb') as tf:
             s3.upload_fileobj(tf, "moneying-uploads", f"{file_id}_thumb.webp",
                 ExtraArgs={'ContentType': 'image/webp'})
-        
+
         video_url = f"/r2/{file_id}.mp4"
         thumb_url = f"/r2/{file_id}_thumb.webp"
         
