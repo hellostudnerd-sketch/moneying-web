@@ -494,5 +494,9 @@
     msg.innerText = "✅ 저장 완료! 이동합니다...";
     setTimeout(() => window.location.href = (data?.redirect || "/admin/gallery"), 400);
   });
+
+// 페이지 전체에서 드래그앤드롭 기본 동작 막기
+document.addEventListener("dragover", (e) => e.preventDefault());
+document.addEventListener("drop", (e) => e.preventDefault());
 </script>
 {% endblock %}
