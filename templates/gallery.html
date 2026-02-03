@@ -486,7 +486,7 @@ function searchGallery(query) {
   const q = query.toLowerCase().trim();
   
   cards.forEach(card => {
-    const title = card.querySelector('.text-white')?.textContent?.toLowerCase() || '';
+    const title = card.querySelector('.text-white.text-sm.font-bold.truncate')?.textContent?.toLowerCase() || '';
     if (q === '' || title.includes(q)) {
       card.style.display = '';
     } else {
