@@ -154,7 +154,7 @@
             <div class="font-bold text-green-400 mb-1">💸 수익 인증 리워드</div>
             <p class="text-zinc-400 text-sm">승인되면 7일 구독 연장!</p>
           </div>
-          {% if session.get('subscriber') or session.get('is_trial') or session.get('admin') %}
+          {% if session.get('subscriber') or session.get('admin') %}
             {% if post.reward_requested %}
               <span class="px-4 py-2 bg-zinc-700 text-zinc-400 font-bold rounded-lg">✓ 신청 완료</span>
             {% else %}
