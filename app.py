@@ -2248,6 +2248,31 @@ def seller_upload():
     
     return render_template("seller_upload.html", user=user)
 
+@app.route("/revenue-proof/apply/<int:post_id>", methods=["POST"])
+def revenue_proof_apply(post_id):
+    if not session.get("user_id"):
+        return jsonify({"ok": False, "error": "로그인이 필요합니다."}), 401
+    
+    # 구독자/체험중/관리자만 가능
+    if not session.get("subscriber") and not session.get("is_trial") and not session.get("admin"):
+        return jsonify({"ok": False, "error": "구독자만 신청할 수 있습니다."}), 403
+    
+    post = CommunityPost.query.get_or_404(post_id)
+    
+    # 본인 글만 가능
+    if post.author_email != session.get("user_email"):
+        return jsonify({"ok": False, "error": "본인 글만 신청 가능합니다."}), 403
+    
+    # 이미 신청했는지 확인
+    if post.reward_requested:
+        return jsonify({"ok": False, "error": "이미 신청하셨습니다."}), 400
+    
+    # 신청 처리
+    post.reward_requested = True
+    db.session.commit()
+    
+    return jsonify({"ok": True})
+    
 # 관리자 - 수익 인증 목록
 @app.route("/admin/revenue-proofs")
 def admin_revenue_proofs():
