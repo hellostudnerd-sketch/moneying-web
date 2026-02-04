@@ -50,11 +50,7 @@
                 {% if request.path.startswith('/admin/gallery') or request.path.startswith('/admin/posts') or request.path.startswith('/admin/upload') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
          갤러리
       </a>
-      <a href="/admin/categories"
-         class="px-4 py-2 rounded-xl transition font-bold text-sm
-                {% if request.path.startswith('/admin/categories') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
-         카테고리
-      </a>
+      
       <a href="/admin/link-requests"
          class="px-4 py-2 rounded-xl transition font-bold text-sm
                 {% if request.path.startswith('/admin/link-requests') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
