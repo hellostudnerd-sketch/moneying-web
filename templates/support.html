@@ -62,46 +62,24 @@
 
   <!-- 문의하기 -->
   <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
-    <h2 class="text-xl font-black mb-4">📧 문의하기</h2>
+    <h2 class="text-xl font-black mb-4">💬 문의하기</h2>
     
     <div class="space-y-4">
-      <div class="flex items-center gap-4 p-4 bg-zinc-800/50 rounded-xl">
-        <div class="w-12 h-12 bg-[#c4ff00]/20 rounded-full flex items-center justify-center">
-          <i class="fas fa-envelope text-[#c4ff00]"></i>
-        </div>
-        <div>
-          <p class="text-sm text-zinc-400">이메일 문의</p>
-          <a href="mailto:support@moneying.co.kr" class="font-bold text-white hover:text-[#c4ff00] transition">
-            support@moneying.co.kr
-          </a>
-        </div>
-      </div>
-      
-      <div class="flex items-center gap-4 p-4 bg-zinc-800/50 rounded-xl">
-        <div class="w-12 h-12 bg-[#c4ff00]/20 rounded-full flex items-center justify-center">
-          <i class="fab fa-instagram text-[#c4ff00]"></i>
+      <a href="https://pf.kakao.com/_ExjxjRX" target="_blank" class="flex items-center gap-4 p-4 bg-zinc-800/50 rounded-xl hover:bg-zinc-800 transition">
+        <div class="w-12 h-12 bg-[#FEE500]/20 rounded-full flex items-center justify-center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#FEE500"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.83 1.89 5.29 4.68 6.68-.15.53-.53 1.94-.61 2.24-.1.37.14.37.29.27.12-.08 1.87-1.23 2.63-1.73.65.09 1.32.14 2.01.14 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/></svg>
         </div>
         <div>
           <p class="text-sm text-zinc-400">카카오톡 채널</p>
-          <a href="https://instagram.com/moneying.official" target="_blank" class="font-bold text-white hover:text-[#c4ff00] transition">
-            @moneying.official
-          </a>
+          <span class="font-bold text-white">@moneying</span>
         </div>
-      </div>
+        <i class="fas fa-chevron-right text-zinc-600 ml-auto"></i>
+      </a>
     </div>
     
     <p class="text-zinc-500 text-sm mt-4">
       * 문의 답변은 평일 기준 24시간 이내에 드립니다.
     </p>
-  </div>
-
-  <!-- 정책 링크 -->
-  <div class="mt-8 flex flex-wrap gap-4 justify-center text-sm">
-    <a href="/terms" class="text-zinc-500 hover:text-white transition">이용약관</a>
-    <span class="text-zinc-700">|</span>
-    <a href="/privacy" class="text-zinc-500 hover:text-white transition">개인정보처리방침</a>
-    <span class="text-zinc-700">|</span>
-    <a href="/refund" class="text-zinc-500 hover:text-white transition">환불정책</a>
   </div>
 </div>
 {% endblock %}
