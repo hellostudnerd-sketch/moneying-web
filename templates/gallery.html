@@ -420,6 +420,8 @@ function createGalleryCard(item) {
   const thumb = imgs.length ? (imgs[0] || "") : "";
   const thumbUrl = thumb ? (thumb.startsWith("http") ? thumb : thumb.startsWith("/r2/") ? (thumb.includes("_thumb") ? thumb : thumb.replace(".webp", "_thumb.webp")) : `/static/thumbnails/${thumb.replace('.png', '_thumb.webp')}`) : "";
   const viewCount = item.view_count || 0;
+  const authorName = item.author_name || "머닝";
+  const authorPhoto = item.author_photo || "/static/images/moneying-logo.png";
   const bookmarked = isBookmarked(item.id);
   const canAccess = IS_ADMIN || IS_SUBSCRIBER || IS_TRIAL || item.is_free;
   const titleSafe = escapeHtml(item.title || "");
@@ -448,8 +450,14 @@ function createGalleryCard(item) {
     </div>
     <div class="mt-2 px-1">
       <div class="text-white text-sm font-bold truncate">${titleSafe}</div>
-      <div class="text-zinc-500 text-xs mt-1 flex items-center gap-1">
-        <i class="far fa-eye"></i> ${viewCount}
+      <div class="text-zinc-500 text-xs mt-1 flex items-center justify-between">
+        <div class="flex items-center gap-1.5">
+          <img src="${authorPhoto}" class="w-4 h-4 rounded-full object-cover" onerror="this.src='/static/images/default-profile.png'">
+          <span class="truncate max-w-[60px]">${authorName}</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <i class="far fa-eye"></i> ${viewCount}
+        </div>
       </div>
     </div>
   `;
