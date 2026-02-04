@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // 알림 개수 체크
   var notiBadge = document.getElementById("notiBadge");
   if (notiBadge) {
-    fetch("/api/notifications/count")
+    fetch("/api/notifications/count", { credentials: "same-origin" })
       .then(r => r.json())
       .then(data => {
         if (data.count > 0) {
