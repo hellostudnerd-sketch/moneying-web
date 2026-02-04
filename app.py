@@ -222,6 +222,7 @@ class CommunityPost(db.Model):
     images_json = db.Column(db.Text, nullable=True, default="[]")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_deal_available = db.Column(db.Boolean, default=True)  # 공구/협찬 진행중 여부
+    reward_requested = db.Column(db.Boolean, default=False)  # 수익인증 리워드 신청 여부
 
     def images(self):
         try:
