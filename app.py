@@ -728,7 +728,13 @@ def community_page():
     my_linkreq_count = 0
     if session.get("user_email"):
         my_linkreq_count = LinkRequest.query.filter_by(requester_email=session["user_email"]).count()
-    return render_template("community.html", posts=posts, my_linkreq_count=my_linkreq_count)
+    
+    # 각 포스트의 좋아요 수 계산
+    post_likes = {}
+    for p in posts:
+        post_likes[p.id] = CommunityLike.query.filter_by(post_id=p.id).count()
+    
+    return render_template("community.html", posts=posts, my_linkreq_count=my_linkreq_count, post_likes=post_likes)
 
 @app.route("/community/<int:post_id>")
 def community_detail(post_id):
