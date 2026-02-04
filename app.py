@@ -2907,7 +2907,7 @@ def notifications():
     Notification.query.filter_by(user_id=session["user_id"], is_read=False).update({"is_read": True})
     db.session.commit()
     
-    return render_template("notifications.html", notifications=notis)
+    return render_template("notifications.html", notifications=notis, timedelta=timedelta)
 
 
 @app.route("/api/notifications/count")
