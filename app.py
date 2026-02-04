@@ -2914,12 +2914,17 @@ def notifications():
 
 @app.route("/api/notifications/count")
 def api_notifications_count():
+    from flask import make_response
     if not session.get("user_id"):
-        return jsonify({"count": 0, "user_id": None})
+        resp = make_response(jsonify({"count": 0, "user_id": None}))
+    else:
+        user_id = session["user_id"]
+        count = Notification.query.filter_by(user_id=user_id, is_read=False).count()
+        resp = make_response(jsonify({"count": count, "user_id": user_id}))
     
-    user_id = session["user_id"]
-    count = Notification.query.filter_by(user_id=user_id, is_read=False).count()
-    return jsonify({"count": count, "user_id": user_id})
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    return resp
     
 @app.route("/api/notifications/<int:noti_id>/delete", methods=["POST"])
 def api_notification_delete(noti_id):
