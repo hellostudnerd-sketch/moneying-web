@@ -188,7 +188,7 @@ class Post(db.Model):
         
         # 작성자 정보
         author_name = "머닝"
-        author_photo = ""
+        author_photo = "/static/images/moneying-logo.webp"
         if self.seller_id:
             seller = User.query.get(self.seller_id)
             if seller:
