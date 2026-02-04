@@ -81,6 +81,7 @@ ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@moneying.com")
 
 # 링크요청 월 제한
 LINK_REQUEST_LIMIT_FREE = 3
+LINK_REQUEST_LIMIT_TRIAL = 1
 LINK_REQUEST_LIMIT_SUBSCRIBER = 10
 LINK_REQUEST_LIMIT_ALLINONE = 20
 
@@ -602,9 +603,13 @@ def get_link_request_limit(user_id):
     # 올인원은 20회
     if has_active_subscription(user_id, "allinone"):
         return LINK_REQUEST_LIMIT_ALLINONE
-    # 갤러리 구독자 또는 체험자는 10회
-    if has_active_subscription(user_id, "gallery") or is_trial_active(user_id):
+    # 갤러리 구독자는 10회
+    if has_active_subscription(user_id, "gallery"):
         return LINK_REQUEST_LIMIT_SUBSCRIBER
+    # 체험중은 1회
+    if is_trial_active(user_id):
+        return LINK_REQUEST_LIMIT_TRIAL
+    # 비구독 가입자는 3회
     return LINK_REQUEST_LIMIT_FREE
 
 def can_make_link_request(user_id, user_email):
