@@ -185,6 +185,16 @@ class Post(db.Model):
                 return v if isinstance(v, list) else []
             except Exception:
                 return []
+        
+        # 작성자 정보
+        author_name = "머닝"
+        author_photo = "/static/images/moneying-logo.png"
+        if self.seller_id:
+            seller = User.query.get(self.seller_id)
+            if seller:
+                author_name = seller.nickname or seller.email.split('@')[0]
+                author_photo = seller.profile_photo or "/static/images/default-profile.png"
+        
         return {
             "id": self.id,
             "title": self.title or "",
@@ -197,6 +207,8 @@ class Post(db.Model):
             "is_free": self.is_free or False,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "preview_video": self.preview_video or "",
+            "author_name": author_name,
+            "author_photo": author_photo,
         }
 
 
