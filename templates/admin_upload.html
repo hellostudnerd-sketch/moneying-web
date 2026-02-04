@@ -192,26 +192,24 @@
     document.getElementById('categoryModal').classList.add('hidden');
     document.getElementById('categoryModal').classList.remove('flex');
     document.getElementById('catName').value = '';
-    document.getElementById('catEmoji').value = '';
+    
   }
 
   document.getElementById('categoryForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('catName').value.trim();
     const key = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_가-힣]/g, '');
-    const emoji = document.getElementById('catEmoji').value.trim();
     
     const fd = new FormData();
     fd.append('key', key);
     fd.append('name', name);
-    fd.append('emoji', emoji);
     
     const res = await fetch('/admin/categories/add', { method: 'POST', body: fd });
     if (res.ok) {
       const select = document.getElementById('category');
       const opt = document.createElement('option');
       opt.value = key;
-      opt.textContent = (emoji ? emoji + ' ' : '') + name;
+      opt.textContent = name;
       select.appendChild(opt);
       select.value = key;
       closeCategoryModal();
