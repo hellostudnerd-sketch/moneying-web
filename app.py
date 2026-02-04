@@ -1402,11 +1402,17 @@ def admin_home():
     # 처리 필요 (대기중)
     pending_links = LinkRequest.query.filter((LinkRequest.coupang_url == None) | (LinkRequest.coupang_url == "")).count()
     
-    # 판매자 대기 (TODO: seller_status 컬럼 확인)
-    pending_sellers = 0
+    # 판매자 대기
+    try:
+        pending_sellers = User.query.filter_by(seller_status="pending").count()
+    except:
+        pending_sellers = 0
     
-    # 수익인증 대기 (TODO: reward_requested 컬럼 추가 후 활성화)
-    pending_rewards = 0
+    # 수익인증 대기
+    try:
+        pending_rewards = RevenueProof.query.filter_by(status="pending").count()
+    except:
+        pending_rewards = 0
     
     # 판매자 게시물 승인 대기
     pending_posts = Post.query.filter_by(status="pending").count()
