@@ -66,10 +66,11 @@
     <!-- 폼 -->
     <form method="POST" class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 space-y-6">
 
-      <!-- 오픈방 인증 섹션 -->
+      <!-- 오픈방 인증 섹션 (비구독자만) -->
+      {% if not session.get('subscriber') %}
       <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-2">
         <div class="flex items-center gap-2 mb-3">
-          <span class="text-yellow-400">⚠️</span>
+          <span class="text-yellow-400">⚠</span>
           <span class="font-bold text-yellow-200">오픈채팅방 멤버 인증</span>
         </div>
         
@@ -89,6 +90,7 @@
         </div>
         <p class="text-yellow-200/50 text-xs mt-2">💡 인증 암호는 오픈채팅방 공지사항에서 확인하세요.</p>
       </div>
+      {% endif %}
 
       <!-- 요청 정보 -->
       <div>
