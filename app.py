@@ -855,7 +855,8 @@ def my_page():
         user_seller_category=user_seller_category,
         referral_code=user.referral_code,
         invited_count=invited_count,
-        my_posts_count=my_posts_count
+        my_posts_count=my_posts_count,
+        profile_photo=user.profile_photo if user else ""
     )
 
 @app.route("/profitguard")
