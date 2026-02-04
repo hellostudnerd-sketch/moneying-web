@@ -1767,6 +1767,22 @@ def admin_category_toggle(cat_id):
     db.session.commit()
     return jsonify({"ok": True, "is_active": cat.is_active})
 
+@app.route("/admin/categories/<int:cat_id>/update", methods=["POST"])
+def admin_category_update(cat_id):
+    if not session.get("admin"):
+        return jsonify({"ok": False, "error": "권한 없음"}), 403
+    cat = Category.query.get_or_404(cat_id)
+    if cat.is_system:
+        return jsonify({"ok": False, "error": "시스템 카테고리는 수정할 수 없습니다."})
+    data = request.get_json()
+    new_name = data.get("name", "").strip()
+    if not new_name:
+        return jsonify({"ok": False, "error": "이름을 입력하세요."})
+    cat.name = new_name
+    cat.key = new_name.lower().replace(" ", "_").replace("/", "_")
+    db.session.commit()
+    return jsonify({"ok": True})
+
 @app.route("/admin/categories/<int:cat_id>/delete", methods=["POST"])
 def admin_category_delete(cat_id):
     if not session.get("admin"):
