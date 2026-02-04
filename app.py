@@ -1538,12 +1538,52 @@ def admin_users():
 def admin_stats():
     if not session.get("admin"):
         return redirect(url_for("admin_login"))
+    
+    from datetime import date, timedelta
+    today = date.today()
+    
+    # 기본 통계
+    total_users = User.query.count()
+    new_users_today = User.query.filter(db.func.date(User.created_at) == today).count()
+    total_subscribers = db.session.query(Subscription.user_id).filter_by(status="active").distinct().count()
+    trial_users = User.query.filter(User.free_trial_expires > datetime.utcnow()).count()
+    total_posts = Post.query.count()
+    
+    # 전환율
+    conversion_rate = round((total_subscribers / total_users * 100), 1) if total_users > 0 else 0
+    
+    # 최근 7일 가입자
+    daily_signups = []
+    max_daily_signup = 0
+    for i in range(6, -1, -1):
+        d = today - timedelta(days=i)
+        count = User.query.filter(db.func.date(User.created_at) == d).count()
+        daily_signups.append({"label": d.strftime("%m/%d"), "count": count})
+        if count > max_daily_signup:
+            max_daily_signup = count
+    
+    # 인기 영상 (조회수 기준)
+    popular_posts = Post.query.order_by(Post.view_count.desc()).limit(5).all()
+    
+    # 최근 가입자
+    recent_users = User.query.order_by(User.created_at.desc()).limit(5).all()
+    
     return render_template("admin_stats.html",
+        total_users=total_users,
+        new_users_today=new_users_today,
+        total_subscribers=total_subscribers,
+        conversion_rate=conversion_rate,
+        trial_users=trial_users,
+        total_posts=total_posts,
+        daily_signups=daily_signups,
+        max_daily_signup=max_daily_signup,
+        popular_posts=popular_posts,
+        recent_users=recent_users,
         gallery_count=Post.query.count(),
         link_count=LinkRequest.query.count(),
         user_count=User.query.count(),
         store_count=StoreProduct.query.count(),
-        subscriber_count=db.session.query(Subscription.user_id).filter_by(status="active").distinct().count()
+        subscriber_count=total_subscribers
     )
 
 @app.route("/api/gallery/<int:post_id>/view", methods=["POST"])
