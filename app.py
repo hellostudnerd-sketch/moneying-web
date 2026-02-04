@@ -740,6 +740,13 @@ def community_page():
 @app.route("/community/<int:post_id>")
 def community_detail(post_id):
     post = CommunityPost.query.get_or_404(post_id)
+    
+    # 비로그인 사용자는 자유게시판(free)과 수익인증(revenue)만 볼 수 있음
+    if not session.get("user_id"):
+        if post.category not in ['free', 'revenue']:
+            flash("로그인 후 이용 가능합니다.", "error")
+            return redirect(url_for("login", next=f"/community/{post_id}"))
+    
     comments = CommunityComment.query.filter_by(post_id=post_id).order_by(CommunityComment.created_at).all()
     like_count = CommunityLike.query.filter_by(post_id=post_id).count()
     user_liked = False
