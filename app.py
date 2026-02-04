@@ -617,17 +617,17 @@ def update_session_status(user_id):
     if not user_id:
         return
     
-    # 체험 상태
-    if is_trial_active(user_id):
+    # 구독 상태 먼저 확인 (구독이 있으면 체험 무시)
+    user_subs = get_user_subscriptions(user_id)
+    if user_subs:
+        session["subscriber"] = True
+        session["is_trial"] = False
+    elif is_trial_active(user_id):
         session["is_trial"] = True
-        session["subscriber"] = False  # 체험중은 subscriber가 아님
+        session["subscriber"] = False
     else:
         session["is_trial"] = False
-        # 실제 구독 확인
-        if get_user_subscriptions(user_id):
-            session["subscriber"] = True
-        else:
-            session["subscriber"] = False
+        session["subscriber"] = False
 # ----------------------------
 # R2 이미지 프록시
 # ----------------------------
