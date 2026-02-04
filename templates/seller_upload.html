@@ -18,7 +18,7 @@
 <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 mb-8">
   <p class="text-zinc-400 text-sm">
     <strong class="text-white">📌 업로드 안내</strong><br>
-    • <span class="text-red-400 font-bold">하이라이트 캡처 이미지</span>와 <span class="text-red-400 font-bold">쿠팡 링크</span>는 <strong class="text-white">필수</strong>입니다.<br>
+    • <span class="text-red-400 font-bold">원본영상</span>과 <span class="text-red-400 font-bold">쿠팡 링크</span>는 <strong class="text-white">필수</strong>입니다.<br>
     • 이미지는 1~5장까지 업로드 가능합니다.<br>
     • 관리자 승인 후 갤러리에 노출됩니다.
   </p>
@@ -56,7 +56,7 @@
 
     <!-- 오른쪽: 이미지 업로드 -->
     <div>
-      <label class="text-xs font-black tracking-widest text-zinc-500 uppercase">하이라이트 캡처 업로드 (1~5장) <span class="text-red-400">*</span></label>
+      <label class="text-xs font-black tracking-widest text-zinc-500 uppercase">원본영상 업로드 <span class="text-red-400">*</span></label>
 
       <div id="dropzone" class="dropzone mt-2 bg-zinc-900/60 border border-zinc-700 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#a3e635] transition min-h-[200px]">
         <i class="fas fa-cloud-upload-alt text-3xl text-[#a3e635] mb-3"></i>
@@ -170,7 +170,7 @@ saveBtn.addEventListener("click", async () => {
     return;
   }
   if (uploadedFiles.length === 0) {
-    msg.textContent = "❌ 하이라이트 캡처 이미지를 1장 이상 업로드해주세요.";
+    msg.textContent = "❌ 원본영상을 업로드해주세요.(60초이내)";
     msg.className = "mt-3 text-sm font-bold text-red-400";
     return;
   }
