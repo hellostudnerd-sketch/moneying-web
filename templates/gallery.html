@@ -452,7 +452,7 @@ function createGalleryCard(item) {
       <div class="text-white text-sm font-bold truncate">${titleSafe}</div>
       <div class="text-zinc-500 text-xs mt-1 flex items-center justify-between">
         <div class="flex items-center gap-1.5">
-          <img src="${authorPhoto}" class="w-4 h-4 rounded-full object-cover" onerror="this.src='/static/images/default-profile.png'">
+          ${authorPhoto ? `<img src="${authorPhoto}" class="w-4 h-4 rounded-full object-cover" onerror="this.onerror=null;this.src='';">` : `<span class="text-sm">💰</span>`}
           <span class="truncate max-w-[60px]">${authorName}</span>
         </div>
         <div class="flex items-center gap-1">
