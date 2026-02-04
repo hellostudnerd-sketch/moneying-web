@@ -421,7 +421,7 @@ function createGalleryCard(item) {
   const thumbUrl = thumb ? (thumb.startsWith("http") ? thumb : thumb.startsWith("/r2/") ? (thumb.includes("_thumb") ? thumb : thumb.replace(".webp", "_thumb.webp")) : `/static/thumbnails/${thumb.replace('.png', '_thumb.webp')}`) : "";
   const viewCount = item.view_count || 0;
   const authorName = item.author_name || "머닝";
-  const authorPhoto = item.author_photo || "/static/images/moneying-logo.png";
+  const authorPhoto = item.author_photo || "";
   const bookmarked = isBookmarked(item.id);
   const canAccess = IS_ADMIN || IS_SUBSCRIBER || IS_TRIAL || item.is_free;
   const titleSafe = escapeHtml(item.title || "");
