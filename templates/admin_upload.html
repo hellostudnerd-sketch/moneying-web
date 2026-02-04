@@ -191,15 +191,14 @@
   function closeCategoryModal() {
     document.getElementById('categoryModal').classList.add('hidden');
     document.getElementById('categoryModal').classList.remove('flex');
-    document.getElementById('catKey').value = '';
     document.getElementById('catName').value = '';
     document.getElementById('catEmoji').value = '';
   }
 
   document.getElementById('categoryForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const key = document.getElementById('catKey').value.trim().toLowerCase();
     const name = document.getElementById('catName').value.trim();
+    const key = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_가-힣]/g, '');
     const emoji = document.getElementById('catEmoji').value.trim();
     
     const fd = new FormData();
