@@ -130,7 +130,7 @@
               <p class="text-sm font-black text-zinc-300 mb-3">썸네일</p>
               
               <div class="flex-1 flex items-center justify-center">
-                <img id="thumbPreview" src="{{ post.preview_video.replace('.mp4', '_thumb.webp') if post and post.preview_video else '' }}" 
+                <img id="thumbPreview" src="{{ post_data['images'][0] if post_data and post_data['images'] and post_data['images']|length > 0 else (post.preview_video.replace('.mp4', '_thumb.webp') if post and post.preview_video else '') }}" 
                   class="max-h-full aspect-[9/16] object-cover rounded-lg border border-zinc-700 {{ '' if post and post.preview_video else 'hidden' }}" />
                 <div id="thumbPlaceholder" class="text-center text-zinc-500 {{ 'hidden' if post and post.preview_video else '' }}">
                   <div class="text-3xl mb-2">🖼️</div>
