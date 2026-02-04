@@ -2913,10 +2913,11 @@ def notifications():
 @app.route("/api/notifications/count")
 def api_notifications_count():
     if not session.get("user_id"):
-        return jsonify({"count": 0})
+        return jsonify({"count": 0, "user_id": None})
     
-    count = Notification.query.filter_by(user_id=session["user_id"], is_read=False).count()
-    return jsonify({"count": count})
+    user_id = session["user_id"]
+    count = Notification.query.filter_by(user_id=user_id, is_read=False).count()
+    return jsonify({"count": count, "user_id": user_id})
     
 @app.route("/api/notifications/<int:noti_id>/delete", methods=["POST"])
 def api_notification_delete(noti_id):
