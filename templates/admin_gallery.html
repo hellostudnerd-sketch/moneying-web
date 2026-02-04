@@ -5,9 +5,13 @@
 
 {% block page_actions %}
   <div class="flex gap-2">
+    <a href="/admin/categories"
+       class="px-4 py-2 rounded-xl bg-zinc-800 text-white hover:bg-zinc-700 transition font-bold border border-zinc-700">
+       카테고리 관리
+    </a>
     <a href="/admin/gallery/bulk"
        class="px-4 py-2 rounded-xl bg-zinc-700 text-white hover:bg-zinc-600 transition font-bold">
-      📦 대량등록
+       대량등록
     </a>
     <a href="{{ url_for('admin_upload') }}"
        class="px-4 py-2 rounded-xl bg-[#a3e635] text-black hover:bg-white transition font-black">
