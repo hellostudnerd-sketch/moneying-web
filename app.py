@@ -26,9 +26,15 @@ except Exception:
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
+
+# Cloudflare 프록시 대응
+from werkzeug.middleware.proxy_fix import ProxyFix
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
 app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET", "moneying-perfect-final-safe")
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-app.config["SESSION_COOKIE_SECURE"] = False
+app.config["SESSION_COOKIE_SECURE"] = True
+app.config["SESSION_COOKIE_HTTPONLY"] = True
 
 # ============ 성능 최적화 ============
 from flask_compress import Compress
@@ -2909,11 +2915,17 @@ def notifications():
     
     notis = Notification.query.filter_by(user_id=session["user_id"]).order_by(Notification.created_at.desc()).limit(50).all()
     
-    # 읽음 처리
+    # 읽음 처리는 POST API로 분리 (Prefetch 방지)
+    return render_template("notifications.html", notifications=notis, timedelta=timedelta)
+
+@app.route("/api/notifications/mark-read", methods=["POST"])
+def api_notifications_mark_read():
+    if not session.get("user_id"):
+        return jsonify({"ok": False}), 401
+    
     Notification.query.filter_by(user_id=session["user_id"], is_read=False).update({"is_read": True})
     db.session.commit()
-    
-    return render_template("notifications.html", notifications=notis, timedelta=timedelta)
+    return jsonify({"ok": True})
 
 
 @app.route("/api/notifications/count")
