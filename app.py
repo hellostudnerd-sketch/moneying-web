@@ -488,7 +488,7 @@ def save_upload(file_storage):
     s3 = boto3.client('s3',
         endpoint_url="https://b6f9c47a567f57911cab3c58f07cfc61.r2.cloudflarestorage.com",
         aws_access_key_id="bd378a5b4a8c51dece8aeeec96c846e5",
-        aws_secret_access_key="f7001674ed1ee7f505a45f071891811db5e333c2a890f4f9f71a7f7be41c55f7"
+        aws_secret_access_key="4c218d723f2f0e0c122c75fa6d782eb1f659e17eabdecc50dc009bd2edbce0c0"
     )
     
     file_id = uuid.uuid4().hex
@@ -625,7 +625,7 @@ def serve_r2_file(filename):
     s3 = boto3.client('s3',
         endpoint_url="https://b6f9c47a567f57911cab3c58f07cfc61.r2.cloudflarestorage.com",
         aws_access_key_id="bd378a5b4a8c51dece8aeeec96c846e5",
-        aws_secret_access_key="f7001674ed1ee7f505a45f071891811db5e333c2a890f4f9f71a7f7be41c55f7"
+        aws_secret_access_key="4c218d723f2f0e0c122c75fa6d782eb1f659e17eabdecc50dc009bd2edbce0c0"
     )
 
     import os
@@ -1950,7 +1950,7 @@ def api_upload_video():
         s3 = boto3.client('s3',
             endpoint_url="https://b6f9c47a567f57911cab3c58f07cfc61.r2.cloudflarestorage.com",
             aws_access_key_id="bd378a5b4a8c51dece8aeeec96c846e5",
-            aws_secret_access_key="f7001674ed1ee7f505a45f071891811db5e333c2a890f4f9f71a7f7be41c55f7"
+            aws_secret_access_key="4c218d723f2f0e0c122c75fa6d782eb1f659e17eabdecc50dc009bd2edbce0c0"
         )
         
         with open(temp_output, 'rb') as vf:
