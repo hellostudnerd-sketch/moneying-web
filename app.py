@@ -706,7 +706,8 @@ def gallery():
         except:
             session["is_seller"] = False
     
-    return render_template("gallery.html", posts=[p.to_dict() for p in posts])
+    categories = Category.query.filter_by(is_active=True).order_by(Category.sort_order).all()
+    return render_template("gallery.html", posts=[p.to_dict() for p in posts], categories=categories)
 
 @app.route("/community")
 def community_page():
