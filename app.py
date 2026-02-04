@@ -2325,6 +2325,16 @@ def admin_seller_reject(user_id):
     
     user.seller_status = "rejected"
     user.is_seller = False
+    
+    # 거절 알림 보내기
+    db.session.add(Notification(
+        user_id=user.id,
+        type="seller_rejected",
+        title="판매자 신청 거절",
+        message="판매자 신청이 거절되었습니다. 조건 확인 후 다시 신청해주세요.",
+        link="/seller/apply"
+    ))
+    
     db.session.commit()
     
     return jsonify({"ok": True})
