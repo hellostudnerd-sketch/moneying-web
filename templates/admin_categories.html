@@ -8,16 +8,13 @@
 <!-- 카테고리 추가 폼 -->
 <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 mb-8">
   <h2 class="font-bold text-lg mb-4">새 카테고리 추가</h2>
-  <form method="POST" action="/admin/categories/add" class="flex flex-wrap gap-4 items-end">
-    <div class="flex-1 min-w-[120px]">
-      <label class="block text-sm font-bold text-zinc-400 mb-2">키 (영문)</label>
-      <input type="text" name="key" required placeholder="예: fashion"
+  <form method="POST" action="/admin/categories/add" class="flex flex-wrap gap-4 items-end" id="categoryAddForm">
+    <div class="flex-1 min-w-[200px]">
+      <label class="block text-sm font-bold text-zinc-400 mb-2">카테고리 이름</label>
+      <input type="text" name="name" id="catNameInput" required placeholder="예: 패션, Food, 리빙용품"
              class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none">
-    </div>
-    <div class="flex-1 min-w-[120px]">
-      <label class="block text-sm font-bold text-zinc-400 mb-2">이름</label>
-      <input type="text" name="name" required placeholder="예: Fashion"
-             class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none">
+      <input type="hidden" name="key" id="catKeyInput">
+      <p class="text-xs text-zinc-500 mt-2">한글/영문 모두 가능</p>
     </div>
     
     <button type="submit" class="px-6 py-3 bg-[#a3e635] text-black font-black rounded-xl hover:bg-white transition">
@@ -36,10 +33,7 @@
   <table class="w-full">
     <thead class="bg-zinc-800/50">
       <tr>
-        <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">순서</th>
         <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">카테고리</th>
-        <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">키</th>
-        <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">타입</th>
         <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">상태</th>
         <th class="px-6 py-4 text-right text-xs font-bold text-zinc-500 uppercase">액션</th>
       </tr>
@@ -47,18 +41,8 @@
     <tbody class="divide-y divide-zinc-800/70">
       {% for cat in categories %}
         <tr class="hover:bg-zinc-800/30 transition">
-          <td class="px-6 py-4 text-zinc-500">{{ cat.sort_order }}</td>
           <td class="px-6 py-4">
-            <span class="text-xl mr-2">{{ cat.emoji }}</span>
             <span class="font-bold text-white">{{ cat.name }}</span>
-          </td>
-          <td class="px-6 py-4 text-zinc-400 font-mono text-sm">{{ cat.key }}</td>
-          <td class="px-6 py-4">
-            {% if cat.is_system %}
-              <span class="px-2 py-1 rounded bg-blue-500/20 text-blue-400 text-xs font-bold">시스템</span>
-            {% else %}
-              <span class="px-2 py-1 rounded bg-zinc-500/20 text-zinc-400 text-xs font-bold">사용자</span>
-            {% endif %}
           </td>
           <td class="px-6 py-4">
             <button onclick="toggleCategory({{ cat.id }})" id="toggle-{{ cat.id }}"
@@ -81,6 +65,13 @@
 </div>
 
 <script>
+
+document.getElementById('categoryAddForm').addEventListener('submit', function(e) {
+  const name = document.getElementById('catNameInput').value.trim();
+  const key = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_가-힣]/g, '');
+  document.getElementById('catKeyInput').value = key;
+});
+  
 function toggleCategory(id) {
   fetch(`/admin/categories/${id}/toggle`, { method: 'POST' })
     .then(r => r.json())
