@@ -460,8 +460,12 @@ def get_nickname(email):
 @app.context_processor
 def inject_globals():
     """모든 템플릿에서 사용 가능한 전역 변수/함수"""
+    unread_count = 0
+    if session.get("user_id"):
+        unread_count = Notification.query.filter_by(user_id=session["user_id"], is_read=False).count()
     return dict(
-        get_nickname=get_nickname
+        get_nickname=get_nickname,
+        unread_notifications_count=unread_count
     )
 
 
