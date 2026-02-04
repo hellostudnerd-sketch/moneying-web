@@ -195,6 +195,20 @@
     </div>
   </div>
   
+  {% elif user_seller_status == 'rejected' %}
+  <div class="bg-zinc-900/60 border border-red-500/30 rounded-2xl mb-4 p-5">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">😢</span>
+        <div>
+          <div class="font-medium text-white text-sm">판매자 신청이 거절되었습니다</div>
+          <div class="text-zinc-500 text-xs">조건을 확인 후 다시 신청해주세요</div>
+        </div>
+      </div>
+      <a href="/seller/apply" class="px-3 py-1.5 rounded-lg bg-zinc-700 text-white text-xs font-bold hover:bg-zinc-600 transition">재신청</a>
+    </div>
+  </div>
+  
   {% else %}
   <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl mb-4 overflow-hidden">
     <a href="/seller/apply" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition">
