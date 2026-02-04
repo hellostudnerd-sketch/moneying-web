@@ -249,13 +249,17 @@ async function applyRevenueProof(postId) {
   btn.disabled = true; btn.textContent = '신청 중...';
   try {
     const res = await fetch(`/revenue-proof/apply/${postId}`, { method: 'POST' });
-    if (res.ok) {
+    const data = await res.json();
+    if (res.ok && data.ok) {
       btn.textContent = '✓ 신청 완료';
       btn.classList.remove('bg-green-500', 'hover:bg-green-400');
       btn.classList.add('bg-zinc-700', 'text-zinc-400', 'cursor-not-allowed');
       showAlert('신청 완료! 🎉', '관리자 승인 후 7일이 연장됩니다.', '✅');
+    } else if (res.status === 403) {
+      showSubscribeModal();
+      btn.disabled = false; btn.textContent = '리워드 신청';
     } else {
-      alert('신청 실패');
+      alert(data.error || '신청 실패');
       btn.disabled = false; btn.textContent = '리워드 신청';
     }
   } catch (e) { 
