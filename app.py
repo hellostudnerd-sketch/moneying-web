@@ -67,6 +67,29 @@ MAIL_FROM = os.getenv("MAIL_FROM", "noreply@moneying.co.kr")
 
 db = SQLAlchemy(app)
 
+@app.before_request
+def check_session_token():
+    # 관리자는 중복 로그인 체크 안 함
+    if session.get("admin"):
+        return
+    
+    # 로그인한 사용자만 체크
+    user_id = session.get("user_id")
+    if not user_id:
+        return
+    
+    # 정적 파일, API 일부는 스킵
+    if request.path.startswith("/static/") or request.path.startswith("/r2/"):
+        return
+    
+    # DB의 세션 토큰과 비교
+    user = User.query.get(user_id)
+    if user and user.session_token != session.get("session_token"):
+        # 다른 곳에서 로그인함 → 로그아웃 처리
+        session.clear()
+        flash("다른 기기에서 로그인하여 자동 로그아웃되었습니다.", "error")
+        return redirect(url_for("login"))
+
 @app.after_request
 def add_header(response):
     # 정적 파일 캐싱 (CSS, JS, 이미지)
@@ -154,6 +177,7 @@ class User(db.Model):
     kakao_id = db.Column(db.String(50), nullable=True)
     nickname = db.Column(db.String(50), nullable=True)
     profile_photo = db.Column(db.String(500), nullable=True, default="")
+    session_token = db.Column(db.String(64), nullable=True)  # 중복 로그인 방지용
     
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -1208,10 +1232,16 @@ def kakao_callback():
         user.kakao_id = kakao_id
         db.session.commit()
     
+   # 중복 로그인 방지: 새 세션 토큰 생성
+    new_token = secrets.token_hex(32)
+    user.session_token = new_token
+    db.session.commit()
+    
     # 로그인 처리
     session.clear()
     session["user_id"] = user.id
     session["user_email"] = user.email
+    session["session_token"] = new_token
     update_session_status(user.id)
     
     return redirect(url_for("index"))
@@ -1267,9 +1297,15 @@ def login():
         u.locked_until = None
         db.session.commit()
         
+       # 중복 로그인 방지: 새 세션 토큰 생성
+        new_token = secrets.token_hex(32)
+        u.session_token = new_token
+        db.session.commit()
+        
         session.clear()
         session["user_id"] = u.id
         session["user_email"] = u.email
+        session["session_token"] = new_token
         
         # 세션 상태 업데이트
         update_session_status(u.id)
