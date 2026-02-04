@@ -65,6 +65,9 @@
 </div>
 
 <script>
+
+// 페이지 로드 시 읽음 처리
+fetch("/api/notifications/mark-read", { method: "POST", credentials: "include" });
 function deleteNotification(id) {
   fetch(`/api/notifications/${id}/delete`, { method: 'POST' })
     .then(r => r.json())
