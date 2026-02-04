@@ -194,7 +194,8 @@
   function checkLinkRequestAccess() {
     const userStatus = {
       isLoggedIn: {{ 'true' if session.get('user_id') else 'false' }},
-      isSubscriber: {{ 'true' if session.get('subscriber') or session.get('is_trial') else 'false' }},
+      isSubscriber: {{ 'true' if session.get('subscriber') else 'false' }},
+      isTrial: {{ 'true' if session.get('is_trial') else 'false' }},
       isSeller: {{ 'true' if session.get('is_seller') else 'false' }},
       isAdmin: {{ 'true' if session.get('admin') else 'false' }},
       monthlyUsed: {{ monthly_used or 0 }},
@@ -207,8 +208,8 @@
       return;
     }
     
-    // 구독자 + 한도 내면 바로 이동
-    if (userStatus.isLoggedIn && userStatus.isSubscriber) {
+    // 구독자 + 한도 내면 바로 이동 (체험 중은 제외)
+    if (userStatus.isLoggedIn && userStatus.isSubscriber && !userStatus.isTrial) {
       if (userStatus.monthlyUsed < userStatus.monthlyLimit) {
         location.href = '/link-requests/new';
         return;
@@ -237,8 +238,8 @@
           <a href="/signup" class="flex-1 py-3 border border-zinc-600 text-white rounded-xl font-bold text-center hover:bg-zinc-800 transition">회원가입</a>
         </div>
       `;
-    } else if (!status.isSubscriber) {
-      // 가입자 (비구독)
+    } else if (!status.isSubscriber || status.isTrial) {
+      // 가입자 (비구독) 또는 체험중
       title = '🔗 링크요청 이용 안내';
       message = '<strong class="text-white">구독자</strong>는 월 10~20회 이용 가능<br><strong class="text-white">오픈채팅 멤버</strong>는 월 3회 무료!';
       buttons = `
