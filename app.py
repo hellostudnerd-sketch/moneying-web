@@ -2254,8 +2254,8 @@ def revenue_proof_apply(post_id):
     if not session.get("user_id"):
         return jsonify({"ok": False, "error": "로그인이 필요합니다."}), 401
     
-    # 구독자/체험중/관리자만 가능
-    if not session.get("subscriber") and not session.get("is_trial") and not session.get("admin"):
+    # 구독자/관리자만 가능 (체험중은 제외)
+    if not session.get("subscriber") and not session.get("admin"):
         return jsonify({"ok": False, "error": "구독자만 신청할 수 있습니다."}), 403
     
     post = CommunityPost.query.get_or_404(post_id)
