@@ -456,6 +456,12 @@ class UserBlock(db.Model):
     
     user = db.relationship('User', foreign_keys=[user_id], backref='blocks')
 
+class RevenueRewardHistory(db.Model):
+    """수익인증 리워드 신청 기록 (악용 방지)"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    post_id = db.Column(db.Integer, nullable=False)  # 삭제되어도 기록 유지
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Notification(db.Model):
     """알림 모델"""
@@ -2321,17 +2327,36 @@ def revenue_proof_apply(post_id):
         return jsonify({"ok": False, "error": "구독자만 신청할 수 있습니다."}), 403
     
     post = CommunityPost.query.get_or_404(post_id)
+    user_id = session.get("user_id")
     
     # 본인 글만 가능
     if post.author_email != session.get("user_email"):
         return jsonify({"ok": False, "error": "본인 글만 신청 가능합니다."}), 403
     
-    # 이미 신청했는지 확인
+    # 이미 신청했는지 확인 (현재 글)
     if post.reward_requested:
         return jsonify({"ok": False, "error": "이미 신청하셨습니다."}), 400
     
+    # 이미 이 글로 신청한 기록이 있는지 확인 (삭제 후 재작성 방지)
+    existing = RevenueRewardHistory.query.filter_by(user_id=user_id, post_id=post_id).first()
+    if existing:
+        return jsonify({"ok": False, "error": "이미 신청한 기록이 있습니다."}), 400
+    
+    # 월 3회 제한 체크
+    from datetime import datetime
+    now = datetime.utcnow()
+    first_day = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    monthly_count = RevenueRewardHistory.query.filter(
+        RevenueRewardHistory.user_id == user_id,
+        RevenueRewardHistory.created_at >= first_day
+    ).count()
+    
+    if monthly_count >= 3:
+        return jsonify({"ok": False, "error": "월 3회까지만 신청 가능합니다."}), 400
+    
     # 신청 처리
     post.reward_requested = True
+    db.session.add(RevenueRewardHistory(user_id=user_id, post_id=post_id))
     db.session.commit()
     
     return jsonify({"ok": True})
