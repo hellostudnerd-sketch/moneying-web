@@ -44,7 +44,7 @@
           <p class="font-bold text-white">{{ noti.title }}</p>
           <p class="text-sm text-zinc-400 mt-1">{{ noti.message }}</p>
           <p class="text-xs text-zinc-500 mt-2">
-            {{ noti.created_at.strftime('%Y.%m.%d %H:%M') if noti.created_at else '' }}
+            {{ (noti.created_at + timedelta(hours=9)).strftime('%Y.%m.%d %H:%M') if noti.created_at else '' }}
           </p>
         </a>
         <button onclick="deleteNotification({{ noti.id }})" class="text-zinc-600 hover:text-red-400 transition p-2">
