@@ -8,19 +8,17 @@
 <!-- 카테고리 추가 폼 -->
 <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 mb-8">
   <h2 class="font-bold text-lg mb-4">새 카테고리 추가</h2>
-  <form method="POST" action="/admin/categories/add" class="flex flex-wrap gap-4 items-end" id="categoryAddForm">
-    <div class="flex-1 min-w-[200px]">
-      <label class="block text-sm font-bold text-zinc-400 mb-2">카테고리 이름</label>
+  <form method="POST" action="/admin/categories/add" class="flex gap-4 items-center" id="categoryAddForm">
+    <div class="flex-1">
       <input type="text" name="name" id="catNameInput" required placeholder="예: 패션, Food, 리빙용품"
              class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none">
       <input type="hidden" name="key" id="catKeyInput">
-      <p class="text-xs text-zinc-500 mt-2">한글/영문 모두 가능</p>
     </div>
-    
-    <button type="submit" class="px-6 py-3 bg-[#a3e635] text-black font-black rounded-xl hover:bg-white transition">
+    <button type="submit" class="px-6 py-3 bg-[#a3e635] text-black font-black rounded-xl hover:bg-white transition whitespace-nowrap">
       + 추가
     </button>
   </form>
+  <p class="text-xs text-zinc-500 mt-2">한글/영문 모두 가능</p>
 </div>
 
 <!-- 카테고리 목록 -->
@@ -40,9 +38,10 @@
     </thead>
     <tbody class="divide-y divide-zinc-800/70">
       {% for cat in categories %}
-        <tr class="hover:bg-zinc-800/30 transition">
+        <tr class="hover:bg-zinc-800/30 transition" id="row-{{ cat.id }}">
           <td class="px-6 py-4">
-            <span class="font-bold text-white">{{ cat.name }}</span>
+            <span class="font-bold text-white cat-name" id="name-{{ cat.id }}">{{ cat.name }}</span>
+            <input type="text" id="edit-{{ cat.id }}" value="{{ cat.name }}" class="hidden w-full bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-white focus:border-[#a3e635] focus:outline-none">
           </td>
           <td class="px-6 py-4">
             <button onclick="toggleCategory({{ cat.id }})" id="toggle-{{ cat.id }}"
@@ -53,7 +52,12 @@
           </td>
           <td class="px-6 py-4 text-right">
             {% if not cat.is_system %}
-              <button onclick="deleteCategory({{ cat.id }}, '{{ cat.name }}')" class="text-red-400 hover:underline text-sm font-bold">삭제</button>
+              <div class="flex gap-2 justify-end">
+                <button onclick="editCategory({{ cat.id }})" id="editBtn-{{ cat.id }}" class="text-[#a3e635] hover:underline text-sm font-bold">수정</button>
+                <button onclick="saveCategory({{ cat.id }})" id="saveBtn-{{ cat.id }}" class="hidden text-blue-400 hover:underline text-sm font-bold">저장</button>
+                <button onclick="cancelEdit({{ cat.id }})" id="cancelBtn-{{ cat.id }}" class="hidden text-zinc-400 hover:underline text-sm font-bold">취소</button>
+                <button onclick="deleteCategory({{ cat.id }}, '{{ cat.name }}')" id="deleteBtn-{{ cat.id }}" class="text-red-400 hover:underline text-sm font-bold">삭제</button>
+              </div>
             {% else %}
               <span class="text-zinc-600 text-sm">-</span>
             {% endif %}
@@ -88,7 +92,47 @@ function toggleCategory(id) {
       }
     });
 }
+function editCategory(id) {
+  document.getElementById('name-' + id).classList.add('hidden');
+  document.getElementById('edit-' + id).classList.remove('hidden');
+  document.getElementById('editBtn-' + id).classList.add('hidden');
+  document.getElementById('saveBtn-' + id).classList.remove('hidden');
+  document.getElementById('cancelBtn-' + id).classList.remove('hidden');
+  document.getElementById('deleteBtn-' + id).classList.add('hidden');
+  document.getElementById('edit-' + id).focus();
+}
 
+function cancelEdit(id) {
+  document.getElementById('name-' + id).classList.remove('hidden');
+  document.getElementById('edit-' + id).classList.add('hidden');
+  document.getElementById('editBtn-' + id).classList.remove('hidden');
+  document.getElementById('saveBtn-' + id).classList.add('hidden');
+  document.getElementById('cancelBtn-' + id).classList.add('hidden');
+  document.getElementById('deleteBtn-' + id).classList.remove('hidden');
+}
+
+function saveCategory(id) {
+  const newName = document.getElementById('edit-' + id).value.trim();
+  if (!newName) {
+    alert('카테고리 이름을 입력하세요.');
+    return;
+  }
+  
+  fetch(`/admin/categories/${id}/update`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: newName })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) {
+      document.getElementById('name-' + id).textContent = newName;
+      cancelEdit(id);
+    } else {
+      alert('수정 실패: ' + (data.error || ''));
+    }
+  });
+}
 function deleteCategory(id, name) {
   if (!confirm(`'${name}' 카테고리를 삭제하시겠습니까?`)) return;
   
