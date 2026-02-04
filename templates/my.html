@@ -57,25 +57,64 @@
       <span class="font-bold text-sm">나의 구독</span>
     </div>
     
-    <!-- 구독 상태 요약 -->
-    <a href="/pricing" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition border-b border-zinc-800/50">
-      <div class="flex items-center gap-3">
-        <span class="text-xl">📦</span>
-        <div>
-          <div class="font-medium text-white text-sm">구독 관리</div>
-          <div class="text-zinc-500 text-xs">
-            {% if session.get("is_trial") %}
-              체험중 · {% if trial_expires_at %}{{ trial_expires_at.strftime('%m/%d') }} 만료{% endif %}
-            {% elif subscriptions and subscriptions|length > 0 %}
-              {{ subscriptions|length }}개 이용중
-            {% else %}
-              구독 중인 상품 없음
-            {% endif %}
+    {% if subscriptions and subscriptions|length > 0 %}
+      <!-- 구독 상세 정보 -->
+      {% for sub in subscriptions %}
+      <div class="px-5 py-4 border-b border-zinc-800/50">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="text-xl">
+              {% if sub.plan_type == 'gallery' %}🎬{% elif 'profitguard' in sub.plan_type %}🛡️{% elif sub.plan_type == 'allinone' %}⭐{% else %}📦{% endif %}
+            </span>
+            <div>
+              <div class="font-medium text-white text-sm">
+                {% if sub.plan_type == 'gallery' %}영상 갤러리
+                {% elif sub.plan_type == 'profitguard_lite' %}프로핏가드 라이트
+                {% elif sub.plan_type == 'profitguard_pro' %}프로핏가드 프로
+                {% elif sub.plan_type == 'profitguard_lifetime' %}프로핏가드 평생
+                {% elif sub.plan_type == 'allinone' %}올인원
+                {% else %}{{ sub.plan_type }}{% endif %}
+              </div>
+              <div class="text-zinc-500 text-xs">
+                {% if sub.expires_at %}
+                  {{ sub.expires_at.strftime('%Y-%m-%d') }} 만료
+                {% else %}
+                  평생 이용
+                {% endif %}
+              </div>
+            </div>
           </div>
+          <span class="px-2 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-bold">이용중</span>
         </div>
       </div>
-      <i class="fas fa-chevron-right text-zinc-600 text-sm"></i>
-    </a>
+      {% endfor %}
+    {% elif session.get("is_trial") %}
+      <!-- 체험중 -->
+      <div class="px-5 py-4 border-b border-zinc-800/50">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="text-xl">🎁</span>
+            <div>
+              <div class="font-medium text-white text-sm">무료 체험</div>
+              <div class="text-zinc-500 text-xs">{% if trial_expires_at %}{{ trial_expires_at.strftime('%Y-%m-%d') }} 만료{% endif %}</div>
+            </div>
+          </div>
+          <span class="px-2 py-1 rounded-full bg-[#c4ff00]/10 text-[#c4ff00] text-xs font-bold">체험중</span>
+        </div>
+      </div>
+    {% else %}
+      <!-- 구독 없음 -->
+      <a href="/pricing" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition border-b border-zinc-800/50">
+        <div class="flex items-center gap-3">
+          <span class="text-xl">📦</span>
+          <div>
+            <div class="font-medium text-white text-sm">구독 시작하기</div>
+            <div class="text-zinc-500 text-xs">구독 중인 상품 없음</div>
+          </div>
+        </div>
+        <i class="fas fa-chevron-right text-zinc-600 text-sm"></i>
+      </a>
+    {% endif %}
     
     <!-- 링크요청 -->
     <a href="/my/link-requests" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition">
