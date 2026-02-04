@@ -1929,6 +1929,23 @@ def api_upload_file():
         return jsonify({"ok": False, "error": "invalid_file"}), 400
     return jsonify({"ok": True, "filename": saved, "url": saved})
 
+@app.route("/api/upload_profile_photo", methods=["POST"])
+def api_upload_profile_photo():
+    if not session.get("user_id"):
+        return jsonify({"ok": False, "error": "로그인이 필요합니다."}), 401
+    f = request.files.get("file")
+    if not f:
+        return jsonify({"ok": False, "error": "파일이 없습니다."}), 400
+    saved = save_upload(f)
+    if not saved:
+        return jsonify({"ok": False, "error": "업로드 실패"}), 400
+    # DB 업데이트
+    user = User.query.get(session["user_id"])
+    if user:
+        user.profile_photo = saved
+        db.session.commit()
+    return jsonify({"ok": True, "url": saved})
+
 @app.route("/api/upload_video", methods=["POST"])
 def api_upload_video():
     if not is_admin() and not session.get("is_seller"):
