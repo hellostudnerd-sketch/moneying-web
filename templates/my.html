@@ -8,8 +8,18 @@
   <!-- 프로필 카드 -->
 <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 mb-4">
   <div class="flex items-center gap-4">
-    <div class="w-14 h-14 bg-gradient-to-br from-[#c4ff00]/20 to-zinc-800 rounded-full flex items-center justify-center text-2xl shrink-0">
-      {% if user_is_seller %}🏪{% elif session.get("is_trial") %}🎁{% elif subscriptions and subscriptions|length > 0 %}⭐{% else %}👤{% endif %}
+    <div class="relative group">
+      <div class="w-14 h-14 bg-gradient-to-br from-[#c4ff00]/20 to-zinc-800 rounded-full flex items-center justify-center text-2xl shrink-0 overflow-hidden">
+        {% if profile_photo %}
+          <img src="{{ profile_photo }}" class="w-full h-full object-cover">
+        {% else %}
+          {% if user_is_seller %}🏪{% elif session.get("is_trial") %}🎁{% elif subscriptions and subscriptions|length > 0 %}⭐{% else %}👤{% endif %}
+        {% endif %}
+      </div>
+      <label class="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition">
+        <i class="fas fa-camera text-white text-sm"></i>
+        <input type="file" id="profilePhotoInput" accept="image/*" class="hidden" onchange="uploadProfilePhoto(this)">
+      </label>
     </div>
     <div class="flex-1 min-w-0">
       <!-- 닉네임 + 변경 버튼 -->
@@ -247,5 +257,26 @@
   <a href="/" class="block w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-4 rounded-xl text-center transition text-sm">메인으로</a>
 
 </div>
-
+<script>
+async function uploadProfilePhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  
+  const file = input.files[0];
+  const fd = new FormData();
+  fd.append('file', file);
+  
+  try {
+    const res = await fetch('/api/upload_profile_photo', { method: 'POST', body: fd });
+    const data = await res.json();
+    
+    if (res.ok && data.url) {
+      location.reload();
+    } else {
+      alert(data.error || '업로드 실패');
+    }
+  } catch (e) {
+    alert('업로드 실패: ' + e.message);
+  }
+}
+</script>
 {% endblock %}
