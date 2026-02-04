@@ -620,7 +620,7 @@ def update_session_status(user_id):
     # 체험 상태
     if is_trial_active(user_id):
         session["is_trial"] = True
-        session["subscriber"] = True
+        session["subscriber"] = False  # 체험중은 subscriber가 아님
     else:
         session["is_trial"] = False
         # 실제 구독 확인
