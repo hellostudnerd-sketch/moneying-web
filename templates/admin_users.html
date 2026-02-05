@@ -7,31 +7,31 @@
 {% block content_admin %}
 
 <!-- 통계 요약 -->
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 text-center">
-    <div class="text-2xl font-black text-white">{{ users|length }}</div>
-    <div class="text-zinc-500 text-xs mt-1">전체 가입자</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-6">
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-3 md:p-4 text-center">
+    <div class="text-xl md:text-2xl font-black text-white">{{ users|length }}</div>
+    <div class="text-zinc-500 text-[11px] md:text-xs mt-1">전체 가입자</div>
   </div>
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 text-center">
-    <div class="text-2xl font-black text-[#c4ff00]">{{ subscriber_count }}</div>
-    <div class="text-zinc-500 text-xs mt-1">구독자</div>
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-3 md:p-4 text-center">
+    <div class="text-xl md:text-2xl font-black text-[#c4ff00]">{{ subscriber_count }}</div>
+    <div class="text-zinc-500 text-[11px] md:text-xs mt-1">구독자</div>
   </div>
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 text-center">
-    <div class="text-2xl font-black text-blue-400">{{ trial_count }}</div>
-    <div class="text-zinc-500 text-xs mt-1">무료체험 중</div>
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-3 md:p-4 text-center">
+    <div class="text-xl md:text-2xl font-black text-blue-400">{{ trial_count }}</div>
+    <div class="text-zinc-500 text-[11px] md:text-xs mt-1">무료체험 중</div>
   </div>
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 text-center">
-    <div class="text-2xl font-black text-zinc-400">{{ users|length - subscriber_count - trial_count }}</div>
-    <div class="text-zinc-500 text-xs mt-1">일반 회원</div>
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-3 md:p-4 text-center">
+    <div class="text-xl md:text-2xl font-black text-zinc-400">{{ users|length - subscriber_count - trial_count }}</div>
+    <div class="text-zinc-500 text-[11px] md:text-xs mt-1">일반 회원</div>
   </div>
 </div>
 
 <!-- 필터 -->
-<div class="flex gap-2 mb-6">
-  <button onclick="filterUsers('all')" class="filter-btn active px-4 py-2 rounded-lg text-sm font-bold" data-filter="all">전체</button>
-  <button onclick="filterUsers('subscriber')" class="filter-btn px-4 py-2 rounded-lg text-sm font-bold" data-filter="subscriber">구독자</button>
-  <button onclick="filterUsers('trial')" class="filter-btn px-4 py-2 rounded-lg text-sm font-bold" data-filter="trial">무료체험</button>
-  <button onclick="filterUsers('normal')" class="filter-btn px-4 py-2 rounded-lg text-sm font-bold" data-filter="normal">일반</button>
+<div class="flex gap-2 mb-6 overflow-x-auto pb-1">
+  <button onclick="filterUsers('all')" class="filter-btn active shrink-0 px-4 py-2 rounded-lg text-sm font-bold" data-filter="all">전체</button>
+  <button onclick="filterUsers('subscriber')" class="filter-btn shrink-0 px-4 py-2 rounded-lg text-sm font-bold" data-filter="subscriber">구독자</button>
+  <button onclick="filterUsers('trial')" class="filter-btn shrink-0 px-4 py-2 rounded-lg text-sm font-bold" data-filter="trial">무료체험</button>
+  <button onclick="filterUsers('normal')" class="filter-btn shrink-0 px-4 py-2 rounded-lg text-sm font-bold" data-filter="normal">일반</button>
 </div>
 
 <style>
@@ -40,9 +40,11 @@
 .filter-btn.active { background: #fff; color: #000; font-weight: 700; }
 </style>
 
-<!-- 가입자 목록 -->
+<!-- 가입자 목록 - PC: 테이블 / 모바일: 카드 -->
 <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
-  <div class="overflow-x-auto">
+
+  <!-- PC 테이블 -->
+  <div class="hidden md:block overflow-x-auto">
     <table class="w-full text-left">
       <thead class="border-b border-zinc-800">
         <tr class="text-zinc-500 text-xs font-bold uppercase">
@@ -53,9 +55,9 @@
           <th class="px-5 py-4">가입일</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-zinc-800/50" id="userTableBody">
+      <tbody class="divide-y divide-zinc-800/50" id="userTableDesktop">
         {% for user in users %}
-        <tr class="hover:bg-zinc-800/30 transition user-row" 
+        <tr class="hover:bg-zinc-800/30 transition user-row"
             data-subscriber="{{ 'true' if user.subscriber else 'false' }}"
             data-trial="{{ 'true' if user.is_trial else 'false' }}">
           <td class="px-5 py-4 text-zinc-500 text-sm">{{ user.id }}</td>
@@ -80,7 +82,32 @@
       </tbody>
     </table>
   </div>
-  
+
+  <!-- 모바일 카드 -->
+  <div class="md:hidden divide-y divide-zinc-800/50" id="userTableMobile">
+    {% for user in users %}
+    <div class="px-4 py-3 user-row"
+         data-subscriber="{{ 'true' if user.subscriber else 'false' }}"
+         data-trial="{{ 'true' if user.is_trial else 'false' }}">
+      <div class="flex items-center justify-between mb-1">
+        <div class="font-medium text-white text-sm truncate mr-2">{{ user.email }}</div>
+        {% if user.subscriber %}
+          <span class="px-2 py-0.5 rounded-full bg-[#c4ff00]/20 text-[#c4ff00] text-xs font-bold shrink-0">구독중</span>
+        {% elif user.is_trial %}
+          <span class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold shrink-0">무료체험</span>
+        {% else %}
+          <span class="px-2 py-0.5 rounded-full bg-zinc-700 text-zinc-400 text-xs font-bold shrink-0">일반</span>
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-3 text-xs text-zinc-500">
+        <span>#{{ user.id }}</span>
+        <span>{{ user.nickname or '-' }}</span>
+        <span>{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else '-' }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
   {% if users|length == 0 %}
   <div class="px-5 py-16 text-center text-zinc-500 font-bold">
     가입자가 없습니다.
@@ -90,19 +117,19 @@
 
 <script>
 function filterUsers(type) {
-  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-  document.querySelector(`[data-filter="${type}"]`).classList.add('active');
-  
-  document.querySelectorAll('.user-row').forEach(row => {
-    const isSubscriber = row.dataset.subscriber === 'true';
-    const isTrial = row.dataset.trial === 'true';
-    
-    let show = false;
+  document.querySelectorAll('.filter-btn').forEach(function(btn) { btn.classList.remove('active'); });
+  document.querySelector('[data-filter="' + type + '"]').classList.add('active');
+
+  document.querySelectorAll('.user-row').forEach(function(row) {
+    var isSubscriber = row.dataset.subscriber === 'true';
+    var isTrial = row.dataset.trial === 'true';
+
+    var show = false;
     if (type === 'all') show = true;
     else if (type === 'subscriber') show = isSubscriber;
     else if (type === 'trial') show = isTrial;
     else if (type === 'normal') show = !isSubscriber && !isTrial;
-    
+
     row.style.display = show ? '' : 'none';
   });
 }
