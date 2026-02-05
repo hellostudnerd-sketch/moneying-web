@@ -766,6 +766,211 @@ def pricing():
             can_use_trial = True
     return render_template("pricing.html", can_use_trial=can_use_trial)
 
+# ============ 토스페이먼츠 결제 ============
+PLAN_INFO = {
+    'gallery': {'name': '영상 갤러리', 'price': 39000, 'billing': True},
+    'allinone': {'name': '올인원 패키지', 'price': 59000, 'billing': True},
+    'profitguard_lite': {'name': '프로핏가드 라이트', 'price': 19000, 'billing': True},
+    'profitguard_pro': {'name': '프로핏가드 PRO', 'price': 39000, 'billing': True},
+    'profitguard_lifetime': {'name': '프로핏가드 평생', 'price': 200000, 'billing': False},
+}
+
+@app.route("/checkout/<plan_type>")
+def checkout(plan_type):
+    if not session.get("user_id"):
+        return redirect(url_for("login", next=f"/checkout/{plan_type}"))
+    
+    plan = PLAN_INFO.get(plan_type)
+    if not plan:
+        flash("잘못된 요금제입니다.", "error")
+        return redirect(url_for("pricing"))
+    
+    # customerKey 생성 (유저별 고유값)
+    user = db.session.get(User, session["user_id"])
+    customer_key = f"cust_{user.id}_{secrets.token_hex(8)}"
+    
+    return render_template("checkout.html",
+        plan_type=plan_type,
+        plan=plan,
+        customer_key=customer_key,
+        client_key=os.getenv("TOSS_CLIENT_KEY", "")
+    )
+
+@app.route("/billing/success")
+def billing_success():
+    """빌링키 발급 성공 콜백"""
+    auth_key = request.args.get("authKey")
+    customer_key = request.args.get("customerKey")
+    plan_type = request.args.get("planType", "")
+    
+    if not session.get("user_id") or not auth_key or not customer_key:
+        flash("결제 인증에 실패했습니다.", "error")
+        return redirect(url_for("pricing"))
+    
+    plan = PLAN_INFO.get(plan_type)
+    if not plan:
+        flash("잘못된 요금제입니다.", "error")
+        return redirect(url_for("pricing"))
+    
+    # 빌링키 발급 API 호출
+    import base64
+    secret_key = os.getenv("TOSS_SECRET_KEY", "")
+    auth_header = base64.b64encode(f"{secret_key}:".encode()).decode()
+    
+    billing_resp = requests.post(
+        "https://api.tosspayments.com/v1/billing/authorizations/issue",
+        headers={
+            "Authorization": f"Basic {auth_header}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "authKey": auth_key,
+            "customerKey": customer_key
+        }
+    )
+    
+    if billing_resp.status_code != 200:
+        error_msg = billing_resp.json().get("message", "빌링키 발급 실패")
+        flash(f"카드 등록 실패: {error_msg}", "error")
+        return redirect(url_for("pricing"))
+    
+    billing_data = billing_resp.json()
+    billing_key = billing_data.get("billingKey")
+    
+    if not billing_key:
+        flash("빌링키를 받지 못했습니다.", "error")
+        return redirect(url_for("pricing"))
+    
+    user_id = session["user_id"]
+    
+    # 정기결제 상품이면 첫 결제 실행
+    if plan['billing']:
+        order_id = f"order_{user_id}_{plan_type}_{secrets.token_hex(6)}"
+        
+        pay_resp = requests.post(
+            f"https://api.tosspayments.com/v1/billing/{billing_key}",
+            headers={
+                "Authorization": f"Basic {auth_header}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "customerKey": customer_key,
+                "amount": plan['price'],
+                "orderId": order_id,
+                "orderName": plan['name'],
+            }
+        )
+        
+        if pay_resp.status_code != 200:
+            error_msg = pay_resp.json().get("message", "결제 실패")
+            flash(f"결제 실패: {error_msg}", "error")
+            return redirect(url_for("pricing"))
+        
+        pay_data = pay_resp.json()
+        
+        # 구독 생성
+        now = datetime.utcnow()
+        sub = Subscription(
+            user_id=user_id,
+            plan_type=plan_type,
+            status="active",
+            price=plan['price'],
+            started_at=now,
+            expires_at=now + timedelta(days=30),
+            billing_key=billing_key,
+            customer_key=customer_key
+        )
+        db.session.add(sub)
+        
+        # 결제 기록
+        payment = PaymentHistory(
+            user_id=user_id,
+            order_id=order_id,
+            payment_key=pay_data.get("paymentKey", ""),
+            amount=plan['price'],
+            plan_type=plan_type,
+            status="paid",
+            paid_at=now
+        )
+        db.session.add(payment)
+        db.session.commit()
+        
+        # 구독 ID 연결
+        payment.subscription_id = sub.id
+        db.session.commit()
+        
+        # 세션 업데이트
+        update_session_status(user_id)
+        
+        flash(f"{plan['name']} 구독이 시작되었습니다!", "success")
+        return redirect(url_for("my_page"))
+    
+    else:
+        # 1회성 결제 (평생 이용권)
+        order_id = f"order_{user_id}_{plan_type}_{secrets.token_hex(6)}"
+        
+        pay_resp = requests.post(
+            f"https://api.tosspayments.com/v1/billing/{billing_key}",
+            headers={
+                "Authorization": f"Basic {auth_header}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "customerKey": customer_key,
+                "amount": plan['price'],
+                "orderId": order_id,
+                "orderName": plan['name'],
+            }
+        )
+        
+        if pay_resp.status_code != 200:
+            error_msg = pay_resp.json().get("message", "결제 실패")
+            flash(f"결제 실패: {error_msg}", "error")
+            return redirect(url_for("pricing"))
+        
+        pay_data = pay_resp.json()
+        
+        now = datetime.utcnow()
+        sub = Subscription(
+            user_id=user_id,
+            plan_type=plan_type,
+            status="active",
+            price=plan['price'],
+            started_at=now,
+            expires_at=None,  # 평생
+            billing_key=None,
+            customer_key=customer_key
+        )
+        db.session.add(sub)
+        
+        payment = PaymentHistory(
+            user_id=user_id,
+            order_id=order_id,
+            payment_key=pay_data.get("paymentKey", ""),
+            amount=plan['price'],
+            plan_type=plan_type,
+            status="paid",
+            paid_at=now
+        )
+        db.session.add(payment)
+        db.session.commit()
+        
+        payment.subscription_id = sub.id
+        db.session.commit()
+        
+        update_session_status(user_id)
+        
+        flash(f"{plan['name']} 구매가 완료되었습니다!", "success")
+        return redirect(url_for("my_page"))
+
+@app.route("/billing/fail")
+def billing_fail():
+    """빌링키 발급 실패 콜백"""
+    error_code = request.args.get("code", "")
+    error_msg = request.args.get("message", "결제가 취소되었습니다.")
+    flash(f"결제 실패: {error_msg}", "error")
+    return redirect(url_for("pricing"))
+
 @app.route("/gallery")
 def gallery():
     # 승인된 게시물만 표시 (status가 approved이거나 없는 경우)
