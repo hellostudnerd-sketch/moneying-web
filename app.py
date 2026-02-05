@@ -329,8 +329,13 @@ class Subscription(db.Model):
     started_at = db.Column(db.DateTime, default=datetime.utcnow)
     expires_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # 토스페이먼츠 빌링
+    billing_key = db.Column(db.String(200), nullable=True)
+    customer_key = db.Column(db.String(200), nullable=True)
+    
     user = db.relationship('User', backref='subscriptions')
-
+    
     def is_active(self):
         if self.status != "active":
             return False
@@ -338,6 +343,18 @@ class Subscription(db.Model):
             return True
         return self.expires_at > datetime.utcnow()
 
+class PaymentHistory(db.Model):
+    """결제 기록"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    subscription_id = db.Column(db.Integer, db.ForeignKey('subscription.id'), nullable=True)
+    order_id = db.Column(db.String(100), unique=True, nullable=False)
+    payment_key = db.Column(db.String(200), nullable=True)
+    amount = db.Column(db.Integer, nullable=False)
+    plan_type = db.Column(db.String(50), nullable=False)
+    status = db.Column(db.String(20), default="pending")
+    paid_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class GroupBuy(db.Model):
     """공구/협찬 모델"""
