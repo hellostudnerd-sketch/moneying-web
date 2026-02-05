@@ -6,56 +6,56 @@
 {% block content_admin %}
 
 <!-- 핵심 지표 -->
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
-    <div class="text-zinc-500 text-xs font-bold mb-1">총 가입자</div>
-    <div class="text-3xl font-black">{{ total_users }}</div>
-    <div class="text-green-400 text-sm mt-1">+{{ new_users_today }} 오늘</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-6 md:mb-8">
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6">
+    <div class="text-zinc-500 text-[11px] md:text-xs font-bold mb-1">총 가입자</div>
+    <div class="text-2xl md:text-3xl font-black">{{ total_users }}</div>
+    <div class="text-green-400 text-xs md:text-sm mt-1">+{{ new_users_today }} 오늘</div>
   </div>
-  
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
-    <div class="text-zinc-500 text-xs font-bold mb-1">구독자</div>
-    <div class="text-3xl font-black text-[#a3e635]">{{ total_subscribers }}</div>
-    <div class="text-zinc-400 text-sm mt-1">전환율 {{ conversion_rate }}%</div>
+
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6">
+    <div class="text-zinc-500 text-[11px] md:text-xs font-bold mb-1">구독자</div>
+    <div class="text-2xl md:text-3xl font-black text-[#a3e635]">{{ total_subscribers }}</div>
+    <div class="text-zinc-400 text-xs md:text-sm mt-1">전환율 {{ conversion_rate }}%</div>
   </div>
-  
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
-    <div class="text-zinc-500 text-xs font-bold mb-1">체험중</div>
-    <div class="text-3xl font-black text-purple-400">{{ trial_users }}</div>
-    <div class="text-zinc-400 text-sm mt-1">무료체험 이용중</div>
+
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6">
+    <div class="text-zinc-500 text-[11px] md:text-xs font-bold mb-1">체험중</div>
+    <div class="text-2xl md:text-3xl font-black text-purple-400">{{ trial_users }}</div>
+    <div class="text-zinc-400 text-xs md:text-sm mt-1">무료체험 이용중</div>
   </div>
-  
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
-    <div class="text-zinc-500 text-xs font-bold mb-1">갤러리</div>
-    <div class="text-3xl font-black">{{ total_posts }}</div>
-    <div class="text-zinc-400 text-sm mt-1">총 게시물</div>
+
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6">
+    <div class="text-zinc-500 text-[11px] md:text-xs font-bold mb-1">갤러리</div>
+    <div class="text-2xl md:text-3xl font-black">{{ total_posts }}</div>
+    <div class="text-zinc-400 text-xs md:text-sm mt-1">총 게시물</div>
   </div>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-  
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+
   <!-- 최근 7일 가입자 -->
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
-    <h3 class="font-black mb-4">📈 최근 7일 가입자</h3>
-    <div class="h-48 flex items-end justify-between gap-2">
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6">
+    <h3 class="font-black text-sm md:text-base mb-4">📈 최근 7일 가입자</h3>
+    <div class="h-40 md:h-48 flex items-end justify-between gap-1 md:gap-2">
       {% for day in daily_signups %}
         <div class="flex-1 flex flex-col items-center">
           <div class="w-full bg-[#a3e635]/20 rounded-t relative" style="height: {{ (day.count / max_daily_signup * 100) if max_daily_signup > 0 else 0 }}%">
-            <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-[#a3e635]">{{ day.count }}</div>
+            <div class="absolute -top-5 left-1/2 -translate-x-1/2 text-[11px] md:text-xs font-bold text-[#a3e635]">{{ day.count }}</div>
           </div>
-          <div class="text-zinc-500 text-xs mt-2">{{ day.label }}</div>
+          <div class="text-zinc-500 text-[10px] md:text-xs mt-1.5 md:mt-2">{{ day.label }}</div>
         </div>
       {% endfor %}
     </div>
   </div>
-  
+
   <!-- 구독 현황 -->
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
-    <h3 class="font-black mb-4">💳 구독 타입별 현황</h3>
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6">
+    <h3 class="font-black text-sm md:text-base mb-4">💳 구독 타입별 현황</h3>
     <div class="space-y-3">
       {% for plan in plan_stats %}
         <div>
-          <div class="flex justify-between text-sm mb-1">
+          <div class="flex justify-between text-xs md:text-sm mb-1">
             <span class="text-zinc-400">{{ plan.name }}</span>
             <span class="font-bold">{{ plan.count }}명</span>
           </div>
@@ -72,33 +72,33 @@
 
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
 
   <!-- 인기 영상 TOP 10 -->
   <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
-    <div class="px-6 py-4 border-b border-zinc-800">
-      <h3 class="font-black">🔥 인기 영상 TOP 10</h3>
+    <div class="px-4 md:px-6 py-3 md:py-4 border-b border-zinc-800">
+      <h3 class="font-black text-sm md:text-base">🔥 인기 영상 TOP 10</h3>
     </div>
     {% if popular_posts|length == 0 %}
       <div class="p-6 text-center text-zinc-600">게시물이 없습니다.</div>
     {% else %}
       <div class="divide-y divide-zinc-800/50">
         {% for p in popular_posts %}
-          <div class="flex items-center gap-4 px-6 py-3 hover:bg-zinc-800/30 transition">
-            <div class="text-lg font-black text-zinc-600 w-6">{{ loop.index }}</div>
+          <div class="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-2.5 md:py-3 hover:bg-zinc-800/30 transition">
+            <div class="text-base md:text-lg font-black text-zinc-600 w-5 md:w-6 shrink-0 text-center">{{ loop.index }}</div>
             {% set img_list = p.to_dict().images %}
             {% if img_list and img_list|length > 0 %}
-              <img src="{% if img_list[0].startswith('/r2/') or img_list[0].startswith('http') %}{{ img_list[0] }}{% else %}/static/uploads/{{ img_list[0] }}{% endif %}" class="w-10 h-10 rounded object-cover">
+              <img src="{% if img_list[0].startswith('/r2/') or img_list[0].startswith('http') %}{{ img_list[0] }}{% else %}/static/uploads/{{ img_list[0] }}{% endif %}" class="w-9 h-9 md:w-10 md:h-10 rounded object-cover shrink-0">
             {% else %}
-              <div class="w-10 h-10 rounded bg-zinc-800"></div>
+              <div class="w-9 h-9 md:w-10 md:h-10 rounded bg-zinc-800 shrink-0"></div>
             {% endif %}
             <div class="flex-1 min-w-0">
-              <div class="font-bold truncate">{{ p.title }}</div>
+              <div class="font-bold text-sm truncate">{{ p.title }}</div>
               <div class="text-zinc-500 text-xs">{{ p.category or 'all' }}</div>
             </div>
             <div class="text-right shrink-0">
-              <div class="font-bold text-[#a3e635]">{{ p.view_count }}</div>
-              <div class="text-zinc-500 text-xs">조회</div>
+              <div class="font-bold text-[#a3e635] text-sm">{{ p.view_count }}</div>
+              <div class="text-zinc-500 text-[11px]">조회</div>
             </div>
           </div>
         {% endfor %}
@@ -108,29 +108,29 @@
 
   <!-- 최근 가입자 -->
   <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
-    <div class="px-6 py-4 border-b border-zinc-800">
-      <h3 class="font-black">👤 최근 가입자</h3>
+    <div class="px-4 md:px-6 py-3 md:py-4 border-b border-zinc-800">
+      <h3 class="font-black text-sm md:text-base">👤 최근 가입자</h3>
     </div>
     {% if recent_users|length == 0 %}
       <div class="p-6 text-center text-zinc-600">가입자가 없습니다.</div>
     {% else %}
       <div class="divide-y divide-zinc-800/50">
         {% for u in recent_users %}
-          <div class="flex items-center justify-between px-6 py-3 hover:bg-zinc-800/30 transition">
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-sm">
+          <div class="flex items-center justify-between px-4 md:px-6 py-2.5 md:py-3 hover:bg-zinc-800/30 transition">
+            <div class="flex items-center gap-2.5 md:gap-3 min-w-0">
+              <div class="w-7 h-7 md:w-8 md:h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs md:text-sm shrink-0">
                 {% if u.free_trial_expires %}🎁{% else %}👤{% endif %}
               </div>
-              <div>
-                <div class="font-bold text-sm">{{ u.email }}</div>
-                <div class="text-zinc-500 text-xs">{{ u.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+              <div class="min-w-0">
+                <div class="font-bold text-xs md:text-sm truncate">{{ u.email }}</div>
+                <div class="text-zinc-500 text-[11px] md:text-xs">{{ u.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
               </div>
             </div>
-            <div class="text-xs">
+            <div class="text-xs shrink-0 ml-2">
               {% if u.free_trial_expires %}
-                <span class="px-2 py-1 rounded bg-purple-500/20 text-purple-400">체험중</span>
+                <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 font-bold">체험중</span>
               {% else %}
-                <span class="px-2 py-1 rounded bg-zinc-800 text-zinc-500">일반</span>
+                <span class="px-2 py-0.5 rounded bg-zinc-800 text-zinc-500 font-bold">일반</span>
               {% endif %}
             </div>
           </div>
