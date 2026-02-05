@@ -5,16 +5,16 @@
 
 {% block page_actions %}
   <a href="{{ url_for('admin_subscription_add') }}"
-     class="px-4 py-2 rounded-lg bg-[#a3e635] text-black hover:bg-white transition font-black">
+     class="px-4 py-2 rounded-lg bg-[#a3e635] text-black hover:bg-white transition font-black text-sm">
     + 구독 추가
   </a>
 {% endblock %}
 
 {% block content_admin %}
   <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
-      <div class="font-black">전체 구독 내역</div>
-      <div class="text-zinc-400 text-sm font-bold">총 {{ subscriptions|length }}건</div>
+    <div class="flex items-center justify-between px-4 md:px-5 py-3 md:py-4 border-b border-zinc-800">
+      <div class="font-black text-sm md:text-base">전체 구독 내역</div>
+      <div class="text-zinc-400 text-xs md:text-sm font-bold">총 {{ subscriptions|length }}건</div>
     </div>
 
     {% if subscriptions|length == 0 %}
@@ -22,101 +22,135 @@
         아직 구독 내역이 없습니다.
       </div>
     {% else %}
-      <!-- 헤더 -->
-      <div class="grid grid-cols-12 text-xs font-black text-zinc-400 border-b border-zinc-800 px-5 py-3">
-        <div class="col-span-1">ID</div>
-        <div class="col-span-3">이메일</div>
-        <div class="col-span-2">구독 타입</div>
-        <div class="col-span-2">상태</div>
-        <div class="col-span-2">만료일</div>
-        <div class="col-span-2 text-right">관리</div>
+
+      <!-- PC 테이블 -->
+      <div class="hidden md:block">
+        <div class="grid grid-cols-12 text-xs font-black text-zinc-400 border-b border-zinc-800 px-5 py-3">
+          <div class="col-span-1">ID</div>
+          <div class="col-span-3">이메일</div>
+          <div class="col-span-2">구독 타입</div>
+          <div class="col-span-2">상태</div>
+          <div class="col-span-2">만료일</div>
+          <div class="col-span-2 text-right">관리</div>
+        </div>
+
+        {% for sub in subscriptions %}
+          <div class="grid grid-cols-12 px-5 py-4 border-b border-zinc-800/60 items-center">
+            <div class="col-span-1 text-zinc-400 font-bold">{{ sub.id }}</div>
+            <div class="col-span-3 font-bold truncate">{{ sub.user.email if sub.user else '(삭제된 유저)' }}</div>
+            <div class="col-span-2">
+              {% if sub.plan_type == 'gallery' %}
+                <span class="text-xs px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold">갤러리</span>
+              {% elif sub.plan_type == 'profitguard_lite' %}
+                <span class="text-xs px-2 py-1 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold">PG 라이트</span>
+              {% elif sub.plan_type == 'profitguard_pro' %}
+                <span class="text-xs px-2 py-1 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold">PG 프로</span>
+              {% elif sub.plan_type == 'profitguard_lifetime' %}
+                <span class="text-xs px-2 py-1 rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 font-bold">PG 평생</span>
+              {% elif sub.plan_type == 'allinone' %}
+                <span class="text-xs px-2 py-1 rounded bg-[#a3e635]/10 border border-[#a3e635]/20 text-[#a3e635] font-bold">올인원</span>
+              {% else %}
+                <span class="text-xs px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-gray-200 font-bold">{{ sub.plan_type }}</span>
+              {% endif %}
+            </div>
+            <div class="col-span-2">
+              {% if sub.status == 'active' and sub.is_active() %}
+                <span class="text-xs px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-green-400 font-bold">활성</span>
+              {% elif sub.status == 'active' and not sub.is_active() %}
+                <span class="text-xs px-2 py-1 rounded bg-red-500/10 border border-red-500/20 text-red-400 font-bold">만료됨</span>
+              {% elif sub.status == 'cancelled' %}
+                <span class="text-xs px-2 py-1 rounded bg-zinc-500/10 border border-zinc-500/20 text-zinc-400 font-bold">취소됨</span>
+              {% else %}
+                <span class="text-xs px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-gray-200 font-bold">{{ sub.status }}</span>
+              {% endif %}
+            </div>
+            <div class="col-span-2 text-zinc-400 text-sm font-bold">
+              {% if sub.expires_at %}{{ sub.expires_at.strftime('%Y-%m-%d') }}{% else %}<span class="text-yellow-400">평생</span>{% endif %}
+            </div>
+            <div class="col-span-2 flex justify-end gap-2">
+              {% if sub.status == 'active' %}
+                <form method="POST" action="{{ url_for('admin_subscription_cancel', sub_id=sub.id) }}" onsubmit="return confirm('정말 이 구독을 취소할까요?');">
+                  <button type="submit" class="px-3 py-2 rounded-lg bg-red-600 hover:bg-red-500 transition text-sm font-bold">취소</button>
+                </form>
+              {% else %}
+                <span class="px-3 py-2 text-zinc-500 text-sm">-</span>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
       </div>
 
-      {% for sub in subscriptions %}
-        <div class="grid grid-cols-12 px-5 py-4 border-b border-zinc-800/60 items-center">
-          <div class="col-span-1 text-zinc-400 font-bold">{{ sub.id }}</div>
-
-          <div class="col-span-3 font-bold truncate">
-            {{ sub.user.email if sub.user else '(삭제된 유저)' }}
+      <!-- 모바일 카드 -->
+      <div class="md:hidden divide-y divide-zinc-800/50">
+        {% for sub in subscriptions %}
+          <div class="px-4 py-3">
+            <div class="flex items-center justify-between mb-2">
+              <div class="font-medium text-white text-sm truncate mr-2">{{ sub.user.email if sub.user else '(삭제된 유저)' }}</div>
+              {% if sub.status == 'active' and sub.is_active() %}
+                <span class="text-[11px] px-2 py-0.5 rounded bg-green-500/10 border border-green-500/20 text-green-400 font-bold shrink-0">활성</span>
+              {% elif sub.status == 'active' and not sub.is_active() %}
+                <span class="text-[11px] px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400 font-bold shrink-0">만료됨</span>
+              {% elif sub.status == 'cancelled' %}
+                <span class="text-[11px] px-2 py-0.5 rounded bg-zinc-500/10 border border-zinc-500/20 text-zinc-400 font-bold shrink-0">취소됨</span>
+              {% else %}
+                <span class="text-[11px] px-2 py-0.5 rounded bg-zinc-800 text-gray-200 font-bold shrink-0">{{ sub.status }}</span>
+              {% endif %}
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 text-xs">
+                {% if sub.plan_type == 'gallery' %}
+                  <span class="px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-bold">갤러리</span>
+                {% elif sub.plan_type == 'profitguard_lite' %}
+                  <span class="px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 font-bold">PG 라이트</span>
+                {% elif sub.plan_type == 'profitguard_pro' %}
+                  <span class="px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 font-bold">PG 프로</span>
+                {% elif sub.plan_type == 'profitguard_lifetime' %}
+                  <span class="px-1.5 py-0.5 rounded bg-yellow-500/10 text-yellow-400 font-bold">PG 평생</span>
+                {% elif sub.plan_type == 'allinone' %}
+                  <span class="px-1.5 py-0.5 rounded bg-[#a3e635]/10 text-[#a3e635] font-bold">올인원</span>
+                {% else %}
+                  <span class="px-1.5 py-0.5 rounded bg-zinc-800 text-gray-300 font-bold">{{ sub.plan_type }}</span>
+                {% endif %}
+                <span class="text-zinc-500">
+                  {% if sub.expires_at %}{{ sub.expires_at.strftime('%Y-%m-%d') }}{% else %}평생{% endif %}
+                </span>
+              </div>
+              {% if sub.status == 'active' %}
+                <form method="POST" action="{{ url_for('admin_subscription_cancel', sub_id=sub.id) }}" onsubmit="return confirm('정말 이 구독을 취소할까요?');">
+                  <button type="submit" class="px-2.5 py-1 rounded-lg bg-red-600 hover:bg-red-500 active:bg-red-700 transition text-xs font-bold">취소</button>
+                </form>
+              {% endif %}
+            </div>
           </div>
+        {% endfor %}
+      </div>
 
-          <div class="col-span-2">
-            {% if sub.plan_type == 'gallery' %}
-              <span class="text-xs px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold">갤러리</span>
-            {% elif sub.plan_type == 'profitguard_lite' %}
-              <span class="text-xs px-2 py-1 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold">PG 라이트</span>
-            {% elif sub.plan_type == 'profitguard_pro' %}
-              <span class="text-xs px-2 py-1 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold">PG 프로</span>
-            {% elif sub.plan_type == 'profitguard_lifetime' %}
-              <span class="text-xs px-2 py-1 rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 font-bold">PG 평생</span>
-            {% elif sub.plan_type == 'allinone' %}
-              <span class="text-xs px-2 py-1 rounded bg-[#a3e635]/10 border border-[#a3e635]/20 text-[#a3e635] font-bold">올인원</span>
-            {% else %}
-              <span class="text-xs px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-gray-200 font-bold">{{ sub.plan_type }}</span>
-            {% endif %}
-          </div>
-
-          <div class="col-span-2">
-            {% if sub.status == 'active' and sub.is_active() %}
-              <span class="text-xs px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-green-400 font-bold">활성</span>
-            {% elif sub.status == 'active' and not sub.is_active() %}
-              <span class="text-xs px-2 py-1 rounded bg-red-500/10 border border-red-500/20 text-red-400 font-bold">만료됨</span>
-            {% elif sub.status == 'cancelled' %}
-              <span class="text-xs px-2 py-1 rounded bg-zinc-500/10 border border-zinc-500/20 text-zinc-400 font-bold">취소됨</span>
-            {% else %}
-              <span class="text-xs px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-gray-200 font-bold">{{ sub.status }}</span>
-            {% endif %}
-          </div>
-
-          <div class="col-span-2 text-zinc-400 text-sm font-bold">
-            {% if sub.expires_at %}
-              {{ sub.expires_at.strftime('%Y-%m-%d') }}
-            {% else %}
-              <span class="text-yellow-400">평생</span>
-            {% endif %}
-          </div>
-
-          <div class="col-span-2 flex justify-end gap-2">
-            {% if sub.status == 'active' %}
-              <form method="POST" action="{{ url_for('admin_subscription_cancel', sub_id=sub.id) }}"
-                    onsubmit="return confirm('정말 이 구독을 취소할까요?');">
-                <button type="submit"
-                        class="px-3 py-2 rounded-lg bg-red-600 hover:bg-red-500 transition text-sm font-bold">
-                  취소
-                </button>
-              </form>
-            {% else %}
-              <span class="px-3 py-2 text-zinc-500 text-sm">-</span>
-            {% endif %}
-          </div>
-        </div>
-      {% endfor %}
     {% endif %}
   </div>
 
   <!-- 구독 타입 설명 -->
-  <div class="mt-8 bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6">
-    <div class="font-black mb-4">구독 타입 안내</div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+  <div class="mt-6 md:mt-8 bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 md:p-6">
+    <div class="font-black text-sm md:text-base mb-3 md:mb-4">구독 타입 안내</div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 text-sm">
       <div class="flex items-center gap-3">
-        <span class="px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-xs">갤러리</span>
-        <span class="text-zinc-400">영상 갤러리 구독 (월 39,000원)</span>
+        <span class="px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-xs shrink-0">갤러리</span>
+        <span class="text-zinc-400 text-xs md:text-sm">영상 갤러리 구독 (월 39,000원)</span>
       </div>
       <div class="flex items-center gap-3">
-        <span class="px-2 py-1 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold text-xs">PG 라이트</span>
-        <span class="text-zinc-400">프로핏가드 라이트 (월 19,000원)</span>
+        <span class="px-2 py-1 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold text-xs shrink-0">PG 라이트</span>
+        <span class="text-zinc-400 text-xs md:text-sm">프로핏가드 라이트 (월 19,000원)</span>
       </div>
       <div class="flex items-center gap-3">
-        <span class="px-2 py-1 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold text-xs">PG 프로</span>
-        <span class="text-zinc-400">프로핏가드 프로 (월 39,000원)</span>
+        <span class="px-2 py-1 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold text-xs shrink-0">PG 프로</span>
+        <span class="text-zinc-400 text-xs md:text-sm">프로핏가드 프로 (월 39,000원)</span>
       </div>
       <div class="flex items-center gap-3">
-        <span class="px-2 py-1 rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 font-bold text-xs">PG 평생</span>
-        <span class="text-zinc-400">프로핏가드 평생 (200,000원)</span>
+        <span class="px-2 py-1 rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 font-bold text-xs shrink-0">PG 평생</span>
+        <span class="text-zinc-400 text-xs md:text-sm">프로핏가드 평생 (200,000원)</span>
       </div>
       <div class="flex items-center gap-3">
-        <span class="px-2 py-1 rounded bg-[#a3e635]/10 border border-[#a3e635]/20 text-[#a3e635] font-bold text-xs">올인원</span>
-        <span class="text-zinc-400">갤러리 + PG 프로 (월 59,000원)</span>
+        <span class="px-2 py-1 rounded bg-[#a3e635]/10 border border-[#a3e635]/20 text-[#a3e635] font-bold text-xs shrink-0">올인원</span>
+        <span class="text-zinc-400 text-xs md:text-sm">갤러리 + PG 프로 (월 59,000원)</span>
       </div>
     </div>
   </div>
