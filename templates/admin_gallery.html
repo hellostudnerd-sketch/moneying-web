@@ -4,17 +4,17 @@
 {% block page_desc %}업로드/수정/삭제를 여기서 관리합니다.{% endblock %}
 
 {% block page_actions %}
-  <div class="flex gap-2">
+  <div class="flex gap-2 flex-wrap">
     <a href="/admin/categories"
-       class="px-4 py-2 rounded-xl bg-zinc-800 text-white hover:bg-zinc-700 transition font-bold border border-zinc-700">
+       class="px-3 md:px-4 py-2 rounded-xl bg-zinc-800 text-white hover:bg-zinc-700 transition font-bold border border-zinc-700 text-sm">
        카테고리 관리
     </a>
     <a href="/admin/gallery/bulk"
-       class="px-4 py-2 rounded-xl bg-zinc-700 text-white hover:bg-zinc-600 transition font-bold">
+       class="px-3 md:px-4 py-2 rounded-xl bg-zinc-700 text-white hover:bg-zinc-600 transition font-bold text-sm">
        대량등록
     </a>
     <a href="{{ url_for('admin_upload') }}"
-       class="px-4 py-2 rounded-xl bg-[#a3e635] text-black hover:bg-white transition font-black">
+       class="px-3 md:px-4 py-2 rounded-xl bg-[#a3e635] text-black hover:bg-white transition font-black text-sm">
       + 새 게시물
     </a>
   </div>
@@ -22,14 +22,14 @@
 
 {% block content_admin %}
   <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
-      <div class="flex items-center gap-4">
-        <div class="font-black">갤러리 게시물</div>
-        <button id="bulkDeleteBtn" onclick="bulkDelete()" class="hidden px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/30 transition">
+    <div class="flex items-center justify-between px-4 md:px-5 py-3 md:py-4 border-b border-zinc-800">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="font-black text-sm md:text-base">갤러리 게시물</div>
+        <button id="bulkDeleteBtn" onclick="bulkDelete()" class="hidden px-2 md:px-3 py-1 md:py-1.5 rounded-lg bg-red-500/20 text-red-400 text-xs font-bold hover:bg-red-500/30 transition shrink-0">
           <i class="fas fa-trash mr-1"></i> <span id="selectedCount">0</span>개 삭제
         </button>
       </div>
-      <div class="text-zinc-400 text-sm font-bold">총 {{ posts|length }}개</div>
+      <div class="text-zinc-400 text-xs md:text-sm font-bold shrink-0">총 {{ posts|length }}개</div>
     </div>
 
     {% if posts|length == 0 %}
@@ -37,58 +37,79 @@
         아직 갤러리 게시물이 없습니다.
       </div>
     {% else %}
-      <div class="grid grid-cols-12 text-xs font-black text-zinc-400 border-b border-zinc-800 px-5 py-3">
-        <div class="col-span-1">
-          <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="w-4 h-4 rounded accent-[#c4ff00]">
+
+      <!-- PC 테이블 -->
+      <div class="hidden md:block">
+        <div class="grid grid-cols-12 text-xs font-black text-zinc-400 border-b border-zinc-800 px-5 py-3">
+          <div class="col-span-1">
+            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="w-4 h-4 rounded accent-[#c4ff00]">
+          </div>
+          <div class="col-span-1">ID</div>
+          <div class="col-span-2">카테고리</div>
+          <div class="col-span-4">제목</div>
+          <div class="col-span-2 text-right pr-6">등록일</div>
+          <div class="col-span-2 text-right">관리</div>
         </div>
-        <div class="col-span-1">ID</div>
-        <div class="col-span-2">카테고리</div>
-        <div class="col-span-4">제목</div>
-        <div class="col-span-2 text-right pr-6">등록일</div>
-        <div class="col-span-2 text-right">관리</div>
+
+        {% for p in posts %}
+          <div class="grid grid-cols-12 px-5 py-4 border-b border-zinc-800/60 items-center post-row" data-id="{{ p.id }}">
+            <div class="col-span-1">
+              <input type="checkbox" class="post-checkbox w-4 h-4 rounded accent-[#c4ff00]" value="{{ p.id }}" onchange="updateSelectedCount()">
+            </div>
+            <div class="col-span-1 text-zinc-400 font-bold">{{ p.id }}</div>
+            <div class="col-span-2">
+              <span class="text-xs px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-gray-200 font-bold">{{ p.category }}</span>
+            </div>
+            <div class="col-span-4 font-bold truncate">{{ p.title }}</div>
+            <div class="col-span-2 text-right pr-6 text-zinc-500 text-xs font-bold">{{ (p.created_at|string)[:10] }}</div>
+            <div class="col-span-2 flex justify-end gap-2">
+              <a href="{{ url_for('admin_edit', post_id=p.id, next=url_for('admin_gallery')) }}"
+                 class="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition text-sm font-bold">수정</a>
+              <form method="POST" action="{{ url_for('admin_delete', post_id=p.id) }}" onsubmit="return confirm('정말 삭제할까요?');">
+                <button type="submit" class="px-3 py-2 rounded-lg bg-red-600 hover:bg-red-500 transition text-sm font-bold">삭제</button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
       </div>
 
-      {% for p in posts %}
-        <div class="grid grid-cols-12 px-5 py-4 border-b border-zinc-800/60 items-center post-row" data-id="{{ p.id }}">
-          <div class="col-span-1">
-            <input type="checkbox" class="post-checkbox w-4 h-4 rounded accent-[#c4ff00]" value="{{ p.id }}" onchange="updateSelectedCount()">
-          </div>
-          <div class="col-span-1 text-zinc-400 font-bold">{{ p.id }}</div>
-
-          <div class="col-span-2">
-            <span class="text-xs px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-gray-200 font-bold">
-              {{ p.category }}
-            </span>
-          </div>
-
-          <div class="col-span-4 font-bold truncate">{{ p.title }}</div>
-
-          <div class="col-span-2 text-right pr-6 text-zinc-500 text-xs font-bold">
-            {{ (p.created_at|string)[:10] }}
-          </div>
-
-          <div class="col-span-2 flex justify-end gap-2">
-            <a href="{{ url_for('admin_edit', post_id=p.id, next=url_for('admin_gallery')) }}"
-               class="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition text-sm font-bold">
-              수정
-            </a>
-
-            <form method="POST" action="{{ url_for('admin_delete', post_id=p.id) }}"
-                  onsubmit="return confirm('정말 삭제할까요?');">
-              <button type="submit"
-                      class="px-3 py-2 rounded-lg bg-red-600 hover:bg-red-500 transition text-sm font-bold">
-                삭제
-              </button>
-            </form>
-          </div>
+      <!-- 모바일 카드 -->
+      <div class="md:hidden divide-y divide-zinc-800/50">
+        <div class="px-4 py-2 flex items-center gap-2 border-b border-zinc-800">
+          <input type="checkbox" id="selectAllMobile" onchange="toggleSelectAll()" class="w-4 h-4 rounded accent-[#c4ff00]">
+          <span class="text-xs text-zinc-500">전체 선택</span>
         </div>
-      {% endfor %}
+        {% for p in posts %}
+          <div class="px-4 py-3 post-row" data-id="{{ p.id }}">
+            <div class="flex items-start gap-3">
+              <input type="checkbox" class="post-checkbox w-4 h-4 rounded accent-[#c4ff00] mt-1 shrink-0" value="{{ p.id }}" onchange="updateSelectedCount()">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-[11px] px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-gray-300 font-bold shrink-0">{{ p.category }}</span>
+                  <span class="font-bold text-sm text-white truncate">{{ p.title }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-zinc-500 text-xs">#{{ p.id }} · {{ (p.created_at|string)[:10] }}</span>
+                  <div class="flex gap-2">
+                    <a href="{{ url_for('admin_edit', post_id=p.id, next=url_for('admin_gallery')) }}"
+                       class="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 transition text-xs font-bold">수정</a>
+                    <form method="POST" action="{{ url_for('admin_delete', post_id=p.id) }}" onsubmit="return confirm('정말 삭제할까요?');">
+                      <button type="submit" class="px-2.5 py-1 rounded-lg bg-red-600 hover:bg-red-500 active:bg-red-700 transition text-xs font-bold">삭제</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
     {% endif %}
   </div>
 
 <!-- 일괄 삭제 확인 모달 -->
-<div id="bulkDeleteModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center">
-  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm mx-4 text-center">
+<div id="bulkDeleteModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm w-full text-center">
     <div class="text-5xl mb-4">🗑️</div>
     <h3 class="text-xl font-black text-white mb-2">일괄 삭제</h3>
     <p class="text-zinc-400 mb-6"><span id="deleteCountText">0</span>개의 게시물을 삭제하시겠습니까?</p>
@@ -100,8 +121,8 @@
 </div>
 
 <!-- 결과 모달 -->
-<div id="resultModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center">
-  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm mx-4 text-center">
+<div id="resultModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm w-full text-center">
     <div id="resultIcon" class="text-5xl mb-4">✅</div>
     <h3 id="resultTitle" class="text-xl font-black text-white mb-2">삭제 완료</h3>
     <p id="resultMessage" class="text-zinc-400 mb-6"></p>
@@ -111,32 +132,38 @@
 
 <script>
 function toggleSelectAll() {
-  const selectAll = document.getElementById('selectAll');
-  const checkboxes = document.querySelectorAll('.post-checkbox');
-  checkboxes.forEach(cb => cb.checked = selectAll.checked);
+  var selectAll = document.getElementById('selectAll');
+  var selectAllMobile = document.getElementById('selectAllMobile');
+  var checked = (selectAll && selectAll === document.activeElement) ? selectAll.checked : (selectAllMobile ? selectAllMobile.checked : false);
+  document.querySelectorAll('.post-checkbox').forEach(function(cb) { cb.checked = checked; });
+  if (selectAll) selectAll.checked = checked;
+  if (selectAllMobile) selectAllMobile.checked = checked;
   updateSelectedCount();
 }
 
 function updateSelectedCount() {
-  const checkboxes = document.querySelectorAll('.post-checkbox:checked');
-  const count = checkboxes.length;
-  const btn = document.getElementById('bulkDeleteBtn');
-  const countSpan = document.getElementById('selectedCount');
-  
+  var checkboxes = document.querySelectorAll('.post-checkbox:checked');
+  var count = checkboxes.length;
+  var btn = document.getElementById('bulkDeleteBtn');
+  var countSpan = document.getElementById('selectedCount');
+
   if (count > 0) {
     btn.classList.remove('hidden');
     countSpan.textContent = count;
   } else {
     btn.classList.add('hidden');
   }
-  
-  // 전체 선택 체크박스 상태 업데이트
-  const allCheckboxes = document.querySelectorAll('.post-checkbox');
-  document.getElementById('selectAll').checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+
+  var allCheckboxes = document.querySelectorAll('.post-checkbox');
+  var allChecked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+  var selectAll = document.getElementById('selectAll');
+  var selectAllMobile = document.getElementById('selectAllMobile');
+  if (selectAll) selectAll.checked = allChecked;
+  if (selectAllMobile) selectAllMobile.checked = allChecked;
 }
 
 function bulkDelete() {
-  const checkboxes = document.querySelectorAll('.post-checkbox:checked');
+  var checkboxes = document.querySelectorAll('.post-checkbox:checked');
   document.getElementById('deleteCountText').textContent = checkboxes.length;
   document.getElementById('bulkDeleteModal').classList.remove('hidden');
   document.getElementById('bulkDeleteModal').classList.add('flex');
@@ -148,28 +175,22 @@ function closeBulkDeleteModal() {
 }
 
 async function confirmBulkDelete() {
-  const checkboxes = document.querySelectorAll('.post-checkbox:checked');
-  const ids = Array.from(checkboxes).map(cb => parseInt(cb.value));
-  
+  var checkboxes = document.querySelectorAll('.post-checkbox:checked');
+  var ids = Array.from(checkboxes).map(function(cb) { return parseInt(cb.value); });
   closeBulkDeleteModal();
-  
   try {
-    const res = await fetch('/admin/gallery/bulk-delete', {
+    var res = await fetch('/admin/gallery/bulk-delete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids })
+      body: JSON.stringify({ ids: ids })
     });
-    const data = await res.json();
-    
+    var data = await res.json();
     if (data.ok) {
-      showResult('success', '삭제 완료', `${data.count}개의 게시물이 삭제되었습니다.`);
-      // 삭제된 행 제거
-      ids.forEach(id => {
-        const row = document.querySelector(`.post-row[data-id="${id}"]`);
-        if (row) row.remove();
+      showResult('success', '삭제 완료', data.count + '개의 게시물이 삭제되었습니다.');
+      ids.forEach(function(id) {
+        document.querySelectorAll('.post-row[data-id="' + id + '"]').forEach(function(row) { row.remove(); });
       });
       updateSelectedCount();
-      document.getElementById('selectAll').checked = false;
     } else {
       showResult('error', '삭제 실패', data.error);
     }
