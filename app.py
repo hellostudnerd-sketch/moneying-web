@@ -1136,7 +1136,7 @@ def free_trial():
         session["is_trial"] = True
         session["subscriber"] = True
         
-        flash("🎉 3일 무료 체험이 시작되었습니다!", "success")
+        flash("🎉 5일 무료 체험이 시작되었습니다!", "success")
         return redirect(url_for("gallery"))
     
     return render_template("free_trial.html")
