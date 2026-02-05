@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}결제 - {{ plan.name }} - MONEYING{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto px-4 pt-24 pb-20">
+  <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 md:p-8">
+    <h1 class="text-2xl font-black mb-6">결제하기</h1>
+    
+    <!-- 주문 정보 -->
+    <div class="bg-zinc-800/50 rounded-xl p-4 mb-6">
+      <div class="flex justify-between items-center mb-2">
+        <span class="text-zinc-400">상품</span>
+        <span class="font-bold text-white">{{ plan.name }}</span>
+      </div>
+      <div class="flex justify-between items-center mb-2">
+        <span class="text-zinc-400">결제 방식</span>
+        <span class="text-zinc-300">{% if plan.billing %}매월 자동결제{% else %}1회 결제{% endif %}</span>
+      </div>
+      <div class="border-t border-zinc-700 my-3"></div>
+      <div class="flex justify-between items-center">
+        <span class="text-zinc-400">결제 금액</span>
+        <span class="text-2xl font-black text-[#c4ff00]">{{ "{:,}".format(plan.price) }}원</span>
+      </div>
+    </div>
+    
+    {% if plan.billing %}
+    <p class="text-zinc-500 text-sm mb-6">
+      카드를 등록하면 매월 자동으로 결제됩니다. 언제든 해지할 수 있어요.
+    </p>
+    {% endif %}
+    
+    <!-- 결제 버튼 -->
+    <button id="payBtn" onclick="requestBilling()" class="w-full py-4 rounded-xl font-black bg-[#c4ff00] text-black hover:bg-white transition text-lg">
+      {% if plan.billing %}카드 등록 및 결제{% else %}결제하기{% endif %}
+    </button>
+    
+    <a href="/pricing" class="block text-center text-zinc-500 hover:text-white text-sm mt-4 transition">
+      요금제로 돌아가기
+    </a>
+  </div>
+</div>
+
+<!-- 토스페이먼츠 SDK -->
+<script src="https://js.tosspayments.com/v2/standard"></script>
+<script>
+const tossPayments = TossPayments("{{ client_key }}");
+const payment = tossPayments.payment({customerKey: "{{ customer_key }}"});
+
+function requestBilling() {
+  const btn = document.getElementById('payBtn');
+  btn.disabled = true;
+  btn.textContent = '처리 중...';
+  
+  payment.requestBillingAuth({
+    method: "CARD",
+    successUrl: window.location.origin + "/billing/success?planType={{ plan_type }}",
+    failUrl: window.location.origin + "/billing/fail",
+    customerEmail: "{{ session.get('user_email', '') }}",
+  }).catch(function(error) {
+    btn.disabled = false;
+    btn.textContent = '{% if plan.billing %}카드 등록 및 결제{% else %}결제하기{% endif %}';
+    if (error.code === 'USER_CANCEL') return;
+    alert(error.message || '결제 요청 중 오류가 발생했습니다.');
+  });
+}
+</script>
+{% endblock %}
