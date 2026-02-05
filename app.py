@@ -65,7 +65,41 @@ MAIL_USERNAME = os.getenv("MAIL_USERNAME", "")
 MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "")
 MAIL_FROM = os.getenv("MAIL_FROM", "noreply@moneying.co.kr")
 
+# ============ [FIX #5,6,7] API 키/비밀번호 환경변수로 통합 ============
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "1234")
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@moneying.com")
+KAKAO_REST_API_KEY = os.getenv("KAKAO_REST_API_KEY", "d6d95667f32febebb7515351c3713fde")
+KAKAO_REDIRECT_URI = os.getenv("KAKAO_REDIRECT_URI", "https://moneying.biz/auth/kakao/callback")
+YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "AIzaSyDRnCHasdEJ3ARExoAsfqmnZiwp1oPrjNQ")
+
+# ============ [FIX #2,8] R2 자격증명 환경변수 + 전역 S3 클라이언트 ============
+R2_ENDPOINT = os.getenv("R2_ENDPOINT", "https://b6f9c47a567f57911cab3c58f07cfc61.r2.cloudflarestorage.com")
+R2_ACCESS_KEY = os.getenv("R2_ACCESS_KEY", "bd378a5b4a8c51dece8aeeec96c846e5")
+R2_SECRET_KEY = os.getenv("R2_SECRET_KEY", "4c218d723f2f0e0c122c75fa6d782eb1f659e17eabdecc50dc009bd2edbce0c0")
+R2_BUCKET = os.getenv("R2_BUCKET", "moneying-uploads")
+
+import boto3
+_s3_client = None
+
+def get_s3_client():
+    """전역 S3 클라이언트 (재사용으로 성능 향상)"""
+    global _s3_client
+    if _s3_client is None:
+        _s3_client = boto3.client('s3',
+            endpoint_url=R2_ENDPOINT,
+            aws_access_key_id=R2_ACCESS_KEY,
+            aws_secret_access_key=R2_SECRET_KEY
+        )
+    return _s3_client
+
 db = SQLAlchemy(app)
+
+# 링크요청 월 제한
+LINK_REQUEST_LIMIT_FREE = 3
+LINK_REQUEST_LIMIT_TRIAL = 1
+LINK_REQUEST_LIMIT_SUBSCRIBER = 10
+LINK_REQUEST_LIMIT_ALLINONE = 20
+
 
 @app.before_request
 def check_session_token():
@@ -90,6 +124,7 @@ def check_session_token():
         flash("다른 기기에서 로그인하여 자동 로그아웃되었습니다.", "error")
         return redirect(url_for("login"))
 
+
 @app.after_request
 def add_header(response):
     # 정적 파일 캐싱 (CSS, JS, 이미지)
@@ -100,21 +135,13 @@ def add_header(response):
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
     return response
+
     
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 ALLOWED_EXT = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
-
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "1234")
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@moneying.com")
-
-# 링크요청 월 제한
-LINK_REQUEST_LIMIT_FREE = 3
-LINK_REQUEST_LIMIT_TRIAL = 1
-LINK_REQUEST_LIMIT_SUBSCRIBER = 10
-LINK_REQUEST_LIMIT_ALLINONE = 20
 
 
 def send_email(to_email, subject, html_body):
@@ -173,20 +200,21 @@ class User(db.Model):
     seller_applied_at = db.Column(db.DateTime, nullable=True)
     seller_approved_at = db.Column(db.DateTime, nullable=True)
 
-# 카카오 로그인
+    # 카카오 로그인
     kakao_id = db.Column(db.String(50), nullable=True)
     nickname = db.Column(db.String(50), nullable=True)
     profile_photo = db.Column(db.String(500), nullable=True, default="")
     session_token = db.Column(db.String(64), nullable=True)  # 중복 로그인 방지용
+
     
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    key = db.Column(db.String(50), unique=True, nullable=False)  # beauty, living 등
-    name = db.Column(db.String(100), nullable=False)  # 💄 Beauty 등
+    key = db.Column(db.String(50), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
     emoji = db.Column(db.String(10), nullable=True, default="")
     sort_order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
-    is_system = db.Column(db.Boolean, default=False)  # 시스템 카테고리 (삭제 불가)
+    is_system = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
@@ -202,16 +230,18 @@ class Post(db.Model):
     is_free = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # 영상 URL (video_url1~3)
+    # 영상 URL
     video_url = db.Column(db.Text, nullable=True, default="")
     video_url2 = db.Column(db.Text, nullable=True, default="")
-    video_url3 = db.Column(db.Text, nullable=True, default="")
-    video_url3 = db.Column(db.Text, nullable=True, default="")
+    video_url3 = db.Column(db.Text, nullable=True, default="")  # [FIX #1] 중복 제거
     preview_video = db.Column(db.Text, nullable=True, default="")  # 미리보기 영상 R2 URL
     
     # 판매자 관련
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     status = db.Column(db.String(20), default="approved")  # pending, approved, rejected
+    
+    # [FIX #9] seller relationship 추가 (N+1 쿼리 방지용)
+    seller = db.relationship('User', foreign_keys=[seller_id], lazy='joined')
 
     def to_dict(self):
         def safe_list(s):
@@ -221,14 +251,12 @@ class Post(db.Model):
             except Exception:
                 return []
         
-        # 작성자 정보
+        # [FIX #9] relationship 사용으로 추가 쿼리 없음
         author_name = "머닝"
         author_photo = "/static/images/moneying-logo.webp"
-        if self.seller_id:
-            seller = User.query.get(self.seller_id)
-            if seller:
-                author_name = seller.nickname or seller.email.split('@')[0]
-                author_photo = seller.profile_photo or "/static/images/default-profile.png"
+        if self.seller_id and self.seller:
+            author_name = self.seller.nickname or self.seller.email.split('@')[0]
+            author_photo = self.seller.profile_photo or "/static/images/default-profile.png"
         
         return {
             "id": self.id,
@@ -343,6 +371,7 @@ class Subscription(db.Model):
             return True
         return self.expires_at > datetime.utcnow()
 
+
 class PaymentHistory(db.Model):
     """결제 기록"""
     id = db.Column(db.Integer, primary_key=True)
@@ -356,30 +385,27 @@ class PaymentHistory(db.Model):
     paid_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+
 class GroupBuy(db.Model):
     """공구/협찬 모델"""
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
     image = db.Column(db.String(500), nullable=True)
-    category = db.Column(db.String(50), default="groupbuy")  # groupbuy, sponsorship
+    category = db.Column(db.String(50), default="groupbuy")
     
-    # 신청 조건
-    max_participants = db.Column(db.Integer, default=0)  # 0이면 무제한
+    max_participants = db.Column(db.Integer, default=0)
     subscribers_only = db.Column(db.Boolean, default=True)
     
-    # 기간
     start_date = db.Column(db.DateTime, default=datetime.utcnow)
     end_date = db.Column(db.DateTime, nullable=True)
     
-    # 상태
-    status = db.Column(db.String(20), default="open")  # open, closed, ended
+    status = db.Column(db.String(20), default="open")
     
-    # 추가 정보
     brand = db.Column(db.String(100), nullable=True)
-    benefit = db.Column(db.Text, nullable=True)  # 혜택 설명
-    requirements = db.Column(db.Text, nullable=True)  # 신청 조건
-    contact = db.Column(db.String(200), nullable=True)  # 연락처
+    benefit = db.Column(db.Text, nullable=True)
+    requirements = db.Column(db.Text, nullable=True)
+    contact = db.Column(db.String(200), nullable=True)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -405,19 +431,19 @@ class GroupBuyApplication(db.Model):
     groupbuy_id = db.Column(db.Integer, db.ForeignKey('group_buy.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     
-    # 신청 정보
     name = db.Column(db.String(50), nullable=True)
     phone = db.Column(db.String(20), nullable=True)
-    sns_url = db.Column(db.String(500), nullable=True)  # SNS 채널 주소
-    message = db.Column(db.Text, nullable=True)  # 신청 메시지
+    sns_url = db.Column(db.String(500), nullable=True)
+    message = db.Column(db.Text, nullable=True)
     
-    status = db.Column(db.String(20), default="pending")  # pending, approved, rejected
+    status = db.Column(db.String(20), default="pending")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     groupbuy = db.relationship('GroupBuy', backref='applications')
     user = db.relationship('User', backref='groupbuy_applications')
     
     __table_args__ = (db.UniqueConstraint('groupbuy_id', 'user_id'),)
+
 
 class DealApplication(db.Model):
     """공구/협찬 신청 (커뮤니티용)"""
@@ -444,14 +470,13 @@ class Report(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     reporter_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     
-    # 신고 대상
-    target_type = db.Column(db.String(20), nullable=False)  # post, comment, user
+    target_type = db.Column(db.String(20), nullable=False)
     target_id = db.Column(db.Integer, nullable=False)
     
-    reason = db.Column(db.String(50), nullable=False)  # spam, abuse, inappropriate, etc
+    reason = db.Column(db.String(50), nullable=False)
     description = db.Column(db.Text, nullable=True)
     
-    status = db.Column(db.String(20), default="pending")  # pending, reviewed, resolved
+    status = db.Column(db.String(20), default="pending")
     admin_note = db.Column(db.Text, nullable=True)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -466,26 +491,28 @@ class UserBlock(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     
     reason = db.Column(db.String(100), nullable=True)
-    blocked_until = db.Column(db.DateTime, nullable=True)  # null이면 영구차단
+    blocked_until = db.Column(db.DateTime, nullable=True)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # 차단한 관리자
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     
     user = db.relationship('User', foreign_keys=[user_id], backref='blocks')
+
 
 class RevenueRewardHistory(db.Model):
     """수익인증 리워드 신청 기록 (악용 방지)"""
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    post_id = db.Column(db.Integer, nullable=False)  # 삭제되어도 기록 유지
+    post_id = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 class Notification(db.Model):
     """알림 모델"""
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     
-    type = db.Column(db.String(50), nullable=True)  # deal_approved, deal_rejected, reward, comment 등
+    type = db.Column(db.String(50), nullable=True)
     title = db.Column(db.String(200), nullable=False)
     message = db.Column(db.Text, nullable=True)
     link = db.Column(db.String(500), nullable=True)
@@ -535,7 +562,7 @@ def is_subscriber():
     return bool(session.get("subscriber", False))
 
 def save_upload(file_storage):
-    print("R2_BUCKET:", os.getenv('R2_BUCKET'))  # 디버깅용
+    """[FIX #2,8] 전역 S3 클라이언트 + 환경변수 사용"""
     if not file_storage or not file_storage.filename:
         return ""
     filename = secure_filename(file_storage.filename)
@@ -543,7 +570,6 @@ def save_upload(file_storage):
     if ext and ext not in ALLOWED_EXT:
         return ""
     
-    import boto3
     from io import BytesIO
     from PIL import Image
     
@@ -560,25 +586,20 @@ def save_upload(file_storage):
     img_thumb = img.copy()
     img_thumb.thumbnail((400, 400), Image.LANCZOS)
     
-    s3 = boto3.client('s3',
-        endpoint_url="https://b6f9c47a567f57911cab3c58f07cfc61.r2.cloudflarestorage.com",
-        aws_access_key_id="bd378a5b4a8c51dece8aeeec96c846e5",
-        aws_secret_access_key="4c218d723f2f0e0c122c75fa6d782eb1f659e17eabdecc50dc009bd2edbce0c0"
-    )
-    
+    s3 = get_s3_client()
     file_id = uuid.uuid4().hex
     
     # 원본 업로드
     buffer_original = BytesIO()
     img_original.save(buffer_original, 'WEBP', quality=80)
     buffer_original.seek(0)
-    s3.upload_fileobj(buffer_original, "moneying-uploads", f"{file_id}.webp", ExtraArgs={'ContentType': 'image/webp'})
+    s3.upload_fileobj(buffer_original, R2_BUCKET, f"{file_id}.webp", ExtraArgs={'ContentType': 'image/webp'})
     
     # 썸네일 업로드
     buffer_thumb = BytesIO()
     img_thumb.save(buffer_thumb, 'WEBP', quality=70)
     buffer_thumb.seek(0)
-    s3.upload_fileobj(buffer_thumb, "moneying-uploads", f"{file_id}_thumb.webp", ExtraArgs={'ContentType': 'image/webp'})
+    s3.upload_fileobj(buffer_thumb, R2_BUCKET, f"{file_id}_thumb.webp", ExtraArgs={'ContentType': 'image/webp'})
     
     # R2 Public URL 반환 (원본)
     return f"/r2/{file_id}.webp"
@@ -613,7 +634,6 @@ def can_access_profitguard(user_id):
 # 무료 체험 헬퍼
 # ----------------------------
 def is_trial_active(user_id):
-    """무료 체험 중인지 확인"""
     if not user_id:
         return False
     user = User.query.get(user_id)
@@ -622,13 +642,11 @@ def is_trial_active(user_id):
     return user.free_trial_expires > datetime.utcnow()
 
 def can_use_free_trial(user_id):
-    """무료 체험 사용 가능한지 확인"""
     if not user_id:
         return False
     user = User.query.get(user_id)
     if not user:
         return False
-    # 이미 사용했거나 구독 중이면 불가
     if user.free_trial_used:
         return False
     if get_user_subscriptions(user_id):
@@ -636,7 +654,6 @@ def can_use_free_trial(user_id):
     return True
 
 def get_trial_expires_at(user_id):
-    """체험 만료일 반환"""
     if not user_id:
         return None
     user = User.query.get(user_id)
@@ -659,16 +676,12 @@ def get_monthly_link_request_count(user_email):
     ).count()
 
 def get_link_request_limit(user_id):
-    # 올인원은 20회
     if has_active_subscription(user_id, "allinone"):
         return LINK_REQUEST_LIMIT_ALLINONE
-    # 갤러리 구독자는 10회
     if has_active_subscription(user_id, "gallery"):
         return LINK_REQUEST_LIMIT_SUBSCRIBER
-    # 체험중은 1회
     if is_trial_active(user_id):
         return LINK_REQUEST_LIMIT_TRIAL
-    # 비구독 가입자는 3회
     return LINK_REQUEST_LIMIT_FREE
 
 def can_make_link_request(user_id, user_email):
@@ -679,11 +692,8 @@ def can_make_link_request(user_id, user_email):
 # 세션 업데이트 헬퍼
 # ----------------------------
 def update_session_status(user_id):
-    """세션의 구독/체험 상태 업데이트"""
     if not user_id:
         return
-    
-    # 구독 상태 먼저 확인 (구독이 있으면 체험 무시)
     user_subs = get_user_subscriptions(user_id)
     if user_subs:
         session["subscriber"] = True
@@ -694,21 +704,18 @@ def update_session_status(user_id):
     else:
         session["is_trial"] = False
         session["subscriber"] = False
+
+
 # ----------------------------
 # R2 이미지 프록시
 # ----------------------------
 @app.route("/r2/<path:filename>")
 def serve_r2_file(filename):
-    import boto3
+    """[FIX #2,8] 전역 S3 클라이언트 + 환경변수 사용"""
     from flask import Response
 
-    s3 = boto3.client('s3',
-        endpoint_url="https://b6f9c47a567f57911cab3c58f07cfc61.r2.cloudflarestorage.com",
-        aws_access_key_id="bd378a5b4a8c51dece8aeeec96c846e5",
-        aws_secret_access_key="4c218d723f2f0e0c122c75fa6d782eb1f659e17eabdecc50dc009bd2edbce0c0"
-    )
+    s3 = get_s3_client()
 
-    import os
     name, ext = os.path.splitext(filename)
     
     # mp4는 그대로, 나머지는 webp로 변환
@@ -720,7 +727,7 @@ def serve_r2_file(filename):
         content_type = 'image/webp'
 
     try:
-        obj = s3.get_object(Bucket="moneying-uploads", Key=key)
+        obj = s3.get_object(Bucket=R2_BUCKET, Key=key)
         return Response(
             obj['Body'].read(),
             content_type=content_type,
@@ -730,6 +737,7 @@ def serve_r2_file(filename):
         print(f"R2 file error for {key}: {e}")
         return f"File not found: {key}", 404
 
+
 # ----------------------------
 # Public Routes
 # ----------------------------
@@ -737,20 +745,20 @@ def serve_r2_file(filename):
 def index():
     return render_template("index.html")
 
+# [FIX #10] store 페이지는 로그인 무관 → 캐시 유지 OK
 @app.route("/store")
-@cache.cached(timeout=300)  # 5분 캐싱
+@cache.cached(timeout=300)
 def store():
     products = StoreProduct.query.filter_by(is_active=True).order_by(StoreProduct.id.desc()).all()
     return render_template("store.html", products=products)
 
 @app.route("/store/chrome-extension")
-@cache.cached(timeout=3600)  # 1시간 캐싱
+@cache.cached(timeout=3600)
 def store_chrome_extension():
     return render_template("store_chrome_extension.html")
 
-
 @app.route("/store/<int:product_id>")
-@cache.cached(timeout=300)  # 5분 캐싱
+@cache.cached(timeout=300)
 def store_detail(product_id):
     product = StoreProduct.query.get_or_404(product_id)
     if not product.is_active and not is_admin():
@@ -765,6 +773,7 @@ def pricing():
         if user and not user.free_trial_used:
             can_use_trial = True
     return render_template("pricing.html", can_use_trial=can_use_trial)
+
 
 # ============ 토스페이먼츠 결제 ============
 PLAN_INFO = {
@@ -785,7 +794,6 @@ def checkout(plan_type):
         flash("잘못된 요금제입니다.", "error")
         return redirect(url_for("pricing"))
     
-    # customerKey 생성 (유저별 고유값)
     user = db.session.get(User, session["user_id"])
     customer_key = f"cust_{user.id}_{secrets.token_hex(8)}"
     
@@ -812,7 +820,6 @@ def billing_success():
         flash("잘못된 요금제입니다.", "error")
         return redirect(url_for("pricing"))
     
-    # 빌링키 발급 API 호출
     import base64
     secret_key = os.getenv("TOSS_SECRET_KEY", "")
     auth_header = base64.b64encode(f"{secret_key}:".encode()).decode()
@@ -842,148 +849,83 @@ def billing_success():
         return redirect(url_for("pricing"))
     
     user_id = session["user_id"]
+    order_id = f"order_{user_id}_{plan_type}_{secrets.token_hex(6)}"
     
-    # 정기결제 상품이면 첫 결제 실행
-    if plan['billing']:
-        order_id = f"order_{user_id}_{plan_type}_{secrets.token_hex(6)}"
-        
-        pay_resp = requests.post(
-            f"https://api.tosspayments.com/v1/billing/{billing_key}",
-            headers={
-                "Authorization": f"Basic {auth_header}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "customerKey": customer_key,
-                "amount": plan['price'],
-                "orderId": order_id,
-                "orderName": plan['name'],
-            }
-        )
-        
-        if pay_resp.status_code != 200:
-            error_msg = pay_resp.json().get("message", "결제 실패")
-            flash(f"결제 실패: {error_msg}", "error")
-            return redirect(url_for("pricing"))
-        
-        pay_data = pay_resp.json()
-        
-        # 구독 생성
-        now = datetime.utcnow()
-        sub = Subscription(
-            user_id=user_id,
-            plan_type=plan_type,
-            status="active",
-            price=plan['price'],
-            started_at=now,
-            expires_at=now + timedelta(days=30),
-            billing_key=billing_key,
-            customer_key=customer_key
-        )
-        db.session.add(sub)
-        
-        # 결제 기록
-        payment = PaymentHistory(
-            user_id=user_id,
-            order_id=order_id,
-            payment_key=pay_data.get("paymentKey", ""),
-            amount=plan['price'],
-            plan_type=plan_type,
-            status="paid",
-            paid_at=now
-        )
-        db.session.add(payment)
-        db.session.commit()
-        
-        # 구독 ID 연결
-        payment.subscription_id = sub.id
-        db.session.commit()
-        
-        # 세션 업데이트
-        update_session_status(user_id)
-        
-        flash(f"{plan['name']} 구독이 시작되었습니다!", "success")
-        return redirect(url_for("my_page"))
+    # 결제 실행 (정기/1회 공통)
+    pay_resp = requests.post(
+        f"https://api.tosspayments.com/v1/billing/{billing_key}",
+        headers={
+            "Authorization": f"Basic {auth_header}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "customerKey": customer_key,
+            "amount": plan['price'],
+            "orderId": order_id,
+            "orderName": plan['name'],
+        }
+    )
     
-    else:
-        # 1회성 결제 (평생 이용권)
-        order_id = f"order_{user_id}_{plan_type}_{secrets.token_hex(6)}"
-        
-        pay_resp = requests.post(
-            f"https://api.tosspayments.com/v1/billing/{billing_key}",
-            headers={
-                "Authorization": f"Basic {auth_header}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "customerKey": customer_key,
-                "amount": plan['price'],
-                "orderId": order_id,
-                "orderName": plan['name'],
-            }
-        )
-        
-        if pay_resp.status_code != 200:
-            error_msg = pay_resp.json().get("message", "결제 실패")
-            flash(f"결제 실패: {error_msg}", "error")
-            return redirect(url_for("pricing"))
-        
-        pay_data = pay_resp.json()
-        
-        now = datetime.utcnow()
-        sub = Subscription(
-            user_id=user_id,
-            plan_type=plan_type,
-            status="active",
-            price=plan['price'],
-            started_at=now,
-            expires_at=None,  # 평생
-            billing_key=None,
-            customer_key=customer_key
-        )
-        db.session.add(sub)
-        
-        payment = PaymentHistory(
-            user_id=user_id,
-            order_id=order_id,
-            payment_key=pay_data.get("paymentKey", ""),
-            amount=plan['price'],
-            plan_type=plan_type,
-            status="paid",
-            paid_at=now
-        )
-        db.session.add(payment)
-        db.session.commit()
-        
-        payment.subscription_id = sub.id
-        db.session.commit()
-        
-        update_session_status(user_id)
-        
-        flash(f"{plan['name']} 구매가 완료되었습니다!", "success")
-        return redirect(url_for("my_page"))
+    if pay_resp.status_code != 200:
+        error_msg = pay_resp.json().get("message", "결제 실패")
+        flash(f"결제 실패: {error_msg}", "error")
+        return redirect(url_for("pricing"))
+    
+    pay_data = pay_resp.json()
+    now = datetime.utcnow()
+    
+    # 구독 생성
+    sub = Subscription(
+        user_id=user_id,
+        plan_type=plan_type,
+        status="active",
+        price=plan['price'],
+        started_at=now,
+        expires_at=None if not plan['billing'] else now + timedelta(days=30),
+        billing_key=billing_key if plan['billing'] else None,
+        customer_key=customer_key
+    )
+    db.session.add(sub)
+    
+    # 결제 기록
+    payment = PaymentHistory(
+        user_id=user_id,
+        order_id=order_id,
+        payment_key=pay_data.get("paymentKey", ""),
+        amount=plan['price'],
+        plan_type=plan_type,
+        status="paid",
+        paid_at=now
+    )
+    db.session.add(payment)
+    db.session.commit()
+    
+    payment.subscription_id = sub.id
+    db.session.commit()
+    
+    update_session_status(user_id)
+    
+    msg = f"{plan['name']} 구독이 시작되었습니다!" if plan['billing'] else f"{plan['name']} 구매가 완료되었습니다!"
+    flash(msg, "success")
+    return redirect(url_for("my_page"))
 
 @app.route("/billing/fail")
 def billing_fail():
-    """빌링키 발급 실패 콜백"""
     error_code = request.args.get("code", "")
     error_msg = request.args.get("message", "결제가 취소되었습니다.")
     flash(f"결제 실패: {error_msg}", "error")
     return redirect(url_for("pricing"))
 
+# [FIX #10] gallery는 사용자별 구독 상태에 따라 다르게 보여야 하므로 캐시 제거
 @app.route("/gallery")
 def gallery():
-    # 승인된 게시물만 표시 (status가 approved이거나 없는 경우)
-    # FREE(is_free=True) 게시물 먼저, 그 다음 최신순
     posts = Post.query.filter(
         (Post.status == "approved") | (Post.status == None) | (Post.status == "")
     ).order_by(Post.is_free.desc(), Post.id.desc()).all()
     
-    # 세션 상태 업데이트
     user_id = session.get("user_id")
     update_session_status(user_id)
     
-    # 판매자 상태 업데이트
     if user_id:
         try:
             user = User.query.get(user_id)
@@ -1001,7 +943,6 @@ def community_page():
     if session.get("user_email"):
         my_linkreq_count = LinkRequest.query.filter_by(requester_email=session["user_email"]).count()
     
-    # 각 포스트의 좋아요 수 계산
     post_likes = {}
     for p in posts:
         post_likes[p.id] = CommunityLike.query.filter_by(post_id=p.id).count()
@@ -1012,7 +953,6 @@ def community_page():
 def community_detail(post_id):
     post = CommunityPost.query.get_or_404(post_id)
     
-    # 비로그인 사용자는 자유게시판(free)과 수익인증(revenue)만 볼 수 있음
     if not session.get("user_id"):
         if post.category not in ['free', 'revenue']:
             flash("로그인 후 이용 가능합니다.", "error")
@@ -1085,7 +1025,6 @@ def my_page():
     user_email = session.get("user_email", "")
     user_id = session.get("user_id")
     
-    # 세션 상태 업데이트
     update_session_status(user_id)
     
     user_subscriptions = get_user_subscriptions(user_id)
@@ -1100,30 +1039,24 @@ def my_page():
     monthly_used = get_monthly_link_request_count(user_email)
     monthly_limit = get_link_request_limit(user_id)
     
-    # 체험 관련
     trial_expires_at = get_trial_expires_at(user_id)
     can_trial = can_use_free_trial(user_id)
     
-    # 판매자 정보
     user = User.query.get(user_id)
     user_is_seller = user.is_seller if user else False
     user_seller_status = user.seller_status if user else None
     user_seller_company = user.seller_company if user else None
     user_seller_category = user.seller_category if user else None
 
-    # 친구 초대 코드 생성 (없으면 생성)
     if not user.referral_code:
         import random
         import string
         user.referral_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         db.session.commit()
     
-    # 초대한 친구 수
     invited_count = User.query.filter_by(referred_by=user.id).count()
-    # 내가 쓴 글 수
     my_posts_count = CommunityPost.query.filter_by(author_email=user_email).count()
     
-    from datetime import datetime
     return render_template("my.html",
         user_email=user_email,
         subscriptions=user_subscriptions,
@@ -1145,34 +1078,35 @@ def my_page():
     )
 
 @app.route("/profitguard")
-@cache.cached(timeout=3600)  # 1시간 캐싱
+@cache.cached(timeout=3600)
 def profitguard_page():
     return render_template("profitguard.html")
 
 @app.route("/proof")
-@cache.cached(timeout=3600)  # 1시간 캐싱
+@cache.cached(timeout=3600)
 def proof_page():
     return render_template("proof.html")
 
 @app.route("/subscribe-info")
-@cache.cached(timeout=3600)  # 1시간 캐싱
+@cache.cached(timeout=3600)
 def subscribe_info():
     return render_template("subscribe.html")
 
 @app.route("/terms")
-@cache.cached(timeout=86400)  # 24시간 캐싱
+@cache.cached(timeout=86400)
 def terms():
     return render_template("terms.html")
 
 @app.route("/privacy")
-@cache.cached(timeout=86400)  # 24시간 캐싱
+@cache.cached(timeout=86400)
 def privacy():
     return render_template("privacy.html")
 
 @app.route("/refund")
-@cache.cached(timeout=86400)  # 24시간 캐싱
+@cache.cached(timeout=86400)
 def refund():
     return render_template("refund.html")
+
 
 # ----------------------------
 # 무료 체험 신청
@@ -1186,18 +1120,15 @@ def free_trial():
     if not user:
         return redirect(url_for("login", next="/free-trial"))
     
-    # 이미 체험 사용했는지 확인
     if user.free_trial_used:
         flash("이미 무료 체험을 사용하셨습니다.", "error")
         return redirect(url_for("pricing"))
     
-    # 이미 구독자인지 확인
     if get_user_subscriptions(user.id):
         flash("이미 구독 중이십니다.", "error")
         return redirect(url_for("gallery"))
     
     if request.method == "POST":
-        # 3일 무료 체험 시작
         user.free_trial_used = True
         user.free_trial_expires = datetime.utcnow() + timedelta(days=3)
         db.session.commit()
@@ -1216,7 +1147,6 @@ def community_write():
     if not session.get("user_id"):
         return redirect(url_for("login", next="/community/write"))
     
-    # 판매자 여부 확인해서 세션에 저장
     user = User.query.get(session.get("user_id"))
     if user:
         session["is_seller"] = user.is_seller
@@ -1227,7 +1157,6 @@ def community_write():
         content = (request.form.get("content") or "").strip()
         images = parse_json_list_field("images_json")
         
-        # 공구/협찬은 판매자만 가능
         if category == "deal" and not (session.get("is_seller") or session.get("admin")):
             flash("공구/협찬 글은 판매자만 작성할 수 있습니다.", "error")
             return redirect(url_for("community_write"))
@@ -1256,7 +1185,6 @@ def link_request_new():
     user_id = session.get("user_id")
     user_email = session.get("user_email", "")
     
-    # 세션 상태 업데이트
     update_session_status(user_id)
     
     monthly_used = get_monthly_link_request_count(user_email)
@@ -1300,7 +1228,6 @@ def link_requests():
     user_id = session.get("user_id")
     user_email = session.get("user_email", "")
 
-    # 세션 상태 업데이트
     if user_id:
         update_session_status(user_id)
 
@@ -1312,7 +1239,6 @@ def link_requests():
         monthly_used = get_monthly_link_request_count(user_email)
         monthly_limit = get_link_request_limit(user_id)
     else:
-        # 비로그인 - 빈 목록
         items = []
         monthly_used, monthly_limit = 0, 3
 
@@ -1332,7 +1258,6 @@ def link_request_detail(request_id):
         it.coupang_url = (request.form.get("coupang_url") or "").strip()
         db.session.commit()
         
-        # 신청자에게 알림
         if it.coupang_url:
             user = User.query.filter_by(email=it.requester_email).first()
             if user:
@@ -1368,7 +1293,6 @@ def register():
             flash("이미 가입된 이메일입니다.", "error")
             return redirect(url_for("register"))
         
-        # 초대코드로 추천인 찾기
         referred_by_id = None
         if referral_code:
             referrer = User.query.filter_by(referral_code=referral_code).first()
@@ -1379,18 +1303,15 @@ def register():
         db.session.add(u)
         db.session.commit()
         
-        # 추천인에게 7일 연장
         if referred_by_id:
             referrer = User.query.get(referred_by_id)
             if referrer:
-                # 추천인의 활성 구독 찾기
                 active_sub = Subscription.query.filter(
                     Subscription.user_id == referrer.id,
                     Subscription.expires_at > datetime.utcnow()
                 ).order_by(Subscription.expires_at.desc()).first()
                 
                 if active_sub:
-                    # 기존 구독에 7일 추가
                     active_sub.expires_at = active_sub.expires_at + timedelta(days=7)
                     db.session.commit()
         
@@ -1402,9 +1323,6 @@ def register():
         return redirect(url_for("index"))
     return render_template("register.html")
 
-# 카카오 로그인
-KAKAO_REST_API_KEY = "d6d95667f32febebb7515351c3713fde"
-KAKAO_REDIRECT_URI = "https://moneying.biz/auth/kakao/callback"
 
 @app.route("/auth/kakao")
 def kakao_login():
@@ -1417,7 +1335,6 @@ def kakao_callback():
     if not code:
         return "에러: code 없음", 400
     
-    # 토큰 받기
     token_url = "https://kauth.kakao.com/oauth/token"
     token_data = {
         "grant_type": "authorization_code",
@@ -1428,10 +1345,8 @@ def kakao_callback():
     token_response = requests.post(token_url, data=token_data)
     token_json = token_response.json()
     
-       
     access_token = token_json.get("access_token")
     
-    # 사용자 정보 가져오기
     user_info_url = "https://kapi.kakao.com/v2/user/me"
     headers = {"Authorization": f"Bearer {access_token}"}
     user_response = requests.get(user_info_url, headers=headers)
@@ -1442,30 +1357,26 @@ def kakao_callback():
     email = kakao_account.get("email")
     nickname = kakao_account.get("profile", {}).get("nickname", "")
     
-    # 이메일 없으면 카카오ID로 대체
     if not email:
         email = f"kakao_{kakao_id}@moneying.biz"
     
-    # 기존 유저 확인 또는 생성
     user = User.query.filter_by(email=email).first()
     if not user:
         user = User(
-    email=email,
-    pw_hash=secrets.token_hex(16),
-    kakao_id=kakao_id
-)
+            email=email,
+            pw_hash=secrets.token_hex(16),
+            kakao_id=kakao_id
+        )
         db.session.add(user)
         db.session.commit()
     elif not user.kakao_id:
         user.kakao_id = kakao_id
         db.session.commit()
     
-   # 중복 로그인 방지: 새 세션 토큰 생성
     new_token = secrets.token_hex(32)
     user.session_token = new_token
     db.session.commit()
     
-    # 로그인 처리
     session.clear()
     session["user_id"] = user.id
     session["user_email"] = user.email
@@ -1483,30 +1394,24 @@ def login():
         password = (request.form.get("password") or "").strip()
         next_url = (request.form.get("next") or "").strip()
         
-        # 관리자 이메일인 경우
         if email == ADMIN_EMAIL and password == ADMIN_PASSWORD:
             session.clear()
             session["admin"] = True
             return redirect(url_for("admin_home"))
         
-        # 일반 유저 로그인
         u = User.query.filter_by(email=email).first()
         
-        # 계정 잠금 확인
         if u and u.locked_until:
             if datetime.now() < u.locked_until:
                 remaining = (u.locked_until - datetime.now()).seconds // 60 + 1
                 flash(f"로그인 시도 5회 실패로 계정이 잠겼습니다. {remaining}분 후 다시 시도해주세요.", "error")
                 return redirect(url_for("login"))
             else:
-                # 잠금 해제
                 u.locked_until = None
                 u.login_fail_count = 0
                 db.session.commit()
         
-        # 비밀번호 확인
         if not u or not check_password_hash(u.pw_hash, password):
-            # 실패 횟수 증가
             if u:
                 u.login_fail_count = (u.login_fail_count or 0) + 1
                 if u.login_fail_count >= 5:
@@ -1520,12 +1425,10 @@ def login():
                 flash("로그인 정보가 올바르지 않습니다.", "error")
             return redirect(url_for("login"))
         
-        # 로그인 성공 - 실패 횟수 초기화
         u.login_fail_count = 0
         u.locked_until = None
         db.session.commit()
         
-       # 중복 로그인 방지: 새 세션 토큰 생성
         new_token = secrets.token_hex(32)
         u.session_token = new_token
         db.session.commit()
@@ -1535,7 +1438,6 @@ def login():
         session["user_email"] = u.email
         session["session_token"] = new_token
         
-        # 세션 상태 업데이트
         update_session_status(u.id)
         
         if next_url and next_url.startswith("/"):
@@ -1552,14 +1454,12 @@ def forgot_password():
         if not user:
             return render_template("forgot_password.html", error="등록되지 않은 이메일입니다.")
         
-        # 임시 비밀번호 생성
         import random
         import string
         temp_pw = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
         user.pw_hash = generate_password_hash(temp_pw)
         db.session.commit()
         
-        # 이메일 발송
         html_body = f"""
         <div style="font-family: 'Noto Sans KR', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #0a0a0a; color: #fff;">
             <div style="text-align: center; margin-bottom: 40px;">
@@ -1597,7 +1497,6 @@ def forgot_password():
         if email_sent:
             return render_template("forgot_password.html", success=True)
         else:
-            # 이메일 발송 실패 시 화면에 표시 (개발용)
             return render_template("forgot_password.html", temp_password=temp_pw, email_failed=True)
     
     return render_template("forgot_password.html")
@@ -1679,7 +1578,6 @@ def admin_home():
     from datetime import date
     today = date.today()
     
-    # 오늘 통계
     try:
         today_users = User.query.filter(db.func.date(User.created_at) == today).count()
     except:
@@ -1690,43 +1588,36 @@ def admin_home():
     except:
         today_links = 0
     
-    # 처리 필요 (대기중)
     pending_links = LinkRequest.query.filter((LinkRequest.coupang_url == None) | (LinkRequest.coupang_url == "")).count()
     
-    # 판매자 대기
     try:
         pending_sellers = User.query.filter_by(seller_status="pending").count()
     except:
         pending_sellers = 0
     
-    # 수익인증 대기
+    # [FIX #3] RevenueProof → RevenueRewardHistory 수정
     try:
-        pending_rewards = RevenueProof.query.filter_by(status="pending").count()
+        pending_rewards = RevenueRewardHistory.query.count()
     except:
         pending_rewards = 0
     
-    # 판매자 게시물 승인 대기
     pending_posts = Post.query.filter_by(status="pending").count()
     
     return render_template("admin_home.html",
-        # 오늘 통계
         today=today,
         today_users=today_users,
         today_links=today_links,
         
-        # 처리 필요
         pending_links=pending_links,
         pending_sellers=pending_sellers,
         pending_rewards=pending_rewards,
         pending_posts=pending_posts,
         
-        # 전체 통계
         user_count=User.query.count(),
         subscriber_count=db.session.query(Subscription.user_id).filter_by(status="active").distinct().count(),
         gallery_count=Post.query.count(),
         store_count=StoreProduct.query.count(),
         
-        # 최근 활동
         recent_link_requests=LinkRequest.query.order_by(desc(LinkRequest.id)).limit(5).all(),
         recent_posts=Post.query.order_by(desc(Post.id)).limit(5).all()
     )
@@ -1749,7 +1640,6 @@ def admin_approve_post(post_id):
     post.status = "approved"
     db.session.commit()
     
-    # 판매자에게 알림
     if post.seller_id:
         noti = Notification(
             user_id=post.seller_id,
@@ -1773,7 +1663,6 @@ def admin_reject_post(post_id):
     post.status = "rejected"
     db.session.commit()
     
-    # 판매자에게 알림
     if post.seller_id:
         noti = Notification(
             user_id=post.seller_id,
@@ -1792,17 +1681,14 @@ def admin_reject_post(post_id):
 def admin_users():
     if not session.get("admin"):
         return redirect(url_for("admin_login"))
-    from datetime import datetime
     
     users = User.query.order_by(desc(User.id)).all()
     
-    # 각 유저의 구독/체험 상태 추가
     now = datetime.utcnow()
     subscriber_count = 0
     trial_count = 0
     
     for user in users:
-        # 구독 상태 확인
         active_sub = Subscription.query.filter(
             Subscription.user_id == user.id,
             Subscription.status == "active",
@@ -1810,7 +1696,6 @@ def admin_users():
         ).first()
         user.subscriber = active_sub is not None
         
-        # 체험 상태 확인
         user.is_trial = user.free_trial_expires and user.free_trial_expires > now
         
         if user.subscriber:
@@ -1830,33 +1715,27 @@ def admin_stats():
     if not session.get("admin"):
         return redirect(url_for("admin_login"))
     
-    from datetime import date, timedelta
+    from datetime import date, timedelta as td
     today = date.today()
     
-    # 기본 통계
     total_users = User.query.count()
     new_users_today = User.query.filter(db.func.date(User.created_at) == today).count()
     total_subscribers = db.session.query(Subscription.user_id).filter_by(status="active").distinct().count()
     trial_users = User.query.filter(User.free_trial_expires > datetime.utcnow()).count()
     total_posts = Post.query.count()
     
-    # 전환율
     conversion_rate = round((total_subscribers / total_users * 100), 1) if total_users > 0 else 0
     
-    # 최근 7일 가입자
     daily_signups = []
     max_daily_signup = 0
     for i in range(6, -1, -1):
-        d = today - timedelta(days=i)
+        d = today - td(days=i)
         count = User.query.filter(db.func.date(User.created_at) == d).count()
         daily_signups.append({"label": d.strftime("%m/%d"), "count": count})
         if count > max_daily_signup:
             max_daily_signup = count
     
-    # 인기 영상 (조회수 기준)
     popular_posts = Post.query.order_by(Post.view_count.desc()).limit(5).all()
-    
-    # 최근 가입자
     recent_users = User.query.order_by(User.created_at.desc()).limit(5).all()
     
     return render_template("admin_stats.html",
@@ -1908,7 +1787,6 @@ def admin_gallery_bulk():
 def admin_gallery_bulk_sample():
     if not session.get("admin"):
         return redirect(url_for("admin_login"))
-    # UTF-8 BOM 추가 (엑셀 한글 깨짐 방지)
     csv_content = "\ufeff"
     csv_content += "title,category,video_url1,video_url2,video_url3,coupang_url,is_free\n"
     csv_content += "미니선풍기,living,https://tiktok.com/...,https://instagram.com/...,,https://coupang.com/...,0\n"
@@ -1936,7 +1814,6 @@ def admin_gallery_bulk_upload():
         raw_data = file.read()
         content = None
         
-        # 여러 인코딩 시도 (엑셀 CSV는 보통 CP949)
         for encoding in ["utf-8-sig", "utf-8", "cp949", "euc-kr"]:
             try:
                 content = raw_data.decode(encoding)
@@ -1947,11 +1824,9 @@ def admin_gallery_bulk_upload():
         if content is None:
             return jsonify({"error": "파일 인코딩을 인식할 수 없습니다"}), 400
         
-        # 탭으로 구분된 파일인지 확인 (엑셀 기본 저장)
         lines = content.strip().split('\n')
         delimiter = '\t' if '\t' in lines[0] else ','
         
-        # 헤더 정리 (공백 제거)
         header_line = lines[0]
         headers = [h.strip().lower() for h in header_line.split(delimiter)]
         
@@ -2019,7 +1894,6 @@ def admin_gallery_bulk_delete():
 def admin_upload():
     if not session.get("admin"):
         return redirect(url_for("admin_login"))
-    # 활성화된 카테고리 목록 (시스템 카테고리 제외: all, bookmark, recent)
     categories = Category.query.filter(
         Category.is_active == True,
         Category.key.notin_(['all', 'bookmark', 'recent'])
@@ -2283,7 +2157,6 @@ def api_upload_profile_photo():
     saved = save_upload(f)
     if not saved:
         return jsonify({"ok": False, "error": "업로드 실패"}), 400
-    # DB 업데이트
     user = User.query.get(session["user_id"])
     if user:
         user.profile_photo = saved
@@ -2292,6 +2165,7 @@ def api_upload_profile_photo():
 
 @app.route("/api/upload_video", methods=["POST"])
 def api_upload_video():
+    """[FIX #2,8] 전역 S3 클라이언트 + 환경변수 사용"""
     if not is_admin() and not session.get("is_seller"):
         return jsonify({"ok": False, "error": "unauthorized"}), 401
     
@@ -2299,16 +2173,13 @@ def api_upload_video():
     if not f:
         return jsonify({"ok": False, "error": "no_file"}), 400
     
-    # 영상 파일 확인
     allowed_ext = {'mp4', 'mov', 'avi', 'webm', 'mkv'}
     ext = f.filename.rsplit('.', 1)[-1].lower() if '.' in f.filename else ''
     if ext not in allowed_ext:
         return jsonify({"ok": False, "error": "invalid_format"}), 400
     
     import subprocess
-    import tempfile
     
-    # 임시 파일 저장
     file_id = str(uuid.uuid4())
     temp_input = f"/tmp/{file_id}_input.{ext}"
     temp_output = f"/tmp/{file_id}_output.mp4"
@@ -2317,7 +2188,6 @@ def api_upload_video():
     f.save(temp_input)
     
     try:
-        # FFmpeg로 720p, 60초 제한 압축
         subprocess.run([
             '/usr/bin/ffmpeg', '-i', temp_input,
             '-vf', 'scale=-2:720',
@@ -2328,7 +2198,6 @@ def api_upload_video():
             '-y', temp_output
         ], check=True, capture_output=True)
         
-        # 썸네일 생성 (첫 프레임, 9:16 비율)
         subprocess.run([
             '/usr/bin/ffmpeg', '-i', temp_input,
             '-vf', 'scale=720:1280:force_original_aspect_ratio=decrease,pad=720:1280:(ow-iw)/2:(oh-ih)/2',
@@ -2336,20 +2205,14 @@ def api_upload_video():
             '-y', temp_thumb
         ], check=True, capture_output=True)
         
-        # R2에 업로드
-        import boto3
-        s3 = boto3.client('s3',
-            endpoint_url="https://b6f9c47a567f57911cab3c58f07cfc61.r2.cloudflarestorage.com",
-            aws_access_key_id="bd378a5b4a8c51dece8aeeec96c846e5",
-            aws_secret_access_key="4c218d723f2f0e0c122c75fa6d782eb1f659e17eabdecc50dc009bd2edbce0c0"
-        )
+        s3 = get_s3_client()
         
         with open(temp_output, 'rb') as vf:
-            s3.upload_fileobj(vf, "moneying-uploads", f"{file_id}.mp4",
+            s3.upload_fileobj(vf, R2_BUCKET, f"{file_id}.mp4",
                 ExtraArgs={'ContentType': 'video/mp4'})
 
         with open(temp_thumb, 'rb') as tf:
-            s3.upload_fileobj(tf, "moneying-uploads", f"{file_id}_thumb.webp",
+            s3.upload_fileobj(tf, R2_BUCKET, f"{file_id}_thumb.webp",
                 ExtraArgs={'ContentType': 'image/webp'})
 
         video_url = f"/r2/{file_id}.mp4"
@@ -2364,7 +2227,6 @@ def api_upload_video():
     except subprocess.CalledProcessError as e:
         return jsonify({"ok": False, "error": "compress_failed"}), 500
     finally:
-        # 임시 파일 삭제
         for tmp in [temp_input, temp_output, temp_thumb]:
             if os.path.exists(tmp):
                 os.remove(tmp)
@@ -2389,7 +2251,6 @@ def api_save_post():
     if not title:
         return jsonify({"ok": False, "error": "title_required"}), 400
     
-    # 자동 넘버링: 다음 번호 계산
     last_post = Post.query.order_by(Post.id.desc()).first()
     next_num = (last_post.id + 1) if last_post else 1
     title = f"{next_num}. {title}"
@@ -2437,7 +2298,6 @@ def seller_apply():
     if not user:
         return redirect(url_for("login"))
     
-    # 이미 판매자이거나 신청 중인 경우
     if user.is_seller:
         flash("이미 판매자로 활동 중입니다.")
         return redirect(url_for("seller_dashboard"))
@@ -2475,7 +2335,6 @@ def seller_dashboard():
         flash("판매자 전용 페이지입니다.")
         return redirect(url_for("my_page"))
     
-    # 판매자가 올린 게시물 조회
     posts = Post.query.filter_by(seller_id=user.id).order_by(Post.created_at.desc()).all()
     return render_template("seller_dashboard.html", user=user, posts=posts)
 
@@ -2494,7 +2353,6 @@ def seller_upload():
         images_json = request.form.get("images_json", "[]")
         links_json = request.form.get("links_json", "[]")
         
-        import json
         try:
             images = json.loads(images_json)
             links = json.loads(links_json)
@@ -2502,7 +2360,6 @@ def seller_upload():
             images = []
             links = []
         
-        # 필수값 검증
         if not title:
             return jsonify({"ok": False, "error": "제목은 필수입니다."})
         if not images or len(images) == 0:
@@ -2510,11 +2367,9 @@ def seller_upload():
         if not coupang_link:
             return jsonify({"ok": False, "error": "쿠팡 링크는 필수입니다."})
         
-       # images를 JSON 문자열로 저장
         images_str = json.dumps(images)
         links_str = json.dumps(links)
         
-        # links 분리 (기존 템플릿 호환)
         video_url = links[0] if len(links) > 0 else ""
         video_url2 = links[1] if len(links) > 1 else ""
         video_url3 = links[2] if len(links) > 2 else ""
@@ -2544,28 +2399,22 @@ def revenue_proof_apply(post_id):
     if not session.get("user_id"):
         return jsonify({"ok": False, "error": "로그인이 필요합니다."}), 401
     
-    # 구독자/관리자만 가능 (체험중은 제외)
     if not session.get("subscriber") and not session.get("admin"):
         return jsonify({"ok": False, "error": "구독자만 신청할 수 있습니다."}), 403
     
     post = CommunityPost.query.get_or_404(post_id)
     user_id = session.get("user_id")
     
-    # 본인 글만 가능
     if post.author_email != session.get("user_email"):
         return jsonify({"ok": False, "error": "본인 글만 신청 가능합니다."}), 403
     
-    # 이미 신청했는지 확인 (현재 글)
     if post.reward_requested:
         return jsonify({"ok": False, "error": "이미 신청하셨습니다."}), 400
     
-    # 이미 이 글로 신청한 기록이 있는지 확인 (삭제 후 재작성 방지)
     existing = RevenueRewardHistory.query.filter_by(user_id=user_id, post_id=post_id).first()
     if existing:
         return jsonify({"ok": False, "error": "이미 신청한 기록이 있습니다."}), 400
     
-    # 월 3회 제한 체크
-    from datetime import datetime
     now = datetime.utcnow()
     first_day = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     monthly_count = RevenueRewardHistory.query.filter(
@@ -2576,12 +2425,12 @@ def revenue_proof_apply(post_id):
     if monthly_count >= 3:
         return jsonify({"ok": False, "error": "월 3회까지만 신청 가능합니다."}), 400
     
-    # 신청 처리
     post.reward_requested = True
     db.session.add(RevenueRewardHistory(user_id=user_id, post_id=post_id))
     db.session.commit()
     
     return jsonify({"ok": True})
+
     
 # 관리자 - 수익 인증 목록
 @app.route("/admin/revenue-proofs")
@@ -2589,7 +2438,6 @@ def admin_revenue_proofs():
     if not is_admin():
         return redirect(url_for("admin_login"))
     
-    # 수익인증 카테고리 글 조회
     proofs = CommunityPost.query.filter_by(category="revenue").order_by(CommunityPost.created_at.desc()).all()
     return render_template("admin_revenue_proofs.html", proofs=proofs)
 
@@ -2635,7 +2483,6 @@ def admin_seller_reject(user_id):
     user.seller_status = "rejected"
     user.is_seller = False
     
-    # 거절 알림 보내기
     db.session.add(Notification(
         user_id=user.id,
         type="seller_rejected",
@@ -2711,6 +2558,8 @@ def init_default_categories():
         if not existing:
             db.session.add(Category(**cat))
     db.session.commit()
+
+
 with app.app_context():
     try:
         db.create_all()
@@ -2727,6 +2576,7 @@ def page_not_found(e):
 @app.errorhandler(500)
 def internal_server_error(e):
     return render_template('500.html'), 500
+
 
 # ============ 공구/협찬 ============
 @app.route("/groupbuy")
@@ -2753,22 +2603,18 @@ def groupbuy_apply(item_id):
     
     item = GroupBuy.query.get_or_404(item_id)
     
-    # 마감 체크
     if item.is_ended() or item.status == "closed":
         flash("마감된 공구/협찬입니다.")
         return redirect(url_for("groupbuy_detail", item_id=item_id))
     
-    # 인원 체크
     if item.is_full():
         flash("신청 인원이 마감되었습니다.")
         return redirect(url_for("groupbuy_detail", item_id=item_id))
     
-    # 구독자 전용 체크
     if item.subscribers_only and not session.get("is_subscriber"):
         flash("구독자만 신청 가능합니다.")
         return redirect(url_for("groupbuy_detail", item_id=item_id))
     
-    # 중복 신청 체크
     existing = GroupBuyApplication.query.filter_by(
         groupbuy_id=item_id, user_id=session["user_id"]
     ).first()
@@ -2776,7 +2622,6 @@ def groupbuy_apply(item_id):
         flash("이미 신청하셨습니다.")
         return redirect(url_for("groupbuy_detail", item_id=item_id))
     
-    # 신청 저장
     application = GroupBuyApplication(
         groupbuy_id=item_id,
         user_id=session["user_id"],
@@ -2793,17 +2638,14 @@ def groupbuy_apply(item_id):
 
 
 # ============ 트렌드 센터 ============
-YOUTUBE_API_KEY = "AIzaSyDRnCHasdEJ3ARExoAsfqmnZiwp1oPrjNQ"
-
 @app.route("/trend")
-@cache.cached(timeout=600)  # 10분 캐싱
+@cache.cached(timeout=600)
 def trend_center():
     return render_template("trend.html")
 
 @app.route("/api/youtube/trending")
-@cache.cached(timeout=300, query_string=True)  # 5분 캐싱
+@cache.cached(timeout=300, query_string=True)
 def api_youtube_trending():
-    """한국 인기 급상승 영상"""
     import urllib.request
     import urllib.parse
     
@@ -2837,9 +2679,8 @@ def api_youtube_trending():
         return jsonify({"ok": False, "error": str(e)})
 
 @app.route("/api/youtube/search")
-@cache.cached(timeout=300, query_string=True)  # 5분 캐싱
+@cache.cached(timeout=300, query_string=True)
 def api_youtube_search():
-    """키워드 검색"""
     import urllib.request
     import urllib.parse
     
@@ -2895,9 +2736,8 @@ def api_youtube_search():
         return jsonify({"ok": False, "error": str(e)})
 
 @app.route("/api/youtube/category/<category_id>")
-@cache.cached(timeout=300, query_string=True)  # 5분 캐싱
+@cache.cached(timeout=300, query_string=True)
 def api_youtube_category(category_id):
-    """카테고리별 인기 영상"""
     import urllib.request
     
     page_token = request.args.get("pageToken", "")
@@ -2932,7 +2772,6 @@ def api_youtube_category(category_id):
 @app.route("/api/youtube/video/<video_id>")
 @cache.cached(timeout=300)
 def api_youtube_video_detail(video_id):
-    """영상 상세 정보 (태그, 댓글 수)"""
     import urllib.request
     
     url = f"https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id={video_id}&key={YOUTUBE_API_KEY}"
@@ -2956,13 +2795,12 @@ def api_youtube_video_detail(video_id):
         return jsonify({"ok": False, "error": str(e)})
 
 @app.route("/api/gallery")
-@cache.cached(timeout=60, query_string=True)  # 1분 캐싱
+@cache.cached(timeout=60, query_string=True)
 def api_gallery():
     page = request.args.get("page", 1, type=int)
     per_page = 30
     category = request.args.get("category", "").strip()
     
-    # 승인된 게시물만 표시
     query = Post.query.filter(
         (Post.status == "approved") | (Post.status == None) | (Post.status == "")
     )
@@ -2997,7 +2835,6 @@ def my_posts():
         author_email=session.get("user_email")
     ).order_by(CommunityPost.created_at.desc()).all()
     
-    # 공구/협찬 신청 내역
     applications = DealApplication.query.filter_by(
         user_id=session.get("user_id")
     ).order_by(DealApplication.created_at.desc()).all()
@@ -3010,11 +2847,12 @@ def my_link_requests():
         return redirect(url_for("login"))
     
     user_email = session.get("user_email")
-    requests = LinkRequest.query.filter_by(
+    requests_list = LinkRequest.query.filter_by(
         requester_email=user_email
     ).order_by(LinkRequest.created_at.desc()).all()
     
-    return render_template("my_link_requests.html", requests=requests)
+    return render_template("my_link_requests.html", requests=requests_list)
+
 
 # ----------------------------
 # 리워드
@@ -3026,7 +2864,6 @@ def my_rewards():
     
     user = User.query.get(session["user_id"])
     
-    # 친구 초대 코드 (없으면 생성)
     if not user.referral_code:
         import random
         import string
@@ -3035,7 +2872,6 @@ def my_rewards():
     
     invited_users = User.query.filter_by(referred_by=user.id).all()
     
-    # 내 수익인증 글
     revenue_posts = CommunityPost.query.filter_by(
         author_email=session.get("user_email"),
         category="revenue"
@@ -3046,6 +2882,7 @@ def my_rewards():
         invited_users=invited_users,
         revenue_posts=revenue_posts
     )
+
 @app.route("/my/nickname", methods=["GET", "POST"])
 def my_nickname():
     if "user_id" not in session:
@@ -3065,6 +2902,7 @@ def my_nickname():
     
     return render_template("my_nickname.html", user=user)
 
+
 # ----------------------------
 # 결제 내역
 # ----------------------------
@@ -3073,7 +2911,6 @@ def my_payments():
     if not session.get("user_id"):
         return redirect(url_for("login"))
     
-    # 나중에 결제 연동하면 여기서 가져옴
     payments = []
     
     return render_template("my_payments.html", payments=payments)
@@ -3102,7 +2939,6 @@ def my_deal_detail(post_id):
     
     post = CommunityPost.query.get_or_404(post_id)
     
-    # 본인 글인지 확인
     if post.author_email != session.get("user_email") and not session.get("admin"):
         flash("접근 권한이 없습니다.", "error")
         return redirect(url_for("my_deals"))
@@ -3124,7 +2960,6 @@ def deal_approve(post_id, app_id):
     application = DealApplication.query.get_or_404(app_id)
     application.status = "approved"
     
-    # 신청자에게 알림
     noti = Notification(
         user_id=application.user_id,
         type="deal_approved",
@@ -3150,7 +2985,6 @@ def deal_reject(post_id, app_id):
     application = DealApplication.query.get_or_404(app_id)
     application.status = "rejected"
     
-    # 신청자에게 알림
     noti = Notification(
         user_id=application.user_id,
         type="deal_rejected",
@@ -3173,7 +3007,8 @@ def deal_close(post_id):
     if post.author_email != session.get("user_email") and not session.get("admin"):
         return jsonify({"ok": False, "error": "no_permission"})
     
-    post.deal_closed = True
+    # [FIX #4] deal_closed → is_deal_available 사용
+    post.is_deal_available = False
     db.session.commit()
     
     return jsonify({"ok": True})
@@ -3183,7 +3018,7 @@ def deal_close(post_id):
 # 고객지원
 # ----------------------------
 @app.route("/support")
-@cache.cached(timeout=3600)  # 1시간 캐싱
+@cache.cached(timeout=3600)
 def support():
     return render_template("support.html")
 
@@ -3198,7 +3033,6 @@ def notifications():
     
     notis = Notification.query.filter_by(user_id=session["user_id"]).order_by(Notification.created_at.desc()).limit(50).all()
     
-    # 읽음 처리는 POST API로 분리 (Prefetch 방지)
     return render_template("notifications.html", notifications=notis, timedelta=timedelta)
 
 @app.route("/api/notifications/mark-read", methods=["POST"])
@@ -3224,6 +3058,7 @@ def api_notifications_count():
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     resp.headers["Pragma"] = "no-cache"
     return resp
+
     
 @app.route("/api/notifications/<int:noti_id>/delete", methods=["POST"])
 def api_notification_delete(noti_id):
@@ -3246,6 +3081,7 @@ def api_notifications_delete_all():
     Notification.query.filter_by(user_id=session["user_id"]).delete()
     db.session.commit()
     return jsonify({"ok": True})
+
 
 if __name__ == "__main__":
     app.run(debug=True)
