@@ -1130,7 +1130,7 @@ def free_trial():
     
     if request.method == "POST":
         user.free_trial_used = True
-        user.free_trial_expires = datetime.utcnow() + timedelta(days=3)
+        user.free_trial_expires = datetime.utcnow() + timedelta(days=5)
         db.session.commit()
         
         session["is_trial"] = True
