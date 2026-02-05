@@ -1,74 +1,131 @@
 {% extends "base.html" %}
-
 {% block title %}관리자{% if self.page_title() %} - {{ self.page_title() }}{% endif %}{% endblock %}
-
-{% block main_class %}max-w-7xl mx-auto px-4 md:px-6 pt-24 md:pt-28 pb-20{% endblock %}
-
+{% block main_class %}max-w-7xl mx-auto px-4 md:px-6 pt-20 md:pt-28 pb-20{% endblock %}
 {% block content %}
-  <!-- ✅ 관리자 헤더 -->
-  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
-    <div>
-      <h1 class="text-3xl md:text-4xl font-black">{% block page_title %}{% endblock %}</h1>
-      <p class="text-zinc-400 mt-2">{% block page_desc %}{% endblock %}</p>
-    </div>
 
+{% block head_extra %}
+<style>
+  /* 관리자 탭 가로 스크롤 - 스크롤바 숨김 */
+  .admin-tabs {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .admin-tabs::-webkit-scrollbar { display: none; }
+  
+  /* 모바일에서 탭 페이드 힌트 (우측 더 있음 표시) */
+  .admin-tabs-wrap {
+    position: relative;
+  }
+  .admin-tabs-wrap::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 40px;
+    background: linear-gradient(to right, transparent, rgba(0,0,0,0.9));
+    pointer-events: none;
+    z-index: 1;
+    opacity: 1;
+    transition: opacity 0.3s;
+  }
+  .admin-tabs-wrap.scrolled-end::after {
+    opacity: 0;
+  }
+  @media (min-width: 768px) {
+    .admin-tabs-wrap::after { display: none; }
+  }
+</style>
+{% endblock %}
+
+  <!-- ✅ 관리자 헤더 -->
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 md:gap-4 mb-4 md:mb-6">
+    <div>
+      <h1 class="text-2xl md:text-4xl font-black">{% block page_title %}{% endblock %}</h1>
+      <p class="text-zinc-400 text-sm md:text-base mt-1 md:mt-2">{% block page_desc %}{% endblock %}</p>
+    </div>
     <!-- ✅ 우측 액션 -->
-    <div class="shrink-0 flex flex-wrap gap-2 justify-end">
+    <div class="shrink-0 flex flex-wrap gap-2 justify-start md:justify-end">
       {% block page_actions %}{% endblock %}
     </div>
   </div>
 
-  <!-- ✅ 관리자 전용 네비(탭) -->
-  <div class="flex flex-wrap gap-2 mb-8">
+  <!-- ✅ 관리자 전용 네비(탭) - 모바일 가로 스크롤 -->
+  <div class="admin-tabs-wrap mb-6 md:mb-8">
+    <div class="admin-tabs flex gap-2 overflow-x-auto pb-2 md:pb-0 md:flex-wrap">
       <a href="/admin"
-         class="px-4 py-2 rounded-xl transition font-bold text-sm
+         class="shrink-0 px-3 md:px-4 py-2 rounded-xl transition font-bold text-xs md:text-sm whitespace-nowrap
                 {% if request.path == '/admin' %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
         🏠 홈
       </a>
-
       <a href="/admin/stats"
-         class="px-4 py-2 rounded-xl transition font-bold text-sm
+         class="shrink-0 px-3 md:px-4 py-2 rounded-xl transition font-bold text-xs md:text-sm whitespace-nowrap
                 {% if request.path.startswith('/admin/stats') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
         📊 통계
       </a>
-
       <a href="/admin/users"
-         class="px-4 py-2 rounded-xl transition font-bold text-sm
+         class="shrink-0 px-3 md:px-4 py-2 rounded-xl transition font-bold text-xs md:text-sm whitespace-nowrap
                 {% if request.path.startswith('/admin/users') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
         👤 가입자
       </a>
-
       <a href="/admin/subscriptions"
-         class="px-4 py-2 rounded-xl transition font-bold text-sm
+         class="shrink-0 px-3 md:px-4 py-2 rounded-xl transition font-bold text-xs md:text-sm whitespace-nowrap
                 {% if request.path.startswith('/admin/subscriptions') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
         💳 구독
       </a>
-
-      
       <a href="/admin/gallery"
-         class="px-4 py-2 rounded-xl transition font-bold text-sm
+         class="shrink-0 px-3 md:px-4 py-2 rounded-xl transition font-bold text-xs md:text-sm whitespace-nowrap
                 {% if request.path.startswith('/admin/gallery') or request.path.startswith('/admin/posts') or request.path.startswith('/admin/upload') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
-         갤러리
+        갤러리
       </a>
-      
       <a href="/admin/link-requests"
-         class="px-4 py-2 rounded-xl transition font-bold text-sm
+         class="shrink-0 px-3 md:px-4 py-2 rounded-xl transition font-bold text-xs md:text-sm whitespace-nowrap
                 {% if request.path.startswith('/admin/link-requests') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
         🔗 링크요청
       </a>
-
       <a href="/admin/revenue-proofs"
-         class="px-4 py-2 rounded-xl transition font-bold text-sm
+         class="shrink-0 px-3 md:px-4 py-2 rounded-xl transition font-bold text-xs md:text-sm whitespace-nowrap
                 {% if request.path.startswith('/admin/revenue-proofs') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
         💸 수익인증
       </a>
-
       <a href="/admin/store"
-         class="px-4 py-2 rounded-xl transition font-bold text-sm
+         class="shrink-0 px-3 md:px-4 py-2 rounded-xl transition font-bold text-xs md:text-sm whitespace-nowrap
                 {% if request.path.startswith('/admin/store') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
         🛒 스토어
       </a>
     </div>
+  </div>
 
   {% block content_admin %}{% endblock %}
+
+<script>
+// 관리자 탭 스크롤 상태 감지 (우측 페이드 힌트)
+document.addEventListener('DOMContentLoaded', function() {
+  var tabs = document.querySelector('.admin-tabs');
+  var wrap = document.querySelector('.admin-tabs-wrap');
+  if (!tabs || !wrap) return;
+  
+  function checkScroll() {
+    var atEnd = tabs.scrollLeft + tabs.clientWidth >= tabs.scrollWidth - 10;
+    if (atEnd) {
+      wrap.classList.add('scrolled-end');
+    } else {
+      wrap.classList.remove('scrolled-end');
+    }
+  }
+  
+  tabs.addEventListener('scroll', checkScroll);
+  checkScroll();
+  
+  // 현재 활성 탭으로 자동 스크롤
+  var activeTab = tabs.querySelector('a[class*="bg-[#a3e635]"]');
+  if (activeTab) {
+    setTimeout(function() {
+      activeTab.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    }, 100);
+  }
+});
+</script>
+
 {% endblock %}
