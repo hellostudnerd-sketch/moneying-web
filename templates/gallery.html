@@ -197,10 +197,10 @@
           {% if session.get("is_trial") %}🎁 체험중{% else %}✅ 구독중{% endif %}
         </span>
       {% elif session.get("user_id") %}
-        <a href="/free-trial" class="bg-zinc-800 text-white font-bold px-4 py-2 rounded-md border border-zinc-700 hover:border-highlight hover:text-highlight transition">🎁 3일 무료체험</a>
+        <a href="/free-trial" class="bg-zinc-800 text-white font-bold px-4 py-2 rounded-md border border-zinc-700 hover:border-highlight hover:text-highlight transition">🎁 5일 무료체험</a>
         <a href="/pricing" class="bg-highlight text-black font-black px-4 py-2 rounded-md hover:bg-white transition">구독하기</a>
       {% else %}
-        <a href="/login?next=/gallery" class="bg-zinc-800 text-white font-bold px-4 py-2 rounded-md border border-zinc-700 hover:border-highlight hover:text-highlight transition">🎁 3일 무료체험</a>
+        <a href="/login?next=/gallery" class="bg-zinc-800 text-white font-bold px-4 py-2 rounded-md border border-zinc-700 hover:border-highlight hover:text-highlight transition">🎁 5일 무료체험</a>
         <a href="/pricing" class="bg-highlight text-black font-black px-4 py-2 rounded-md hover:bg-white transition">구독하기</a>
       {% endif %}
     </div>
