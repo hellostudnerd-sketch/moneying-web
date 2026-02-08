@@ -162,6 +162,7 @@ function closeSellerModal() {
       </div>
       {% endfor %}
       <!-- 체험중 -->
+      {% if not subscriptions or subscriptions|length == 0 %}
       <div class="px-5 py-4 border-b border-zinc-800/50">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
@@ -174,7 +175,6 @@ function closeSellerModal() {
           <span class="px-2 py-1 rounded-full bg-[#c4ff00]/10 text-[#c4ff00] text-xs font-bold">체험중</span>
         </div>
       </div>
-    {% else %}
       <!-- 구독 없음 -->
       <a href="/pricing" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition border-b border-zinc-800/50">
         <div class="flex items-center gap-3">
@@ -187,6 +187,7 @@ function closeSellerModal() {
         <i class="fas fa-chevron-right text-zinc-600 text-sm"></i>
       </a>
     {% endif %}
+      {% endif %}
     
     <!-- 링크요청 (판매자는 숨김) -->
     <a href="{% if user_is_seller %}#{% else %}/link-requests/new{% endif %}" {% if user_is_seller %}onclick="showSellerModal('link'); return false;"{% endif %} class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition">
