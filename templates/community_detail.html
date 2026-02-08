@@ -178,7 +178,7 @@
       {% if post.author_email == session.get('user_email') or session.get('admin') %}
   <div class="flex items-center gap-3">
     <a href="/community/{{ post.id }}/edit" class="text-zinc-500 hover:text-[#c4ff00] text-sm transition">수정</a>
-    <form method="POST" action="/community/{{ post.id }}/delete" onsubmit="return confirm('정말 삭제하시겠습니까?');" class="inline"><button type="submit" class="text-zinc-600 hover:text-red-500 text-sm transition">삭제</button></form>
+    <button onclick="showDeleteModal()" class="text-zinc-600 hover:text-red-500 text-sm transition">삭제</button>
     {% if post.category == 'deal' and post.is_deal_available %}<button onclick="closeDeal()" class="text-zinc-500 hover:text-red-400 text-sm transition">마감하기</button>{% endif %}
   </div>
 {% endif %}
@@ -313,6 +313,7 @@ if (dealForm) {
     }
   });
 }
+function showDeleteModal() { document.getElementById("deleteModal").classList.remove("hidden"); }
 function closeDeal() { document.getElementById("closeModal").classList.remove("hidden"); }
 function confirmClose() { fetch("/my/deals/{{ post.id }}/close", {method:"POST"}).then(r=>r.json()).then(data=>{ if(data.ok){location.reload();}else{document.getElementById("closeModal").classList.add("hidden");} }); }
 function cancelClose() { document.getElementById("closeModal").classList.add("hidden"); }
@@ -353,6 +354,7 @@ function toggleLike() {
 }
 
 
+function showDeleteModal() { document.getElementById("deleteModal").classList.remove("hidden"); }
 function closeDeal() {
 
   document.getElementById("closeModal").classList.remove("hidden");
@@ -382,6 +384,34 @@ function cancelClose() {
 
 }
 
+
+
+
+<!-- 삭제 확인 모달 -->
+
+<div id="deleteModal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm w-full text-center">
+
+    <div class="text-3xl mb-3">🗑️</div>
+
+    <h3 class="text-lg font-bold text-white mb-2">글 삭제</h3>
+
+    <p class="text-zinc-400 text-sm mb-6">정말 삭제하시겠습니까?<br>삭제된 글은 복구할 수 없습니다.</p>
+
+    <div class="flex gap-3">
+
+      <button onclick="document.getElementById('deleteModal').classList.add('hidden')" class="flex-1 bg-zinc-800 text-white font-bold py-3 rounded-lg hover:bg-zinc-700 transition">취소</button>
+
+      <button onclick="document.getElementById('deleteForm').submit()" class="flex-1 bg-red-500 text-white font-bold py-3 rounded-lg hover:bg-red-600 transition">삭제하기</button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<form id="deleteForm" method="POST" action="/community/{{ post.id }}/delete" class="hidden"></form>
 
 
 
