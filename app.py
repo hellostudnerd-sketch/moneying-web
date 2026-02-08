@@ -1909,7 +1909,7 @@ def community_edit(post_id):
 
             db.session.commit()
 
-            return redirect(url_for("community_detail", post_id=post.id))
+            return '<script>location.replace("/community/' + str(post.id) + '")</script>'
 
     return render_template("community_edit.html", post=post, now=datetime.utcnow())
 
