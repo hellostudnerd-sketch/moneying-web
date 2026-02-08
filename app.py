@@ -342,6 +342,11 @@ class CommunityPost(db.Model):
     images_json = db.Column(db.Text, nullable=True, default="[]")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_deal_available = db.Column(db.Boolean, default=True)  # 공구/협찬 진행중 여부
+    deal_type = db.Column(db.String(20), nullable=True)  # groupbuy, sponsor
+    deal_deadline = db.Column(db.DateTime, nullable=True)
+    deal_max_people = db.Column(db.Integer, nullable=True)
+    deal_subscribers_only = db.Column(db.Boolean, default=False)
+    deal_closed = db.Column(db.Boolean, default=False)
     reward_requested = db.Column(db.Boolean, default=False)  # 수익인증 리워드 신청 여부
 
     def images(self):
@@ -1830,7 +1835,11 @@ def community_detail(post_id):
     user_liked = False
     if session.get("user_email"):
         user_liked = CommunityLike.query.filter_by(post_id=post_id, user_email=session.get("user_email")).first() is not None
-    return render_template("community_detail.html", post=post, comments=comments, like_count=like_count, user_liked=user_liked)
+    deal_apply_count = DealApplication.query.filter_by(post_id=post_id).count() if post.category == "deal" else 0
+
+    user_applied = DealApplication.query.filter_by(post_id=post_id, user_id=session.get("user_id")).first() is not None if session.get("user_id") and post.category == "deal" else False
+
+    return render_template("community_detail.html", post=post, comments=comments, like_count=like_count, user_liked=user_liked, now=datetime.utcnow(), deal_apply_count=deal_apply_count, user_applied=user_applied)
 
 @app.route("/community/<int:post_id>/delete", methods=["POST"])
 def community_delete(post_id):
@@ -1902,7 +1911,7 @@ def community_edit(post_id):
 
             return redirect(url_for("community_detail", post_id=post.id))
 
-    return render_template("community_edit.html", post=post)
+    return render_template("community_edit.html", post=post, now=datetime.utcnow())
 
 @app.route("/community/<int:post_id>/apply", methods=["POST"])
 
