@@ -508,6 +508,7 @@ class DealApplication(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey('community_post.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_email = db.Column(db.String(120), nullable=False)
     
     name = db.Column(db.String(50), nullable=True)
     phone = db.Column(db.String(20), nullable=True)
@@ -1902,6 +1903,94 @@ def community_edit(post_id):
             return redirect(url_for("community_detail", post_id=post.id))
 
     return render_template("community_edit.html", post=post)
+
+@app.route("/community/<int:post_id>/apply", methods=["POST"])
+
+def community_deal_apply(post_id):
+
+    if not session.get("user_id"):
+
+        return jsonify({"ok": False, "error": "login_required"}), 401
+
+    
+
+    try:
+
+        db.session.rollback()
+
+    except:
+
+        pass
+
+    
+
+    post = CommunityPost.query.get_or_404(post_id)
+
+    
+
+    if not post.is_deal_available:
+
+        return jsonify({"ok": False, "error": "closed"})
+
+    
+
+    existing = DealApplication.query.filter_by(post_id=post_id, user_id=session["user_id"]).first()
+
+    if existing:
+
+        return jsonify({"ok": False, "error": "already_applied"})
+
+    
+
+    app_entry = DealApplication(
+
+        post_id=post_id,
+
+        user_id=session["user_id"],
+
+        user_email=request.form.get("email", session.get("user_email", "")),
+
+        name=request.form.get("name", ""),
+
+        phone=request.form.get("phone", ""),
+
+        sns_url=request.form.get("sns_url", ""),
+
+        message=request.form.get("message", "")
+
+    )
+
+    db.session.add(app_entry)
+
+    
+
+    # 판매자(글 작성자)에게 알림
+
+    author = User.query.filter_by(email=post.author_email).first()
+
+    if author:
+
+        applicant_name = request.form.get("name", "")
+
+        noti = Notification(
+
+            user_id=author.id,
+
+            message=f"'{post.title}' 공구/협찬에 {applicant_name}님이 신청했습니다!"
+
+        )
+
+        db.session.add(noti)
+
+    
+
+    db.session.commit()
+
+    
+
+    return jsonify({"ok": True})
+
+
 
 @app.route("/community/<int:post_id>/like", methods=["POST"])
 

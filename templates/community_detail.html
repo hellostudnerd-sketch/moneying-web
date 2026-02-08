@@ -129,6 +129,10 @@
                 </div>
               </div>
               <div>
+                <label class="block text-sm font-bold text-zinc-400 mb-1">이메일 *</label>
+                <input type="email" name="email" required class="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white focus:border-purple-400 focus:outline-none" placeholder="이메일 주소" value="{{ session.get('user_email', '') }}">
+              </div>
+              <div>
                 <label class="block text-sm font-bold text-zinc-400 mb-1">SNS 계정 (선택)</label>
                 <input type="url" name="sns_url" class="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white focus:border-purple-400 focus:outline-none" placeholder="https://instagram.com/...">
               </div>
