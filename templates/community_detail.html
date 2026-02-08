@@ -92,12 +92,31 @@
               <div class="text-zinc-400 text-sm mt-1">판매자가 확인 후 연락드릴 예정입니다.</div>
             </div>
           
+
           <!-- 마감된 경우 -->
-          {% elif not post.is_deal_available %}
+
+          {% elif not post.is_deal_available or (post.deal_deadline and post.deal_deadline < now) or (post.deal_max_people and deal_apply_count >= post.deal_max_people) %}
+
             <div class="text-center py-4">
+
               <div class="text-2xl mb-2">⏰</div>
-              <div class="text-red-400 font-bold">신청이 마감되었습니다</div>
+
+              {% if post.deal_max_people and deal_apply_count >= post.deal_max_people %}
+
+                <div class="text-red-400 font-bold">인원이 마감되었습니다</div>
+
+              {% elif post.deal_deadline and post.deal_deadline < now %}
+
+                <div class="text-red-400 font-bold">신청 기간이 마감되었습니다</div>
+
+              {% else %}
+
+                <div class="text-red-400 font-bold">신청이 마감되었습니다</div>
+
+              {% endif %}
+
             </div>
+
           
           <!-- 비로그인 -->
           {% elif not session.get('user_id') %}
