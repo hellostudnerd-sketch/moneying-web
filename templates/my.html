@@ -1,5 +1,73 @@
 {% extends "base.html" %}
-{% block title %}내정보 - MONEYING{% endblock %}
+{% block title %}내정보 - MONEYING
+
+<!-- 판매자 안내 모달 -->
+
+<div id="sellerModal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center" onclick="if(event.target===this)closeSellerModal()">
+
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm mx-4 text-center">
+
+    <div class="text-4xl mb-4" id="sellerModalIcon"></div>
+
+    <div class="font-bold text-white text-lg mb-2" id="sellerModalTitle"></div>
+
+    <div class="text-zinc-400 text-sm mb-6" id="sellerModalMsg"></div>
+
+    <button onclick="closeSellerModal()" class="w-full py-3 rounded-xl bg-zinc-800 text-white font-bold hover:bg-zinc-700 transition">확인</button>
+
+  </div>
+
+</div>
+
+<script>
+
+function showSellerModal(type) {
+
+  const modal = document.getElementById('sellerModal');
+
+  const icon = document.getElementById('sellerModalIcon');
+
+  const title = document.getElementById('sellerModalTitle');
+
+  const msg = document.getElementById('sellerModalMsg');
+
+  if (type === 'link') {
+
+    icon.textContent = '\u{1F6AB}';
+
+    title.textContent = '\uD310\uB9E4\uC790 \uACC4\uC815';
+
+    msg.innerHTML = '\uB9C1\uD06C\uC694\uCCAD\uC740 \uD06C\uB9AC\uC5D0\uC774\uD130 \uC804\uC6A9 \uC11C\uBE44\uC2A4\uC608\uC694.<br>\uD310\uB9E4\uC790 \uACC4\uC815\uC740 \uC774\uC6A9\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4.';
+
+  } else {
+
+    icon.textContent = '\u{1F6AB}';
+
+    title.textContent = '\uD310\uB9E4\uC790 \uACC4\uC815';
+
+    msg.innerHTML = '\uB9AC\uC6CC\uB4DC\uB294 \uD06C\uB9AC\uC5D0\uC774\uD130 \uC804\uC6A9 \uC11C\uBE44\uC2A4\uC608\uC694.<br>\uD310\uB9E4\uC790 \uACC4\uC815\uC740 \uC774\uC6A9\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4.';
+
+  }
+
+  modal.classList.remove('hidden');
+
+  modal.classList.add('flex');
+
+}
+
+function closeSellerModal() {
+
+  const modal = document.getElementById('sellerModal');
+
+  modal.classList.add('hidden');
+
+  modal.classList.remove('flex');
+
+}
+
+</script>
+
+{% endblock %}
 
 {% block content %}
 
@@ -121,8 +189,7 @@
     {% endif %}
     
     <!-- 링크요청 (판매자는 숨김) -->
-    {% if not user_is_seller %}
-    <a href="/link-requests/new" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition">
+    <a href="{% if user_is_seller %}#{% else %}/link-requests/new{% endif %}" {% if user_is_seller %}onclick="showSellerModal('link'); return false;"{% endif %} class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition">
       <div class="flex items-center gap-3">
         <span class="text-xl">🔗</span>
         <div>
@@ -132,7 +199,6 @@
       </div>
       <i class="fas fa-chevron-right text-zinc-600 text-sm"></i>
     </a>
-    {% endif %}
   </div>
 
   <!-- 비구독자/체험중일 때 CTA -->
@@ -183,9 +249,7 @@
       <i class="fas fa-chevron-right text-zinc-600 text-sm"></i>
     </a>
     
-    <!-- 리워드 -->
-    {% if not user_is_seller %}
-    <a href="/my/rewards" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition">
+    <a href="{% if user_is_seller %}#{% else %}/my/rewards{% endif %}" {% if user_is_seller %}onclick="showSellerModal('reward'); return false;"{% endif %} class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition">
       <div class="flex items-center gap-3">
         <span class="text-xl">🎁</span>
         <div>
@@ -196,7 +260,6 @@
       <i class="fas fa-chevron-right text-zinc-600 text-sm"></i>
     </a>
   </div>
-    {% endif %}
 
   <!-- 판매자 섹션 (판매자만) -->
   {% if user_is_seller %}
@@ -403,6 +466,74 @@ function confirmCancel() {
     else { document.getElementById('cancel-modal-msg').textContent = d.msg; document.getElementById('cancel-modal').style.display = 'flex'; }
 
   });
+
+}
+
+</script>
+
+
+
+<!-- 판매자 안내 모달 -->
+
+<div id="sellerModal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center" onclick="if(event.target===this)closeSellerModal()">
+
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm mx-4 text-center">
+
+    <div class="text-4xl mb-4" id="sellerModalIcon"></div>
+
+    <div class="font-bold text-white text-lg mb-2" id="sellerModalTitle"></div>
+
+    <div class="text-zinc-400 text-sm mb-6" id="sellerModalMsg"></div>
+
+    <button onclick="closeSellerModal()" class="w-full py-3 rounded-xl bg-zinc-800 text-white font-bold hover:bg-zinc-700 transition">확인</button>
+
+  </div>
+
+</div>
+
+<script>
+
+function showSellerModal(type) {
+
+  const modal = document.getElementById('sellerModal');
+
+  const icon = document.getElementById('sellerModalIcon');
+
+  const title = document.getElementById('sellerModalTitle');
+
+  const msg = document.getElementById('sellerModalMsg');
+
+  if (type === 'link') {
+
+    icon.textContent = '\u{1F6AB}';
+
+    title.textContent = '\uD310\uB9E4\uC790 \uACC4\uC815';
+
+    msg.innerHTML = '\uB9C1\uD06C\uC694\uCCAD\uC740 \uD06C\uB9AC\uC5D0\uC774\uD130 \uC804\uC6A9 \uC11C\uBE44\uC2A4\uC608\uC694.<br>\uD310\uB9E4\uC790 \uACC4\uC815\uC740 \uC774\uC6A9\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4.';
+
+  } else {
+
+    icon.textContent = '\u{1F6AB}';
+
+    title.textContent = '\uD310\uB9E4\uC790 \uACC4\uC815';
+
+    msg.innerHTML = '\uB9AC\uC6CC\uB4DC\uB294 \uD06C\uB9AC\uC5D0\uC774\uD130 \uC804\uC6A9 \uC11C\uBE44\uC2A4\uC608\uC694.<br>\uD310\uB9E4\uC790 \uACC4\uC815\uC740 \uC774\uC6A9\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4.';
+
+  }
+
+  modal.classList.remove('hidden');
+
+  modal.classList.add('flex');
+
+}
+
+function closeSellerModal() {
+
+  const modal = document.getElementById('sellerModal');
+
+  modal.classList.add('hidden');
+
+  modal.classList.remove('flex');
 
 }
 

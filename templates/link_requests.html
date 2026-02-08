@@ -215,6 +215,12 @@
       return;
     }
     
+    
+    // 판매자는 모달 표시
+    if (userStatus.isSeller) {
+      showLinkRequestModal(userStatus);
+      return;
+    }
     // 구독자 + 한도 내면 바로 이동 (체험 중은 제외)
     if (userStatus.isLoggedIn && userStatus.isSubscriber && !userStatus.isTrial) {
       if (userStatus.monthlyUsed < userStatus.monthlyLimit) {

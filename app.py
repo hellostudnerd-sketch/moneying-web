@@ -148,9 +148,11 @@ def check_session_token():
 
     
 
-    # 구독/체험 상태 실시간 갱신
+    # 구독/체험/판매자 상태 실시간 갱신
 
     if user:
+
+        session["is_seller"] = user.is_seller
 
         user_subs = get_user_subscriptions(user_id)
 
