@@ -146,6 +146,33 @@ def check_session_token():
         flash("다른 기기에서 로그인하여 자동 로그아웃되었습니다.", "error")
         return redirect(url_for("login"))
 
+    
+
+    # 구독/체험 상태 실시간 갱신
+
+    if user:
+
+        user_subs = get_user_subscriptions(user_id)
+
+        if user_subs:
+
+            session["subscriber"] = True
+
+            session["is_trial"] = False
+
+        elif is_trial_active(user_id):
+
+            session["is_trial"] = True
+
+            session["subscriber"] = False
+
+        else:
+
+            session["is_trial"] = False
+
+            session["subscriber"] = False
+
+
 
 @app.after_request
 def add_header(response):
@@ -690,8 +717,21 @@ def can_use_free_trial(user_id):
         return False
     if user.free_trial_used:
         return False
+
     if get_user_subscriptions(user_id):
+
         return False
+
+    # 구독 이력 있으면 체험 차단 (해지 후 재신청 방지)
+
+    all_subs = Subscription.query.filter_by(user_id=user_id).count()
+
+    if all_subs > 0:
+
+        return False
+
+
+
     return True
 
 def get_trial_expires_at(user_id):
@@ -2033,6 +2073,12 @@ def free_trial():
         flash("이미 무료 체험을 사용하셨습니다.", "error")
         return redirect(url_for("pricing"))
     
+    
+    # 구독 이력 있으면 체험 차단 (해지 후 재신청 방지)
+    all_subs = Subscription.query.filter_by(user_id=user.id).all()
+    if all_subs:
+        flash("이미 구독 이력이 있어 무료 체험을 사용할 수 없습니다.", "error")
+        return redirect(url_for("pricing"))
     if get_user_subscriptions(user.id):
         flash("이미 구독 중이십니다.", "error")
         return redirect(url_for("gallery"))
