@@ -32,11 +32,11 @@
             <tr class="hover:bg-zinc-800/30">
               <td class="p-4 text-zinc-500">{{ proof.id }}</td>
               <td class="p-4">
-                <span class="text-white font-bold">User #{{ proof.user_id }}</span>
+                <span class="text-white font-bold">{{ proof.user.email if proof.user else "탈퇴유저" }}</span>
               </td>
               <td class="p-4">
-                <a href="/community/{{ proof.id }}" target="_blank" class="text-[#a3e635] hover:underline font-bold">
-                  게시글 #{{ proof.post_id }} 보기 →
+                <a href="/community/{{ proof.post_id }}" target="_blank" class="text-[#a3e635] hover:underline font-bold">
+                  {{ proof.post.title[:20] if proof.post else "삭제된 글" }}
                 </a>
               </td>
               <td class="p-4">
@@ -75,8 +75,7 @@
         <div class="px-4 py-3">
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2">
-              <span class="text-white font-bold text-sm">User #{{ proof.user_id }}</span>
-              <a href="/community/{{ proof.id }}" target="_blank" class="text-[#a3e635] text-xs font-bold">게시글 #{{ proof.post_id }} →</a>
+              <span class="text-white font-bold text-sm">{{ proof.user.email[:15] if proof.user else "탈퇴" }}</span>
             </div>
             {% if proof.status == 'pending' %}
               <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400 text-[11px] font-bold shrink-0">대기중</span>

@@ -1,7 +1,7 @@
 
 {% extends "base.html" %}
 
-{% block title %}결제 - {{ plan.name }} - MONEYING{% endblock %}
+{% block title %}결제 - {{ product.title }} - MONEYING{% endblock %}
 
 {% block content %}
 
@@ -17,15 +17,7 @@
 
         <span class="text-zinc-400">상품</span>
 
-        <span class="font-bold text-white">{{ plan.name }}</span>
-
-      </div>
-
-      <div class="flex justify-between items-center mb-2">
-
-        <span class="text-zinc-400">결제 방식</span>
-
-        <span class="text-zinc-300">{% if plan.billing %}매월 자동결제{% else %}1회 결제{% endif %}</span>
+        <span class="font-bold text-white">{{ product.title }}</span>
 
       </div>
 
@@ -35,21 +27,11 @@
 
         <span class="text-zinc-400">결제 금액</span>
 
-        <span class="text-2xl font-black text-[#c4ff00]">{{ "{:,}".format(plan.price) }}원</span>
+        <span class="text-2xl font-black text-[#c4ff00]">{{ "{:,}".format(product.price) }}원</span>
 
       </div>
 
     </div>
-
-    {% if plan.billing %}
-
-    <p class="text-zinc-500 text-sm mb-6">
-
-      카드를 등록하면 매월 자동으로 결제됩니다. 언제든 해지할 수 있어요.
-
-    </p>
-
-    {% endif %}
 
     <div id="payment-widget"></div>
 
@@ -57,53 +39,37 @@
 
     <button id="payBtn" onclick="doPayment()" class="w-full py-4 rounded-xl font-black bg-[#c4ff00] text-black hover:bg-white transition text-lg mt-6">
 
-      {% if plan.billing %}카드 등록 및 결제{% else %}결제하기{% endif %}
+      결제하기
 
     </button>
 
-    <button onclick="history.back()" class="w-full py-3 bg-zinc-800 text-zinc-400 rounded-xl font-bold hover:text-white hover:bg-zinc-700 transition mt-3">
-
-      취소
-
-    </button>
+    <a href="/store/{{ product.id }}" class="block text-center text-zinc-500 hover:text-white text-sm mt-4 transition">돌아가기</a>
 
   </div>
 
 </div>
 
-
-
 <script src="https://js.tosspayments.com/v2/standard"></script>
 
 <script>
 
-const clientKey = "{{ client_key }}";
-
-const customerKey = "{{ customer_key }}";
-
-const tossPayments = TossPayments(clientKey);
-
-
+const tossPayments = TossPayments("{{ client_key }}");
 
 async function main() {
 
-  const widgets = tossPayments.widgets({customerKey: customerKey});
+  const widgets = tossPayments.widgets({customerKey: "{{ customer_key }}"});
 
-  await widgets.setAmount({currency: "KRW", value: {{ plan.price }}});
+  await widgets.setAmount({currency: "KRW", value: {{ product.price }}});
 
   await widgets.renderPaymentMethods({selector: "#payment-widget", variantKey: "DEFAULT"});
 
   await widgets.renderAgreement({selector: "#agreement-widget", variantKey: "AGREEMENT"});
-
-
 
   window._widgets = widgets;
 
 }
 
 main();
-
-
 
 async function doPayment() {
 
@@ -117,13 +83,13 @@ async function doPayment() {
 
     await window._widgets.requestPayment({
 
-      orderId: "order_{{ plan_type }}_" + Date.now(),
+      orderId: "store_{{ product.id }}_" + Date.now(),
 
-      orderName: "{{ plan.name }}",
+      orderName: "{{ product.title }}",
 
-      successUrl: window.location.origin + "/payment/success?planType={{ plan_type }}",
+      successUrl: window.location.origin + "/store/payment/success?productId={{ product.id }}",
 
-      failUrl: window.location.origin + "/payment/fail",
+      failUrl: window.location.origin + "/store/payment/fail",
 
       customerEmail: "{{ session.get('user_email', '') }}",
 
@@ -133,7 +99,7 @@ async function doPayment() {
 
     btn.disabled = false;
 
-    btn.textContent = '{% if plan.billing %}카드 등록 및 결제{% else %}결제하기{% endif %}';
+    btn.textContent = '결제하기';
 
     if (e.code !== 'USER_CANCEL') alert(e.message || '결제 요청 중 오류가 발생했습니다.');
 

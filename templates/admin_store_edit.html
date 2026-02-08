@@ -1,12 +1,27 @@
 {% extends "admin_base.html" %}
-{% block title %}상품 수정 - MONEYING Admin{% endblock %}
-{% block page_title %}상품 수정{% endblock %}
-{% block page_desc %}{{ product.title }}{% endblock %}
+{% block title %}상품 수정 - MONEYING{% endblock %}
+{% block head_extra %}
 
-{% block page_actions %}
-<a href="/admin/store" class="px-4 py-2 rounded-xl bg-zinc-800 text-gray-200 hover:bg-zinc-700 transition font-bold">
-  ← 목록으로
-</a>
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+
+<style>
+
+  .ql-toolbar.ql-snow { border-color: #333 !important; background: #252525; border-radius: 12px 12px 0 0; }
+
+  .ql-snow .ql-picker-label, .ql-snow .ql-picker-item { color: #ccc !important; }
+
+  .ql-snow .ql-stroke { stroke: #ccc !important; }
+
+  .ql-snow .ql-fill { fill: #ccc !important; }
+
+  .ql-editor { font-size: 16px; line-height: 1.8; min-height: 460px; }
+
+  .ql-editor img { max-width: 100%; border-radius: 12px; margin: 16px 0; }
+
+  #quill-editor { border-radius: 0 0 12px 12px !important; border-top: none !important; }
+
+</style>
+
 {% endblock %}
 
 {% block content_admin %}
@@ -44,9 +59,14 @@
         </div>
         
         <div>
+          <div class="flex items-center gap-2 mb-2">
+            <input type="checkbox" id="freeCheck" onchange="toggleFree(this)" {% if product.price == 0 %}checked{% endif %} class="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-[#a3e635]">
+            <label for="freeCheck" class="text-sm text-zinc-400 cursor-pointer">무료 상품</label>
+          </div>
           <label class="block text-sm font-bold text-zinc-300 mb-2">가격 (원) <span class="text-red-400">*</span></label>
           <input type="number" name="price" required min="0" value="{{ product.price }}"
                  class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none">
+          <div id="free-label" style="display:none" class="w-full bg-zinc-900 border border-[#a3e635] rounded-xl px-4 py-3 text-[#c4ff00] font-black text-lg">무료</div>
         </div>
         
         <div>
@@ -83,12 +103,17 @@
       
       <!-- 탭 버튼 -->
       <div class="flex gap-2 mb-4">
-        <button type="button" onclick="showTab('code')" id="tab-code" class="px-4 py-2 rounded-lg bg-[#a3e635] text-black font-bold text-sm">코드 입력</button>
+        <button type="button" onclick="showTab('editor')" id="tab-editor" class="px-4 py-2 rounded-lg bg-[#a3e635] text-black font-bold text-sm">내용 작성</button>
+        <button type="button" onclick="showTab('code')" id="tab-code" class="px-4 py-2 rounded-lg bg-zinc-700 text-white font-bold text-sm">코드 입력</button>
         <button type="button" onclick="showTab('preview')" id="tab-preview" class="px-4 py-2 rounded-lg bg-zinc-700 text-white font-bold text-sm">미리보기</button>
       </div>
       
+      <!-- 블로그 에디터 -->
+      <div id="panel-editor">
+        <div id="quill-editor" style="height:500px;background:#1a1a1a;color:white;border:1px solid #333;border-radius:12px;"></div>
+      </div>
       <!-- 코드 입력 -->
-      <div id="panel-code">
+      <div id="panel-code" class="hidden">
         <textarea name="description" id="htmlCode" 
                   class="w-full h-[500px] bg-zinc-800 border border-zinc-700 rounded-xl p-4 text-green-400 font-mono text-sm focus:outline-none focus:border-[#a3e635] resize-none"
                   placeholder="HTML 코드를 붙여넣으세요... (style 태그 포함 가능)">{{ product.description or '' }}</textarea>
@@ -115,20 +140,7 @@
   </form>
 
 <script>
-  function showTab(tab) {
-    const codePanel = document.getElementById('panel-code');
-    const previewPanel = document.getElementById('panel-preview');
-    const codeTab = document.getElementById('tab-code');
-    const previewTab = document.getElementById('tab-preview');
-    
-    if (tab === 'code') {
-      codePanel.classList.remove('hidden');
-      previewPanel.classList.add('hidden');
-      codeTab.classList.remove('bg-zinc-700', 'text-white');
-      codeTab.classList.add('bg-[#a3e635]', 'text-black');
-      previewTab.classList.remove('bg-[#a3e635]', 'text-black');
-      previewTab.classList.add('bg-zinc-700', 'text-white');
-    } else {
+   else {
       codePanel.classList.add('hidden');
       previewPanel.classList.remove('hidden');
       previewTab.classList.remove('bg-zinc-700', 'text-white');
@@ -141,4 +153,120 @@
     }
   }
 </script>
+
+
+
+
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+
+<script>
+
+var quill = new Quill('#quill-editor', {
+
+  theme: 'snow',
+
+  modules: {
+
+    toolbar: [
+
+      [{'header': [1, 2, 3, false]}],
+
+      ['bold', 'italic', 'underline', 'strike'],
+
+      [{'color': []}, {'background': []}],
+
+      [{'list': 'ordered'}, {'list': 'bullet'}],
+
+      [{'align': []}],
+
+      ['link', 'image', 'video'],
+
+      ['blockquote', 'code-block'],
+
+      ['clean']
+
+    ]
+
+  }
+
+});
+
+
+
+var existingHtml = document.getElementById('htmlCode').value;
+
+if (existingHtml) { quill.root.innerHTML = existingHtml; }
+
+
+
+function showTab(tab) {
+
+  ['editor','code','preview'].forEach(function(t) {
+
+    document.getElementById('panel-' + t).classList.add('hidden');
+
+    document.getElementById('tab-' + t).className = 'px-4 py-2 rounded-lg bg-zinc-700 text-white font-bold text-sm';
+
+  });
+
+  document.getElementById('panel-' + tab).classList.remove('hidden');
+
+  document.getElementById('tab-' + tab).className = 'px-4 py-2 rounded-lg bg-[#a3e635] text-black font-bold text-sm';
+
+  if (tab === 'code') {
+
+    var html = quill.root.innerHTML;
+
+    if (html && html !== '<p><br></p>') { document.getElementById('htmlCode').value = html; }
+
+  } else if (tab === 'preview') {
+
+    var src = document.getElementById('htmlCode').value || quill.root.innerHTML;
+
+    document.getElementById('previewArea').innerHTML = src;
+
+  } else if (tab === 'editor') {
+
+    var code = document.getElementById('htmlCode').value;
+
+    if (code) { quill.root.innerHTML = code; }
+
+  }
+
+}
+
+
+
+document.querySelector('form').addEventListener('submit', function() {
+
+  var html = quill.root.innerHTML;
+
+  if (html && html !== '<p><br></p>' && !document.getElementById('htmlCode').value) {
+
+    document.getElementById('htmlCode').value = html;
+
+  }
+
+});
+function toggleFree(cb) {
+  var priceInput = document.querySelector('input[name="price"]');
+  var freeLabel = document.getElementById('free-label');
+  if (cb.checked) {
+    priceInput.value = 0;
+    priceInput.style.display = 'none';
+    freeLabel.style.display = 'block';
+  } else {
+    priceInput.value = '';
+    priceInput.style.display = 'block';
+    freeLabel.style.display = 'none';
+  }
+}
+if (document.getElementById('freeCheck').checked) {
+  document.querySelector('input[name="price"]').style.display = 'none';
+  document.getElementById('free-label').style.display = 'block';
+}
+
+</script>
+
+
 {% endblock %}

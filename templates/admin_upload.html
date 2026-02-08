@@ -5,7 +5,7 @@
 
 {% block page_actions %}
 <a href="/admin/gallery" class="px-4 py-2 rounded-xl bg-zinc-800 text-gray-200 hover:bg-zinc-700 transition font-bold">
-  ← 목록으로
+  ← 뒤로가기
 </a>
 {% endblock %}
 
@@ -25,7 +25,7 @@
         <select id="category" class="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white font-bold focus:border-[#a3e635] focus:outline-none">
           <option value="all">전체</option>
           {% for cat in categories %}
-            <option value="{{ cat.key }}">{{ cat.emoji }} {{ cat.name }}</option>
+            <option value="{{ cat.key }}">{{ cat.name }}</option>
           {% endfor %}
         </select>
         <button type="button" onclick="openCategoryModal()" class="px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white hover:bg-zinc-700 transition" title="카테고리 추가">
@@ -70,9 +70,9 @@
       <label class="text-xs font-black tracking-widest text-zinc-500 uppercase">미리보기 영상 업로드</label>
       <p class="text-zinc-500 text-xs mt-1 mb-3">720p로 자동 압축, 최대 60초</p>
       
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-2 gap-3 items-stretch">
         <!-- 영상 -->
-        <div id="videoDropzone" class="border-2 border-dashed border-zinc-700 rounded-2xl p-4 bg-zinc-950/40 flex flex-col aspect-[9/16]">
+        <div id="videoDropzone" class="border-2 border-dashed border-zinc-700 rounded-2xl p-4 bg-zinc-950/40 flex flex-col min-h-[400px]">
           <p class="text-sm font-black text-zinc-300 mb-2">영상</p>
           
           <div id="videoUploadArea" class="flex-1 flex flex-col items-center justify-center text-center cursor-pointer">
@@ -93,7 +93,7 @@
         </div>
         
         <!-- 썸네일 -->
-        <div id="thumbSection" class="border-2 border-dashed border-zinc-700 rounded-2xl p-4 bg-zinc-950/40 flex flex-col aspect-[9/16] opacity-50">
+        <div id="thumbSection" class="border-2 border-dashed border-zinc-700 rounded-2xl p-4 bg-zinc-950/40 flex flex-col min-h-[400px] opacity-50">
           <p class="text-sm font-black text-zinc-300 mb-2">썸네일</p>
           
           <div class="flex-1 flex items-center justify-center">

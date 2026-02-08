@@ -135,7 +135,12 @@
                     <li class="flex items-start text-zinc-600"><i class="fas fa-times text-zinc-700 mr-2 mt-0.5"></i> 텔레그램 알림</li>
                 </ul>
                 {% if session.get('user_id') %}
+                {% if pg_plan in ['profitguard_lite', 'profitguard_pro', 'profitguard_lifetime', 'allinone'] %}
+                <a href="/api/profitguard/download" class="w-full py-3 bg-zinc-700 text-white rounded-xl font-bold text-center block mb-2">✅ 구독 중 — 다운로드</a>
+                <a href="/api/profitguard/manual" class="w-full py-2 border border-zinc-700 text-zinc-400 rounded-xl text-sm text-center block hover:text-white transition">📘 사용 매뉴얼</a>
+                {% else %}
                 <button onclick="subscribe('profitguard_lite')" class="w-full py-3 border border-zinc-700 text-white rounded-xl font-bold hover:bg-zinc-800 transition">선택하기</button>
+                {% endif %}
                 {% else %}
                 <a href="/login?next=/profitguard" class="w-full py-3 border border-zinc-700 text-white rounded-xl font-bold hover:bg-zinc-800 transition text-center block">로그인 후 선택</a>
                 {% endif %}
@@ -154,7 +159,14 @@
                     <li class="flex items-start text-gray-300"><i class="fas fa-check text-highlight mr-2 mt-0.5"></i> 링크 자동 수집</li>
                 </ul>
                 {% if session.get('user_id') %}
+                {% if pg_plan in ['profitguard_pro', 'profitguard_lifetime', 'allinone'] %}
+                <a href="/api/profitguard/download" class="btn-glow w-full py-4 bg-highlight text-black rounded-xl font-black hover:bg-white transition text-lg text-center block mb-2">✅ 구독 중 — 다운로드</a>
+                <a href="/api/profitguard/manual" class="w-full py-2 border border-[#c4ff00]/30 text-[#c4ff00]/70 rounded-xl text-sm text-center block hover:text-[#c4ff00] transition">📘 사용 매뉴얼</a>
+                {% elif pg_plan == 'profitguard_lite' %}
+                <button onclick="subscribe('profitguard_pro')" class="btn-glow w-full py-4 bg-highlight text-black rounded-xl font-black hover:bg-white transition text-lg">PRO로 업그레이드</button>
+                {% else %}
                 <button onclick="subscribe('profitguard_pro')" class="btn-glow w-full py-4 bg-highlight text-black rounded-xl font-black hover:bg-white transition text-lg">선택하기</button>
+                {% endif %}
                 {% else %}
                 <a href="/login?next=/profitguard" class="btn-glow w-full py-4 bg-highlight text-black rounded-xl font-black hover:bg-white transition text-lg text-center block">로그인 후 선택</a>
                 {% endif %}
@@ -173,7 +185,12 @@
                     <li class="flex items-start text-gray-300"><i class="fas fa-check text-purple-400 mr-2 mt-0.5"></i> 5개월만 써도 이득!</li>
                 </ul>
                 {% if session.get('user_id') %}
+                {% if pg_plan == 'profitguard_lifetime' %}
+                <a href="/api/profitguard/download" class="w-full py-3 bg-purple-600 text-white rounded-xl font-bold text-center block mb-2">✅ 평생 이용 중 — 다운로드</a>
+                <a href="/api/profitguard/manual" class="w-full py-2 border border-purple-500/30 text-purple-400/70 rounded-xl text-sm text-center block hover:text-purple-400 transition">📘 사용 매뉴얼</a>
+                {% else %}
                 <button onclick="subscribe('profitguard_lifetime')" class="w-full py-3 border border-purple-500/50 text-purple-400 rounded-xl font-bold hover:bg-purple-500/10 transition">평생 이용권 구매</button>
+                {% endif %}
                 {% else %}
                 <a href="/login?next=/profitguard" class="w-full py-3 border border-purple-500/50 text-purple-400 rounded-xl font-bold hover:bg-purple-500/10 transition text-center block">로그인 후 구매</a>
                 {% endif %}

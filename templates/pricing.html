@@ -375,8 +375,29 @@
 </section>
 
 <script>
+var activePlans = {{ active_plans | tojson }};
 function subscribe(planType) {
+  var msg = '';
+  if (activePlans.indexOf(planType) >= 0) { msg = '\uc774\ubbf8 \uad6c\ub3c5 \uc911\uc778 \ud50c\ub79c\uc785\ub2c8\ub2e4.'; }
+  else if (planType.indexOf('profitguard') >= 0 && activePlans.indexOf('allinone') >= 0) { msg = '\uc62c\uc778\uc6d0 \ud328\ud0a4\uc9c0\ub85c \uc774\ubbf8 \ud504\ub85c\ud54f\uac00\ub4dc PRO\ub97c \uc774\uc6a9 \uc911\uc785\ub2c8\ub2e4.'; }
+  else if (planType === 'gallery' && activePlans.indexOf('allinone') >= 0) { msg = '\uc62c\uc778\uc6d0 \ud328\ud0a4\uc9c0\ub85c \uc774\ubbf8 \uac24\ub7ec\ub9ac\ub97c \uc774\uc6a9 \uc911\uc785\ub2c8\ub2e4.'; }
+  if (planType === 'profitguard_lite' && (activePlans.indexOf('profitguard_pro') >= 0 || activePlans.indexOf('profitguard_lifetime') >= 0 || activePlans.indexOf('allinone') >= 0)) { msg = '\ud604\uc7ac PRO \uc774\uc0c1\uc744 \uc774\uc6a9 \uc911\uc785\ub2c8\ub2e4.\n\ub77c\uc774\ud2b8\ub85c \ubcc0\uacbd\ud558\uc2dc\ub824\uba74 PRO\ub97c \ud574\uc9c0 \ud6c4 \uc2e0\uccad\ud574\uc8fc\uc138\uc694.'; }
+  if (msg) { document.getElementById('sub-modal-msg').textContent = msg; document.getElementById('sub-modal').style.display = 'flex'; return; }
   window.location.href = '/checkout/' + planType;
 }
 </script>
+<div id="sub-modal" style="display:none" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
+
+  <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 max-w-sm w-full mx-4 text-center">
+
+    <div class="text-4xl mb-4">✅</div>
+
+    <p id="sub-modal-msg" class="text-white font-bold text-lg mb-6"></p>
+
+    <button onclick="document.getElementById('sub-modal').style.display='none'" class="w-full py-3 bg-[#c4ff00] text-black font-bold rounded-xl hover:bg-white transition">확인</button>
+
+  </div>
+
+</div>
+
 {% endblock %}

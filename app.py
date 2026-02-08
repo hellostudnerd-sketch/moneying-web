@@ -66,8 +66,8 @@ MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "")
 MAIL_FROM = os.getenv("MAIL_FROM", "noreply@moneying.co.kr")
 
 # ============ [FIX #5,6,7] API 키/비밀번호 환경변수로 통합 ============
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "1234")
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@moneying.com")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 KAKAO_REST_API_KEY = os.getenv("KAKAO_REST_API_KEY", "d6d95667f32febebb7515351c3713fde")
 KAKAO_REDIRECT_URI = os.getenv("KAKAO_REDIRECT_URI", "https://moneying.biz/auth/kakao/callback")
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "AIzaSyDRnCHasdEJ3ARExoAsfqmnZiwp1oPrjNQ")
@@ -77,6 +77,28 @@ R2_ENDPOINT = os.getenv("R2_ENDPOINT", "https://b6f9c47a567f57911cab3c58f07cfc61
 R2_ACCESS_KEY = os.getenv("R2_ACCESS_KEY", "bd378a5b4a8c51dece8aeeec96c846e5")
 R2_SECRET_KEY = os.getenv("R2_SECRET_KEY", "4c218d723f2f0e0c122c75fa6d782eb1f659e17eabdecc50dc009bd2edbce0c0")
 R2_BUCKET = os.getenv("R2_BUCKET", "moneying-uploads")
+
+
+
+# ============ 알리고 알림톡 설정 ============
+
+ALIGO_API_KEY = os.getenv("ALIGO_API_KEY", "")
+
+ALIGO_USER_ID = os.getenv("ALIGO_USER_ID", "")
+
+ALIGO_SENDER_KEY = os.getenv("ALIGO_SENDER_KEY", "")
+
+ALIGO_SENDER = os.getenv("ALIGO_SENDER", "")
+
+ALIGO_TPL_PAYMENT = os.getenv("ALIGO_TPL_PAYMENT", "")
+
+ALIGO_TPL_EXPIRY = os.getenv("ALIGO_TPL_EXPIRY", "")
+
+ALIGO_TPL_WELCOME = os.getenv("ALIGO_TPL_WELCOME", "")
+
+ALIGO_TPL_NOTICE = os.getenv("ALIGO_TPL_NOTICE", "")
+
+
 
 import boto3
 _s3_client = None
@@ -104,7 +126,7 @@ LINK_REQUEST_LIMIT_ALLINONE = 20
 @app.before_request
 def check_session_token():
     # 관리자는 중복 로그인 체크 안 함
-    if session.get("admin"):
+    if is_admin():
         return
     
     # 로그인한 사용자만 체크
@@ -205,6 +227,12 @@ class User(db.Model):
     nickname = db.Column(db.String(50), nullable=True)
     profile_photo = db.Column(db.String(500), nullable=True, default="")
     session_token = db.Column(db.String(64), nullable=True)  # 중복 로그인 방지용
+    
+    # 프로핏가드 기기인증
+    profitguard_hwid = db.Column(db.String(100), nullable=True)
+    profitguard_hwid_changed_at = db.Column(db.DateTime, nullable=True)
+    pg_password_set = db.Column(db.Boolean, default=False)  # 프로핏가드용 비밀번호 설정 여부
+    is_staff = db.Column(db.Boolean, default=False)  # 관리자 권한
 
     
 class Category(db.Model):
@@ -238,6 +266,7 @@ class Post(db.Model):
     
     # 판매자 관련
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    uploaded_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # 관리자 업로드 기록
     status = db.Column(db.String(20), default="approved")  # pending, approved, rejected
     
     # [FIX #9] seller relationship 추가 (N+1 쿼리 방지용)
@@ -504,6 +533,7 @@ class RevenueRewardHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     post_id = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.String(20), default="pending")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
@@ -523,7 +553,18 @@ class Notification(db.Model):
     user = db.relationship('User', backref='notifications')
 
 
+class EventTrialApply(db.Model):
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    email = db.Column(db.String(200), unique=True, nullable=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+
 # ----------------------------
+
 # Template Helpers
 # ----------------------------
 def get_nickname(email):
@@ -680,6 +721,8 @@ def get_link_request_limit(user_id):
         return LINK_REQUEST_LIMIT_ALLINONE
     if has_active_subscription(user_id, "gallery"):
         return LINK_REQUEST_LIMIT_SUBSCRIBER
+    if has_active_subscription(user_id, "profitguard_pro") or has_active_subscription(user_id, "profitguard_lite") or has_active_subscription(user_id, "profitguard_lifetime"):
+        return LINK_REQUEST_LIMIT_SUBSCRIBER
     if is_trial_active(user_id):
         return LINK_REQUEST_LIMIT_TRIAL
     return LINK_REQUEST_LIMIT_FREE
@@ -758,21 +801,203 @@ def store_chrome_extension():
     return render_template("store_chrome_extension.html")
 
 @app.route("/store/<int:product_id>")
-@cache.cached(timeout=300)
 def store_detail(product_id):
     product = StoreProduct.query.get_or_404(product_id)
     if not product.is_active and not is_admin():
         abort(404)
-    return render_template("store_detail.html", product=product)
-
+    can_download_pg = False
+    is_kakao = False
+    pg_pw_set = False
+    if session.get('user_id'):
+        can_download_pg = can_access_profitguard(session['user_id'])
+        u = db.session.get(User, session['user_id'])
+        if u and u.kakao_id:
+            is_kakao = True
+            pg_pw_set = bool(u.pg_password_set)
+    return render_template('store_detail.html', product=product, can_download_pg=can_download_pg, is_kakao=is_kakao, pg_pw_set=pg_pw_set)
 @app.route("/pricing")
 def pricing():
     can_use_trial = False
-    if session.get("user_id"):
-        user = db.session.get(User, session["user_id"])
+    active_plans = []
+    if session.get('user_id'):
+        user = db.session.get(User, session['user_id'])
         if user and not user.free_trial_used:
             can_use_trial = True
-    return render_template("pricing.html", can_use_trial=can_use_trial)
+        subs = Subscription.query.filter_by(user_id=session['user_id'], status='active').all()
+        active_plans = [s.plan_type for s in subs if s.is_active()]
+    return render_template('pricing.html', can_use_trial=can_use_trial, active_plans=active_plans)
+def send_alimtalk(receiver, subject, message, tpl_code, button=None):
+
+    """알리고 알림톡 발송"""
+
+    if not all([ALIGO_API_KEY, ALIGO_USER_ID, ALIGO_SENDER_KEY, ALIGO_SENDER]):
+
+        print("[알림톡] 알리고 설정 미완료 - 발송 건너뜀")
+
+        return {"code": -1, "message": "설정 미완료"}
+
+    if not tpl_code:
+
+        print("[알림톡] 템플릿 코드 미설정 - 발송 건너뜀")
+
+        return {"code": -1, "message": "템플릿 미설정"}
+
+    url = "https://kakaoapi.aligo.in/akv10/alimtalk/send/"
+
+    data = {
+
+        "apikey": ALIGO_API_KEY,
+
+        "userid": ALIGO_USER_ID,
+
+        "senderkey": ALIGO_SENDER_KEY,
+
+        "tpl_code": tpl_code,
+
+        "sender": ALIGO_SENDER,
+
+        "receiver_1": receiver,
+
+        "subject_1": subject,
+
+        "message_1": message,
+
+        "failover": "N",
+
+        "testMode": "N",
+
+    }
+
+    if button:
+
+        data["button_1"] = json.dumps(button)
+
+    try:
+
+        resp = requests.post(url, data=data, timeout=10)
+
+        result = resp.json()
+
+        print(f"[알림톡] 발송 결과: {result}")
+
+        return result
+
+    except Exception as e:
+
+        print(f"[알림톡] 발송 실패: {e}")
+
+        return {"code": -99, "message": str(e)}
+
+
+
+def send_payment_alimtalk(phone, name, product_name, amount, next_date=None):
+
+    """결제 완료 알림톡"""
+
+    now_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M")
+
+    next_date = next_date or (datetime.utcnow() + timedelta(days=30)).strftime("%Y-%m-%d")
+
+    msg = f"""{name}님, 결제가 완료되었습니다.
+
+
+
+■ 결제 정보
+
+- 상품명: {product_name}
+
+- 결제금액: {amount:,}원
+
+- 결제일시: {now_str}
+
+- 다음 결제일: {next_date}
+
+
+
+MONEYING을 이용해주셔서 감사합니다."""
+
+    button = {"button": [{"name": "내 구독 확인하기", "linkType": "WL", "linkTypeName": "웹링크", "linkMo": "https://moneying.biz/my", "linkPc": "https://moneying.biz/my"}]}
+
+    return send_alimtalk(phone, "결제 완료 알림", msg, ALIGO_TPL_PAYMENT, button)
+
+
+
+def send_expiry_alimtalk(phone, name, product_name, expiry_date, days_left):
+
+    """구독 만료 예정 알림톡"""
+
+    msg = f"""{name}님, 구독 만료 안내드립니다.
+
+
+
+■ 구독 정보
+
+- 상품명: {product_name}
+
+- 만료일: {expiry_date}
+
+
+
+구독이 {days_left}일 후 만료됩니다.
+
+지금 갱신하시면 서비스를 계속 이용하실 수 있습니다."""
+
+    button = {"button": [{"name": "구독 갱신하기", "linkType": "WL", "linkTypeName": "웹링크", "linkMo": "https://moneying.biz/pricing", "linkPc": "https://moneying.biz/pricing"}]}
+
+    return send_alimtalk(phone, "구독 만료 안내", msg, ALIGO_TPL_EXPIRY, button)
+
+
+
+def send_welcome_alimtalk(phone, name):
+
+    """회원가입 환영 알림톡"""
+
+    msg = f"""{name}님, MONEYING 가입을 환영합니다!
+
+
+
+숏폼 크리에이터를 위한 수익화 전략 플랫폼,
+
+MONEYING에서 다양한 콘텐츠를 만나보세요.
+
+
+
+■ 주요 서비스
+
+- 영상 갤러리: 수익화 영상 레퍼런스
+
+- 지식 스토어: 전자책, VOD 강의
+
+- 프로핏가드: 상품 모니터링 도구
+
+
+
+3일 무료 체험으로 시작해보세요!"""
+
+    button = {"button": [{"name": "MONEYING 시작하기", "linkType": "WL", "linkTypeName": "웹링크", "linkMo": "https://moneying.biz", "linkPc": "https://moneying.biz"}]}
+
+    return send_alimtalk(phone, "가입 환영", msg, ALIGO_TPL_WELCOME, button)
+
+
+
+def send_notice_alimtalk(phone, name, notice_content):
+
+    """공지사항/이벤트 알림톡"""
+
+    msg = f"""{name}님, MONEYING 공지사항 안내드립니다.
+
+
+
+{notice_content}
+
+
+
+자세한 내용은 아래 버튼을 눌러 확인해주세요."""
+
+    button = {"button": [{"name": "자세히 보기", "linkType": "WL", "linkTypeName": "웹링크", "linkMo": "https://moneying.biz/community", "linkPc": "https://moneying.biz/community"}]}
+
+    return send_alimtalk(phone, "공지사항", msg, ALIGO_TPL_NOTICE, button)
+
 
 
 # ============ 토스페이먼츠 결제 ============
@@ -805,118 +1030,717 @@ def checkout(plan_type):
     )
 
 @app.route("/billing/success")
-def billing_success():
-    """빌링키 발급 성공 콜백"""
-    auth_key = request.args.get("authKey")
-    customer_key = request.args.get("customerKey")
+@app.route("/payment/success")
+
+def payment_success():
+
+    """결제위젯 결제 성공 콜백"""
+
+    payment_key = request.args.get("paymentKey")
+
+    order_id = request.args.get("orderId")
+
+    amount = request.args.get("amount")
+
     plan_type = request.args.get("planType", "")
-    
-    if not session.get("user_id") or not auth_key or not customer_key:
+
+
+
+    if not session.get("user_id") or not payment_key or not order_id or not amount:
+
         flash("결제 인증에 실패했습니다.", "error")
+
         return redirect(url_for("pricing"))
-    
+
+
+
     plan = PLAN_INFO.get(plan_type)
+
     if not plan:
+
         flash("잘못된 요금제입니다.", "error")
+
         return redirect(url_for("pricing"))
-    
+
+
+
+    if int(amount) != plan['price']:
+
+        flash("결제 금액이 일치하지 않습니다.", "error")
+
+        return redirect(url_for("pricing"))
+
+
+
     import base64
+
     secret_key = os.getenv("TOSS_SECRET_KEY", "")
+
     auth_header = base64.b64encode(f"{secret_key}:".encode()).decode()
-    
-    billing_resp = requests.post(
-        "https://api.tosspayments.com/v1/billing/authorizations/issue",
+
+
+
+    confirm_resp = requests.post(
+
+        "https://api.tosspayments.com/v1/payments/confirm",
+
         headers={
+
             "Authorization": f"Basic {auth_header}",
+
             "Content-Type": "application/json"
+
         },
+
         json={
-            "authKey": auth_key,
-            "customerKey": customer_key
-        }
-    )
-    
-    if billing_resp.status_code != 200:
-        error_msg = billing_resp.json().get("message", "빌링키 발급 실패")
-        flash(f"카드 등록 실패: {error_msg}", "error")
-        return redirect(url_for("pricing"))
-    
-    billing_data = billing_resp.json()
-    billing_key = billing_data.get("billingKey")
-    
-    if not billing_key:
-        flash("빌링키를 받지 못했습니다.", "error")
-        return redirect(url_for("pricing"))
-    
-    user_id = session["user_id"]
-    order_id = f"order_{user_id}_{plan_type}_{secrets.token_hex(6)}"
-    
-    # 결제 실행 (정기/1회 공통)
-    pay_resp = requests.post(
-        f"https://api.tosspayments.com/v1/billing/{billing_key}",
-        headers={
-            "Authorization": f"Basic {auth_header}",
-            "Content-Type": "application/json"
-        },
-        json={
-            "customerKey": customer_key,
-            "amount": plan['price'],
+
+            "paymentKey": payment_key,
+
             "orderId": order_id,
-            "orderName": plan['name'],
+
+            "amount": int(amount)
+
         }
+
     )
-    
-    if pay_resp.status_code != 200:
-        error_msg = pay_resp.json().get("message", "결제 실패")
+
+
+
+    if confirm_resp.status_code != 200:
+
+        error_msg = confirm_resp.json().get("message", "결제 승인 실패")
+
         flash(f"결제 실패: {error_msg}", "error")
+
         return redirect(url_for("pricing"))
-    
-    pay_data = pay_resp.json()
+
+
+
+    pay_data = confirm_resp.json()
+
+    user_id = session["user_id"]
+
     now = datetime.utcnow()
-    
-    # 구독 생성
+
+
+
     sub = Subscription(
+
         user_id=user_id,
+
         plan_type=plan_type,
+
         status="active",
+
         price=plan['price'],
+
         started_at=now,
+
         expires_at=None if not plan['billing'] else now + timedelta(days=30),
-        billing_key=billing_key if plan['billing'] else None,
-        customer_key=customer_key
+
+        billing_key=None,
+
+        customer_key=None
+
     )
+
     db.session.add(sub)
-    
-    # 결제 기록
+
+
+
     payment = PaymentHistory(
+
         user_id=user_id,
+
         order_id=order_id,
+
         payment_key=pay_data.get("paymentKey", ""),
+
         amount=plan['price'],
+
         plan_type=plan_type,
+
         status="paid",
+
         paid_at=now
+
     )
+
     db.session.add(payment)
+
     db.session.commit()
-    
+
+
+
     payment.subscription_id = sub.id
+
     db.session.commit()
-    
+
+
+
     update_session_status(user_id)
-    
-    msg = f"{plan['name']} 구독이 시작되었습니다!" if plan['billing'] else f"{plan['name']} 구매가 완료되었습니다!"
-    flash(msg, "success")
+
+
+
+    # 알림톡 발송 (결제 완료)
+
+    try:
+
+        user = db.session.get(User, user_id)
+
+        if user and user.phone:
+
+            send_payment_alimtalk(
+
+                phone=user.phone,
+
+                name=user.nickname or user.email,
+
+                product_name=plan['name'],
+
+                amount=plan['price']
+
+            )
+
+    except Exception as e:
+
+        print(f"[알림톡] 결제 알림 발송 오류: {e}")
+
+
+
+    if plan['billing']:
+
+        flash(f"{plan['name']} 구독이 시작되었습니다!", "success")
+
+    else:
+
+        flash(f"{plan['name']} 구매가 완료되었습니다!", "success")
+
+    if 'profitguard' in plan_type:
+
+        return redirect(url_for("profitguard_page"))
+
     return redirect(url_for("my_page"))
 
-@app.route("/billing/fail")
-def billing_fail():
+
+
+@app.route("/payment/fail")
+
+def payment_fail():
+
+    """결제위젯 결제 실패"""
+
     error_code = request.args.get("code", "")
+
     error_msg = request.args.get("message", "결제가 취소되었습니다.")
+
     flash(f"결제 실패: {error_msg}", "error")
+
     return redirect(url_for("pricing"))
 
+
 # [FIX #10] gallery는 사용자별 구독 상태에 따라 다르게 보여야 하므로 캐시 제거
+
+
+
+
+# ============ 관리자 권한 부여/해제 API ============
+
+@app.route("/admin/api/toggle-staff/<int:user_id>", methods=["POST"])
+
+def admin_toggle_staff(user_id):
+
+    if not is_admin():
+
+        return jsonify({"result": "FAIL", "msg": "권한이 없습니다."})
+
+    user = db.session.get(User, user_id)
+
+    if not user:
+
+        return jsonify({"result": "FAIL", "msg": "사용자를 찾을 수 없습니다."})
+
+    user.is_staff = not user.is_staff
+
+    db.session.commit()
+
+    status = "관리자" if user.is_staff else "일반 회원"
+
+    return jsonify({"result": "SUCCESS", "msg": f"{user.nickname or user.email}님이 {status}(으)로 변경되었습니다.", "is_staff": user.is_staff})
+
+
+# ============ 구독 해지 API ============
+
+@app.route("/api/subscription/cancel", methods=["POST"])
+
+def api_subscription_cancel():
+
+    if not session.get("user_id"):
+
+        return jsonify({"result": "FAIL", "msg": "로그인이 필요합니다."})
+
+    data = request.get_json() or {}
+
+    sub_id = data.get("subscription_id")
+
+    if not sub_id:
+
+        return jsonify({"result": "FAIL", "msg": "구독 정보가 없습니다."})
+
+    sub = Subscription.query.filter_by(id=sub_id, user_id=session["user_id"]).first()
+
+    if not sub:
+
+        return jsonify({"result": "FAIL", "msg": "구독을 찾을 수 없습니다."})
+
+    if sub.plan_type == "profitguard_lifetime":
+
+        return jsonify({"result": "FAIL", "msg": "평생 이용권은 해지할 수 없습니다."})
+
+    sub.status = "cancelled"
+
+    db.session.commit()
+
+    return jsonify({"result": "SUCCESS", "msg": "구독이 해지되었습니다."})
+
+
+
+# ============ 프로핏가드 비밀번호 설정 ============
+
+@app.route("/api/profitguard/set-password", methods=["POST"])
+
+def api_profitguard_set_password():
+
+    """카카오 가입자 프로핏가드용 비밀번호 설정"""
+
+    if not session.get("user_id"):
+
+        return jsonify({"result": "FAIL", "msg": "로그인이 필요합니다."})
+
+    user = db.session.get(User, session["user_id"])
+
+    if not user:
+
+        return jsonify({"result": "FAIL", "msg": "유저를 찾을 수 없습니다."})
+
+    password = (request.get_json() or {}).get("password", "").strip()
+
+    if len(password) < 4:
+
+        return jsonify({"result": "FAIL", "msg": "비밀번호는 4자 이상이어야 합니다."})
+
+    user.pw_hash = generate_password_hash(password)
+
+    user.pg_password_set = True
+
+    db.session.commit()
+
+    return jsonify({"result": "SUCCESS", "msg": "비밀번호가 설정되었습니다."})
+
+
+
+# ============ 프로핏가드 다운로드 ============
+
+
+
+@app.route("/api/profitguard/manual")
+
+def profitguard_manual():
+
+    if not session.get("user_id"):
+
+        flash("로그인이 필요합니다.", "error")
+
+        return redirect(url_for("login"))
+
+    if not can_access_profitguard(session["user_id"]):
+
+        flash("프로핏가드 구독 후 다운로드할 수 있습니다.", "error")
+
+        return redirect(url_for("profitguard_page"))
+
+    manual_url = os.environ.get("PROFITGUARD_MANUAL_URL", "")
+
+    if not manual_url:
+
+        flash("매뉴얼 파일이 준비 중입니다.", "error")
+
+        return redirect(url_for("profitguard_page"))
+
+    return redirect(manual_url)
+
+
+
+@app.route("/api/profitguard/download")
+
+def profitguard_download():
+
+    """프로핏가드 exe 다운로드 (구독자 전용)"""
+
+    if not session.get("user_id"):
+
+        flash("로그인이 필요합니다.", "error")
+
+        return redirect(url_for("login"))
+
+    if not can_access_profitguard(session["user_id"]):
+
+        flash("프로핏가드 구독 후 다운로드할 수 있습니다.", "error")
+
+        return redirect(url_for("store_detail", product_id=2))
+
+    # R2에 업로드한 exe 파일 URL로 리다이렉트
+
+    download_url = os.environ.get("PROFITGUARD_DOWNLOAD_URL", "")
+
+    if not download_url:
+
+        flash("다운로드 파일이 준비 중입니다.", "error")
+
+        return redirect(url_for("store_detail", product_id=2))
+
+    return redirect(download_url)
+
+
+
+# ============ 프로핏가드 API ============
+
+@app.route("/api/profitguard", methods=["POST"])
+
+def api_profitguard():
+
+    """프로핏가드 exe 통합 API (login, register, reset_device)"""
+
+    data = request.get_json() or {}
+
+    action = data.get("action", "")
+
+
+
+    if action == "login":
+
+        email = (data.get("email") or "").strip().lower()
+
+        password = data.get("password", "")
+
+        hwid = data.get("hwid", "")
+
+
+
+        if not email or not password:
+
+            return jsonify({"result": "FAIL", "msg": "이메일과 비밀번호를 입력해주세요."})
+
+
+
+        user = User.query.filter_by(email=email).first()
+
+        if not user or not check_password_hash(user.pw_hash, password):
+
+            return jsonify({"result": "FAIL", "msg": "이메일 또는 비밀번호가 틀렸습니다."})
+
+
+
+        # 구독 상태 확인 (프로핏가드 관련 플랜)
+
+        now = datetime.utcnow()
+
+        tier = "FREE"
+
+        is_trial = False
+
+
+
+        # 프로핏가드 구독 확인
+
+        pg_sub = Subscription.query.filter(
+
+            Subscription.user_id == user.id,
+
+            Subscription.status == "active",
+
+            Subscription.plan_type.in_(["profitguard_pro", "profitguard_lite", "profitguard_lifetime", "allinone"])
+
+        ).first()
+
+
+
+        if pg_sub and pg_sub.is_active():
+
+            if pg_sub.plan_type in ["profitguard_pro", "allinone", "profitguard_lifetime"]:
+
+                tier = "PRO"
+
+            elif pg_sub.plan_type == "profitguard_lite":
+
+                tier = "BASIC"
+
+
+
+        # 무료체험 확인
+
+        if tier == "FREE" and user.free_trial_expires and user.free_trial_expires > now:
+
+            tier = "PRO"
+
+            is_trial = True
+
+
+
+        if tier == "FREE":
+
+            return jsonify({"result": "FAIL", "msg": "구독 중인 프로핏가드 플랜이 없습니다.\nmoneying.biz에서 구독 후 이용해주세요."})
+
+
+
+        # HWID 기기 인증
+
+        if hwid:
+
+            if not user.profitguard_hwid:
+
+                user.profitguard_hwid = hwid
+
+                db.session.commit()
+
+            elif user.profitguard_hwid != hwid:
+
+                return jsonify({"result": "DEVICE_ERROR", "msg": "이미 다른 기기에 등록되어 있습니다.\n기기 초기화 후 다시 시도해주세요.\n(기기 변경은 월 1회 가능)"})
+
+
+
+        user_name = user.nickname or user.email.split("@")[0]
+
+        return jsonify({"result": "SUCCESS", "tier": tier, "is_trial": is_trial, "user_name": user_name})
+
+
+
+    elif action == "register":
+
+        email = (data.get("email") or "").strip().lower()
+
+        password = data.get("password", "")
+
+        name = data.get("name", "")
+
+        phone = data.get("phone", "")
+
+
+
+        if not email or not password or not name:
+
+            return jsonify({"result": "FAIL", "msg": "이메일, 비밀번호, 이름은 필수입니다."})
+
+
+
+        if User.query.filter_by(email=email).first():
+
+            return jsonify({"result": "FAIL", "msg": "이미 가입된 이메일입니다."})
+
+
+
+        u = User(
+
+            email=email,
+
+            pw_hash=generate_password_hash(password),
+
+            nickname=name,
+
+            free_trial_used=True,
+
+            free_trial_expires=datetime.utcnow() + timedelta(days=5)
+
+        )
+
+        db.session.add(u)
+
+        db.session.commit()
+
+        return jsonify({"result": "SUCCESS", "msg": "체험판 계정이 생성되었습니다."})
+
+
+
+    elif action == "reset_device":
+
+        email = (data.get("email") or "").strip().lower()
+
+        password = data.get("password", "")
+
+        hwid = data.get("hwid", "")
+
+
+
+        user = User.query.filter_by(email=email).first()
+
+        if not user or not check_password_hash(user.pw_hash, password):
+
+            return jsonify({"result": "FAIL", "msg": "이메일 또는 비밀번호가 틀렸습니다."})
+
+
+
+        # 월 1회 제한
+
+        if user.profitguard_hwid_changed_at:
+
+            days_since = (datetime.utcnow() - user.profitguard_hwid_changed_at).days
+
+            if days_since < 30:
+
+                return jsonify({"result": "FAIL", "msg": f"기기 변경은 월 1회만 가능합니다.\n{30 - days_since}일 후 다시 시도해주세요."})
+
+
+
+        user.profitguard_hwid = hwid
+
+        user.profitguard_hwid_changed_at = datetime.utcnow()
+
+        db.session.commit()
+
+        return jsonify({"result": "SUCCESS", "msg": "기기가 변경되었습니다. 다시 로그인해주세요."})
+
+
+
+    return jsonify({"result": "FAIL", "msg": "알 수 없는 요청입니다."})
+
+
+
+# ============ 스토어 결제 ============
+
+@app.route("/store/checkout/<int:product_id>")
+
+def store_checkout(product_id):
+
+    if not session.get("user_id"):
+
+        return redirect(url_for("login", next=f"/store/checkout/{product_id}"))
+
+    product = db.session.get(StoreProduct, product_id)
+
+    if not product or product.price == 0:
+
+        flash("잘못된 상품입니다.", "error")
+
+        return redirect(url_for("store"))
+
+    user = db.session.get(User, session["user_id"])
+
+    customer_key = f"store_{user.id}_{secrets.token_hex(8)}"
+
+    return render_template("store_checkout.html",
+
+        product=product,
+
+        customer_key=customer_key,
+
+        client_key=os.getenv("TOSS_CLIENT_KEY", "")
+
+    )
+
+
+
+@app.route("/store/payment/success")
+
+def store_payment_success():
+
+    payment_key = request.args.get("paymentKey")
+
+    order_id = request.args.get("orderId")
+
+    amount = request.args.get("amount")
+
+    product_id = request.args.get("productId", "")
+
+    if not session.get("user_id") or not payment_key or not order_id or not amount:
+
+        flash("결제 인증에 실패했습니다.", "error")
+
+        return redirect(url_for("store"))
+
+    product = db.session.get(StoreProduct, int(product_id)) if product_id else None
+
+    if not product:
+
+        flash("잘못된 상품입니다.", "error")
+
+        return redirect(url_for("store"))
+
+    if int(amount) != product.price:
+
+        flash("결제 금액이 일치하지 않습니다.", "error")
+
+        return redirect(url_for("store"))
+
+    import base64
+
+    secret_key = os.getenv("TOSS_SECRET_KEY", "")
+
+    auth_header = base64.b64encode(f"{secret_key}:".encode()).decode()
+
+    confirm_resp = requests.post(
+
+        "https://api.tosspayments.com/v1/payments/confirm",
+
+        headers={"Authorization": f"Basic {auth_header}", "Content-Type": "application/json"},
+
+        json={"paymentKey": payment_key, "orderId": order_id, "amount": int(amount)}
+
+    )
+
+    if confirm_resp.status_code != 200:
+
+        error_msg = confirm_resp.json().get("message", "결제 승인 실패")
+
+        flash(f"결제 실패: {error_msg}", "error")
+
+        return redirect(url_for("store_detail", product_id=product.id))
+
+    pay_data = confirm_resp.json()
+
+    user_id = session["user_id"]
+
+    now = datetime.utcnow()
+
+    payment = PaymentHistory(
+
+        user_id=user_id,
+
+        order_id=order_id,
+
+        payment_key=pay_data.get("paymentKey", ""),
+
+        amount=product.price,
+
+        plan_type=f"store_{product.id}",
+
+        status="paid",
+
+        paid_at=now
+
+    )
+
+    db.session.add(payment)
+
+    db.session.commit()
+
+    flash(f"{product.title} 구매가 완료되었습니다!", "success")
+
+    return redirect(url_for("store_detail", product_id=product.id))
+
+
+
+@app.route("/store/payment/fail")
+
+def store_payment_fail():
+
+    error_msg = request.args.get("message", "결제가 취소되었습니다.")
+
+    flash(f"결제 실패: {error_msg}", "error")
+
+    return redirect(url_for("store"))
+
+
+
 @app.route("/gallery")
 def gallery():
     posts = Post.query.filter(
@@ -979,6 +1803,67 @@ def community_delete(post_id):
     return redirect(url_for("community_page"))
 
 @app.route("/community/<int:post_id>/like", methods=["POST"])
+
+
+
+@app.route("/community/<int:post_id>/edit", methods=["GET", "POST"])
+
+def community_edit(post_id):
+
+    if not session.get("user_id"):
+
+        return redirect(url_for("login"))
+
+    post = CommunityPost.query.get_or_404(post_id)
+
+    user = User.query.get(session["user_id"])
+
+    if post.author_email != user.email:
+
+        return redirect(url_for("community_page"))
+
+    if request.method == "POST":
+
+        post.title = request.form.get("title", "").strip()
+
+        post.content = request.form.get("content", "").strip()
+
+        post.images_json = request.form.get("images_json", "[]")
+
+        if post.category == "deal":
+
+            post.deal_type = request.form.get("deal_type", "groupbuy")
+
+            post.deal_max_people = request.form.get("deal_max_people", type=int)
+
+            post.deal_subscribers_only = bool(request.form.get("deal_subscribers_only"))
+
+            deadline = request.form.get("deal_deadline", "").strip()
+
+            if deadline:
+
+                try:
+
+                    post.deal_deadline = datetime.strptime(deadline, "%Y-%m-%d %H:%M")
+
+                except:
+
+                    post.deal_deadline = None
+
+            else:
+
+                post.deal_deadline = None
+
+        if post.title and post.content:
+
+            db.session.commit()
+
+            return redirect(url_for("community_detail", post_id=post.id))
+
+    return render_template("community_edit.html", post=post)
+
+
+
 def community_like(post_id):
     if not session.get("user_id"):
         return redirect(url_for("login", next=f"/community/{post_id}"))
@@ -1019,7 +1904,7 @@ def community_comment_delete(comment_id):
 def my_page():
     if not session.get("user_id"):
         return redirect(url_for("login", next="/my"))
-    if session.get("admin"):
+    if is_admin():
         return redirect(url_for("admin_posts"))
 
     user_email = session.get("user_email", "")
@@ -1078,9 +1963,33 @@ def my_page():
     )
 
 @app.route("/profitguard")
-@cache.cached(timeout=3600)
 def profitguard_page():
-    return render_template("profitguard.html")
+    pg_plan = None
+    if session.get("user_id"):
+        pg_plan = "none"
+        if can_access_profitguard(session["user_id"]):
+            sub = Subscription.query.filter(
+                Subscription.user_id == session["user_id"],
+                Subscription.status == "active",
+                Subscription.plan_type.in_(["profitguard_pro", "profitguard_lite", "profitguard_lifetime", "allinone"])
+            ).first()
+            if sub:
+                pg_plan = sub.plan_type
+    is_kakao = False
+
+    pg_pw_set = False
+
+    if session.get("user_id"):
+
+        u = db.session.get(User, session["user_id"])
+
+        if u and u.kakao_id:
+
+            is_kakao = True
+
+            pg_pw_set = bool(u.pg_password_set)
+
+    return render_template("profitguard.html", pg_plan=pg_plan, is_kakao=is_kakao, pg_pw_set=pg_pw_set)
 
 @app.route("/proof")
 @cache.cached(timeout=3600)
@@ -1157,7 +2066,7 @@ def community_write():
         content = (request.form.get("content") or "").strip()
         images = parse_json_list_field("images_json")
         
-        if category == "deal" and not (session.get("is_seller") or session.get("admin")):
+        if category == "deal" and not (session.get("is_seller") or is_admin()):
             flash("공구/협찬 글은 판매자만 작성할 수 있습니다.", "error")
             return redirect(url_for("community_write"))
         
@@ -1231,7 +2140,7 @@ def link_requests():
     if user_id:
         update_session_status(user_id)
 
-    if session.get("admin"):
+    if is_admin():
         items = LinkRequest.query.order_by(LinkRequest.id.desc()).all()
         monthly_used, monthly_limit = 0, 999
     elif user_id:
@@ -1247,13 +2156,13 @@ def link_requests():
 @app.route("/link-requests/<int:request_id>", methods=["GET", "POST"])
 def link_request_detail(request_id):
     it = LinkRequest.query.get_or_404(request_id)
-    if not session.get("admin"):
+    if not is_admin():
         if not session.get("user_id"):
             return redirect(url_for("login", next=f"/link-requests/{request_id}"))
         if it.requester_email != session.get("user_email", ""):
             abort(403)
     if request.method == "POST":
-        if not session.get("admin"):
+        if not is_admin():
             abort(403)
         it.coupang_url = (request.form.get("coupang_url") or "").strip()
         db.session.commit()
@@ -1321,6 +2230,22 @@ def register():
         session["subscriber"] = False
         session["is_trial"] = False
         return redirect(url_for("index"))
+
+
+        # 알림톡 발송 (회원가입 환영)
+
+        try:
+
+            if u.phone:
+
+                send_welcome_alimtalk(phone=u.phone, name=u.nickname or u.email)
+
+        except Exception as e:
+
+            print(f"[알림톡] 가입환영 발송 오류: {e}")
+
+
+
     return render_template("register.html")
 
 
@@ -1374,6 +2299,24 @@ def kakao_callback():
         db.session.commit()
     
     new_token = secrets.token_hex(32)
+
+
+    # 카카오 신규가입 알림톡
+
+    if not User.query.filter_by(email=email).first():
+
+        try:
+
+            if user.phone:
+
+                send_welcome_alimtalk(phone=user.phone, name=nickname or user.email)
+
+        except Exception as e:
+
+            print(f"[알림톡] 카카오 가입환영 발송 오류: {e}")
+
+
+
     user.session_token = new_token
     db.session.commit()
     
@@ -1387,7 +2330,7 @@ def kakao_callback():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if session.get("admin"):
+    if is_admin():
         return redirect(url_for("admin_home"))
     if request.method == "POST":
         email = (request.form.get("email") or "").strip().lower()
@@ -1397,6 +2340,9 @@ def login():
         if email == ADMIN_EMAIL and password == ADMIN_PASSWORD:
             session.clear()
             session["admin"] = True
+            _au = User.query.filter_by(email=ADMIN_EMAIL).first()
+            if _au:
+                session["user_id"] = _au.id
             return redirect(url_for("admin_home"))
         
         u = User.query.filter_by(email=email).first()
@@ -1556,6 +2502,9 @@ def admin_login():
         if (request.form.get("password") or "").strip() == ADMIN_PASSWORD:
             session.clear()
             session["admin"] = True
+            _au = User.query.filter_by(email=ADMIN_EMAIL).first()
+            if _au:
+                session["user_id"] = _au.id
             return redirect(url_for("admin_home"))
         flash("비밀번호가 틀렸습니다.", "error")
         return redirect(url_for("admin_login"))
@@ -1572,7 +2521,7 @@ def admin_logout():
 # ----------------------------
 @app.route("/admin")
 def admin_home():
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     
     from datetime import date
@@ -1623,8 +2572,25 @@ def admin_home():
     )
 
 @app.route("/admin/pending-posts")
+
+
+
+@app.route("/admin/event-trials")
+
+def admin_event_trials():
+
+    if not is_admin():
+
+        return redirect(url_for("admin_login"))
+
+    trials = EventTrialApply.query.order_by(desc(EventTrialApply.created_at)).all()
+
+    return render_template("admin_event_trials.html", trials=trials, total=len(trials))
+
+
+
 def admin_pending_posts():
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     
     posts = Post.query.filter_by(status="pending").order_by(desc(Post.id)).all()
@@ -1633,7 +2599,7 @@ def admin_pending_posts():
 
 @app.route("/admin/pending-posts/<int:post_id>/approve", methods=["POST"])
 def admin_approve_post(post_id):
-    if not session.get("admin"):
+    if not is_admin():
         return jsonify({"ok": False, "error": "권한 없음"})
     
     post = Post.query.get_or_404(post_id)
@@ -1656,7 +2622,7 @@ def admin_approve_post(post_id):
 
 @app.route("/admin/pending-posts/<int:post_id>/reject", methods=["POST"])
 def admin_reject_post(post_id):
-    if not session.get("admin"):
+    if not is_admin():
         return jsonify({"ok": False, "error": "권한 없음"})
     
     post = Post.query.get_or_404(post_id)
@@ -1679,7 +2645,7 @@ def admin_reject_post(post_id):
 
 @app.route("/admin/users")
 def admin_users():
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     
     users = User.query.order_by(desc(User.id)).all()
@@ -1712,7 +2678,7 @@ def admin_users():
 
 @app.route("/admin/stats")
 def admin_stats():
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     
     from datetime import date, timedelta as td
@@ -1769,13 +2735,34 @@ def api_gallery_view(post_id):
 # ----------------------------
 @app.route("/admin/gallery")
 def admin_gallery():
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
-    return render_template("admin_gallery.html", posts=Post.query.order_by(Post.id.desc()).all())
+    posts = Post.query.order_by(Post.id.desc()).all()
+
+    uploaders = {}
+
+    for p in posts:
+
+        if p.uploaded_by and p.uploaded_by not in uploaders:
+
+            u = db.session.get(User, p.uploaded_by)
+
+            uploaders[p.uploaded_by] = u.nickname or u.email if u else '-'
+
+    categories = Category.query.filter(
+
+        Category.is_active == True,
+
+        Category.key.notin_(['all', 'bookmark', 'recent'])
+
+    ).order_by(Category.sort_order).all()
+
+    return render_template("admin_gallery.html", posts=posts, uploaders=uploaders, categories=categories)
+
 
 @app.route("/admin/gallery/bulk")
 def admin_gallery_bulk():
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     categories = Category.query.filter(
         Category.is_active == True,
@@ -1785,7 +2772,7 @@ def admin_gallery_bulk():
 
 @app.route("/admin/gallery/bulk/sample")
 def admin_gallery_bulk_sample():
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     csv_content = "\ufeff"
     csv_content += "title,category,video_url1,video_url2,video_url3,coupang_url,is_free\n"
@@ -1800,7 +2787,7 @@ def admin_gallery_bulk_sample():
 
 @app.route("/admin/gallery/bulk/upload", methods=["POST"])
 def admin_gallery_bulk_upload():
-    if not session.get("admin"):
+    if not is_admin():
         return jsonify({"error": "unauthorized"}), 401
     
     import csv
@@ -1854,7 +2841,8 @@ def admin_gallery_bulk_upload():
                 video_url2=row.get("video_url2", "").strip(),
                 video_url3=row.get("video_url3", "").strip(),
                 coupang_link=row.get("coupang_url", "").strip(),
-                is_free=row.get("is_free", "0").strip() == "1"
+                is_free=row.get("is_free", "0").strip() == "1",
+                uploaded_by=session.get("user_id")
             )
             db.session.add(post)
             count += 1
@@ -1866,14 +2854,14 @@ def admin_gallery_bulk_upload():
 
 @app.route("/admin/posts")
 def admin_posts():
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     return redirect("/admin/gallery")
 
 
 @app.route("/admin/gallery/bulk-delete", methods=["POST"])
 def admin_gallery_bulk_delete():
-    if not session.get("admin"):
+    if not is_admin():
         return jsonify({"error": "unauthorized"}), 401
     
     data = request.get_json()
@@ -1892,7 +2880,7 @@ def admin_gallery_bulk_delete():
 
 @app.route("/admin/upload")
 def admin_upload():
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     categories = Category.query.filter(
         Category.is_active == True,
@@ -1949,7 +2937,7 @@ def admin_delete(post_id):
 # ----------------------------
 @app.route("/admin/link-requests")
 def admin_link_requests():
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     return render_template("admin_link_requests.html", items=LinkRequest.query.order_by(LinkRequest.id.desc()).all())
 
@@ -1959,14 +2947,14 @@ def admin_link_requests():
 # ----------------------------
 @app.route("/admin/categories")
 def admin_categories():
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     categories = Category.query.order_by(Category.sort_order).all()
     return render_template("admin_categories.html", categories=categories)
 
 @app.route("/admin/categories/add", methods=["POST"])
 def admin_category_add():
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     
     key = request.form.get("key", "").strip().lower()
@@ -1991,7 +2979,7 @@ def admin_category_add():
 
 @app.route("/admin/categories/<int:cat_id>/toggle", methods=["POST"])
 def admin_category_toggle(cat_id):
-    if not session.get("admin"):
+    if not is_admin():
         return jsonify({"error": "unauthorized"}), 401
     cat = Category.query.get_or_404(cat_id)
     cat.is_active = not cat.is_active
@@ -2000,7 +2988,7 @@ def admin_category_toggle(cat_id):
 
 @app.route("/admin/categories/<int:cat_id>/update", methods=["POST"])
 def admin_category_update(cat_id):
-    if not session.get("admin"):
+    if not is_admin():
         return jsonify({"ok": False, "error": "권한 없음"}), 403
     cat = Category.query.get_or_404(cat_id)
     if cat.is_system:
@@ -2016,7 +3004,7 @@ def admin_category_update(cat_id):
 
 @app.route("/admin/categories/<int:cat_id>/delete", methods=["POST"])
 def admin_category_delete(cat_id):
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     cat = Category.query.get_or_404(cat_id)
     if cat.is_system:
@@ -2033,13 +3021,13 @@ def admin_category_delete(cat_id):
 # ----------------------------
 @app.route("/admin/store")
 def admin_store():
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     return render_template("admin_store.html", products=StoreProduct.query.order_by(StoreProduct.id.desc()).all())
 
 @app.route("/admin/store/new", methods=["GET", "POST"])
 def admin_store_new():
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     if request.method == "POST":
         title = (request.form.get("title") or "").strip()
@@ -2063,7 +3051,7 @@ def admin_store_new():
 
 @app.route("/admin/store/<int:product_id>/edit", methods=["GET", "POST"])
 def admin_store_edit(product_id):
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     p = StoreProduct.query.get_or_404(product_id)
     if request.method == "POST":
@@ -2082,7 +3070,7 @@ def admin_store_edit(product_id):
 
 @app.route("/admin/store/<int:product_id>/delete", methods=["POST"])
 def admin_store_delete(product_id):
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     db.session.delete(StoreProduct.query.get_or_404(product_id))
     db.session.commit()
@@ -2094,13 +3082,13 @@ def admin_store_delete(product_id):
 # ----------------------------
 @app.route("/admin/subscriptions")
 def admin_subscriptions():
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     return render_template("admin_subscriptions.html", subscriptions=Subscription.query.order_by(Subscription.id.desc()).all())
 
 @app.route("/admin/subscriptions/add", methods=["GET", "POST"])
 def admin_subscription_add():
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     if request.method == "POST":
         user_email = (request.form.get("user_email") or "").strip().lower()
@@ -2124,7 +3112,7 @@ def admin_subscription_add():
 
 @app.route("/admin/subscriptions/<int:sub_id>/cancel", methods=["POST"])
 def admin_subscription_cancel(sub_id):
-    if not session.get("admin"):
+    if not is_admin():
         return redirect(url_for("admin_login"))
     sub = Subscription.query.get_or_404(sub_id)
     sub.status = "cancelled"
@@ -2265,7 +3253,8 @@ def api_save_post():
         tags_json=json.dumps(parse_json_list_field("tags_json"), ensure_ascii=False),
         links_json=json.dumps(parse_json_list_field("links_json"), ensure_ascii=False),
         is_free=request.form.get("is_free") == "1",
-        preview_video=(request.form.get("preview_video") or "").strip()
+        preview_video=(request.form.get("preview_video") or "").strip(),
+        uploaded_by=session.get("user_id")
     )
     db.session.add(p)
     db.session.commit()
@@ -2438,10 +3427,94 @@ def admin_revenue_proofs():
     if not is_admin():
         return redirect(url_for("admin_login"))
     
-    proofs = CommunityPost.query.filter_by(category="revenue").order_by(CommunityPost.created_at.desc()).all()
+    proofs = RevenueRewardHistory.query.order_by(RevenueRewardHistory.created_at.desc()).all()
+    for p in proofs:
+        p.user = User.query.get(p.user_id)
+        p.post = CommunityPost.query.get(p.post_id)
     return render_template("admin_revenue_proofs.html", proofs=proofs)
 
 # 관리자 - 판매자 신청 목록
+
+
+
+@app.route("/admin/revenue-proofs/<int:proof_id>/approve", methods=["POST"])
+
+def admin_revenue_approve(proof_id):
+
+    if not is_admin():
+
+        return redirect(url_for("admin_login"))
+
+    proof = RevenueRewardHistory.query.get_or_404(proof_id)
+
+    proof.status = "approved"
+
+    user = User.query.get(proof.user_id)
+
+    if user:
+
+        active_sub = Subscription.query.filter_by(user_id=user.id, status="active").first()
+
+        if active_sub and active_sub.expires_at:
+
+            active_sub.expires_at = active_sub.expires_at + timedelta(days=7)
+
+        elif active_sub:
+
+            active_sub.expires_at = datetime.utcnow() + timedelta(days=7)
+
+    post = CommunityPost.query.get(proof.post_id)
+
+    if post:
+
+        post.reward_requested = True
+
+    if user:
+
+        expires_str = ""
+
+        active_sub2 = Subscription.query.filter_by(user_id=user.id, status="active").first()
+
+        if active_sub2 and active_sub2.expires_at:
+
+            expires_str = active_sub2.expires_at.strftime("%Y-%m-%d")
+
+        db.session.add(Notification(
+
+            user_id=user.id,
+
+            type="reward_approved",
+
+            title="수익인증 리워드 승인",
+
+            message=f"수익인증이 승인되어 구독이 7일 연장되었습니다! (다음 결제일: {expires_str})",
+
+            link="/my/rewards"
+
+        ))
+
+    db.session.commit()
+
+    return redirect(url_for("admin_revenue_proofs"))
+
+
+
+@app.route("/admin/revenue-proofs/<int:proof_id>/reject", methods=["POST"])
+
+def admin_revenue_reject(proof_id):
+
+    if not is_admin():
+
+        return redirect(url_for("admin_login"))
+
+    proof = RevenueRewardHistory.query.get_or_404(proof_id)
+
+    proof.status = "rejected"
+
+    db.session.commit()
+    return redirect(url_for("admin_revenue_proofs"))
+
+
 @app.route("/admin/sellers")
 def admin_sellers():
     if not is_admin():
@@ -2877,10 +3950,62 @@ def my_rewards():
         category="revenue"
     ).order_by(CommunityPost.created_at.desc()).all()
     
+
+    
+
+    # 각 게시글에 리워드 상태 매핑
+
+    for post in revenue_posts:
+
+        reward = RevenueRewardHistory.query.filter_by(user_id=user.id, post_id=post.id).first()
+
+        if reward:
+
+            post.reward_approved = (reward.status == "approved")
+
+            post.reward_requested = True
+
+        else:
+
+            post.reward_approved = False
+
+            post.reward_requested = False
+
+    
+
+    # 이번 달 승인/대기 리워드 수
+
+    first_day = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    monthly_approved = RevenueRewardHistory.query.filter(
+
+        RevenueRewardHistory.user_id == user.id,
+
+        RevenueRewardHistory.created_at >= first_day,
+
+        RevenueRewardHistory.status == "approved"
+
+    ).count()
+
+    monthly_pending = RevenueRewardHistory.query.filter(
+
+        RevenueRewardHistory.user_id == user.id,
+
+        RevenueRewardHistory.created_at >= first_day,
+
+        RevenueRewardHistory.status == "pending"
+
+    ).count()
+
+
+
+
     return render_template("my_rewards.html", 
         user=user,
         invited_users=invited_users,
-        revenue_posts=revenue_posts
+        revenue_posts=revenue_posts,
+        monthly_approved=monthly_approved,
+        monthly_pending=monthly_pending
     )
 
 @app.route("/my/nickname", methods=["GET", "POST"])
@@ -3081,6 +4206,89 @@ def api_notifications_delete_all():
     Notification.query.filter_by(user_id=session["user_id"]).delete()
     db.session.commit()
     return jsonify({"ok": True})
+
+
+
+
+@app.route("/api/profitguard-event/count")
+
+def profitguard_event_count():
+
+    count = EventTrialApply.query.count()
+
+    return jsonify({"ok": True, "count": count})
+
+
+
+@app.route("/api/profitguard-event/apply", methods=["POST"])
+
+def profitguard_event_apply():
+
+    import secrets as _secrets, string as _string
+
+    data = request.get_json() or {}
+
+    email = (data.get("email") or "").strip().lower()
+
+    if not email or "@" not in email:
+
+        return jsonify({"ok": False, "error": "이메일을 올바르게 입력해주세요."})
+
+    if EventTrialApply.query.count() >= 100:
+
+        return jsonify({"ok": False, "error": "무료체험이 마감되었습니다."})
+
+    if EventTrialApply.query.filter_by(email=email).first():
+
+        return jsonify({"ok": False, "error": "이미 신청하셨습니다."})
+
+    db.session.add(EventTrialApply(email=email))
+
+    user = User.query.filter_by(email=email).first()
+
+    temp_pw = "".join(_secrets.choice(_string.ascii_letters + _string.digits) for _ in range(10))
+
+    if not user:
+
+        user = User(email=email, pw_hash=generate_password_hash(temp_pw))
+
+        db.session.add(user)
+
+        db.session.flush()
+
+    else:
+
+        temp_pw = None
+
+    existing_sub = Subscription.query.filter_by(user_id=user.id, plan_type="profitguard_pro", status="active").first()
+
+    if not existing_sub:
+
+        db.session.add(Subscription(user_id=user.id, plan_type="profitguard_pro", status="active", price=0, expires_at=datetime.utcnow() + timedelta(days=14)))
+
+    db.session.commit()
+
+    dl = "https://moneying.biz/profitguard"
+
+    if temp_pw:
+
+        html = '<div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px;"><h2 style="color:#c4ff00;background:#0a0a0a;padding:20px;border-radius:12px;text-align:center;">PROFIT GUARD 무료체험</h2><p>프로핏가드 14일 무료체험 신청이 완료되었습니다.</p><div style="background:#f5f5f5;padding:16px;border-radius:8px;margin:16px 0;"><p><strong>이메일:</strong> ' + email + '</p><p><strong>임시 비밀번호:</strong> ' + temp_pw + '</p><p><strong>체험 기간:</strong> 14일</p></div><p>아래에서 프로핏가드를 다운로드하고 로그인하세요.</p><p style="text-align:center;margin:24px 0;"><a href="' + dl + '" style="background:#c4ff00;color:#000;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:bold;">프로핏가드 다운로드</a></p></div>'
+
+    else:
+
+        html = '<div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px;"><h2 style="color:#c4ff00;background:#0a0a0a;padding:20px;border-radius:12px;text-align:center;">PROFIT GUARD 무료체험</h2><p>프로핏가드 14일 무료체험 신청이 완료되었습니다.</p><div style="background:#f5f5f5;padding:16px;border-radius:8px;margin:16px 0;"><p><strong>이메일:</strong> ' + email + '</p><p><strong>비밀번호:</strong> 기존 MONEYING 비밀번호 사용</p><p><strong>체험 기간:</strong> 14일</p></div><p>아래에서 프로핏가드를 다운로드하고 로그인하세요.</p><p style="text-align:center;margin:24px 0;"><a href="' + dl + '" style="background:#c4ff00;color:#000;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:bold;">프로핏가드 다운로드</a></p></div>'
+
+    try:
+
+        send_email(email, "[MONEYING] 프로핏가드 14일 무료체험 안내", html)
+
+    except Exception as e:
+
+        print(f"[EVENT] 이메일 발송 실패: {e}")
+
+    return jsonify({"ok": True, "count": EventTrialApply.query.count()})
+
+
 
 @app.route("/profitguard-event")
 def profitguard_event():

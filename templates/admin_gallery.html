@@ -29,7 +29,24 @@
           <i class="fas fa-trash mr-1"></i> <span id="selectedCount">0</span>개 삭제
         </button>
       </div>
-      <div class="text-zinc-400 text-xs md:text-sm font-bold shrink-0">총 {{ posts|length }}개</div>
+      <div class="text-zinc-400 text-xs md:text-sm font-bold shrink-0" id="totalCount">총 {{ posts|length }}개</div>
+    </div>
+    <!-- 필터/정렬 바 -->
+    <div class="flex flex-wrap items-center gap-2 px-4 md:px-5 py-3 border-b border-zinc-800 bg-zinc-900/30">
+      <select id="filterUploader" onchange="applyFilter()" class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-white">
+        <option value="">업로더 전체</option>
+        {% if uploaders is defined %}{% for uid, uname in uploaders.items() %}
+        <option value="{{ uid }}">{{ uname }}</option>
+        {% endfor %}{% endif %}
+      </select>
+      <select id="filterCategory" onchange="applyFilter()" class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-white">
+        <option value="">카테고리 전체</option>
+        {% if categories is defined %}{% for cat in categories %}<option value="{{ cat.key }}">{{ cat.name }}</option>{% endfor %}{% endif %}
+      </select>
+      <input type="date" id="filterDateFrom" onchange="applyFilter()" class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-white">
+      <span class="text-zinc-500 text-sm">~</span>
+      <input type="date" id="filterDateTo" onchange="applyFilter()" class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-white">
+      <span id="filteredCount" class="text-[#c4ff00] text-xs font-bold ml-2"></span>
     </div>
 
     {% if posts|length == 0 %}
@@ -46,13 +63,14 @@
           </div>
           <div class="col-span-1">ID</div>
           <div class="col-span-2">카테고리</div>
-          <div class="col-span-4">제목</div>
+          <div class="col-span-3">제목</div>
+          <div class="col-span-1">업로더</div>
           <div class="col-span-2 text-right pr-6">등록일</div>
           <div class="col-span-2 text-right">관리</div>
         </div>
 
         {% for p in posts %}
-          <div class="grid grid-cols-12 px-5 py-4 border-b border-zinc-800/60 items-center post-row" data-id="{{ p.id }}">
+          <div class="grid grid-cols-12 px-5 py-4 border-b border-zinc-800/60 items-center post-row pc-row" data-id="{{ p.id }}" data-uploader="{{ p.uploaded_by or '' }}" data-category="{{ p.category }}" data-date="{{ (p.created_at|string)[:10] }}">
             <div class="col-span-1">
               <input type="checkbox" class="post-checkbox w-4 h-4 rounded accent-[#c4ff00]" value="{{ p.id }}" onchange="updateSelectedCount()">
             </div>
@@ -60,7 +78,8 @@
             <div class="col-span-2">
               <span class="text-xs px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-gray-200 font-bold">{{ p.category }}</span>
             </div>
-            <div class="col-span-4 font-bold truncate">{{ p.title }}</div>
+            <div class="col-span-3 font-bold truncate">{{ p.title }}</div>
+            <div class="col-span-1 text-xs">{% if p.uploaded_by and uploaders.get(p.uploaded_by) %}<span class="text-purple-400 font-bold">{{ uploaders[p.uploaded_by] }}</span>{% else %}<span class="text-zinc-600">-</span>{% endif %}</div>
             <div class="col-span-2 text-right pr-6 text-zinc-500 text-xs font-bold">{{ (p.created_at|string)[:10] }}</div>
             <div class="col-span-2 flex justify-end gap-2">
               <a href="{{ url_for('admin_edit', post_id=p.id, next=url_for('admin_gallery')) }}"
@@ -80,7 +99,7 @@
           <span class="text-xs text-zinc-500">전체 선택</span>
         </div>
         {% for p in posts %}
-          <div class="px-4 py-3 post-row" data-id="{{ p.id }}">
+          <div class="px-4 py-3 post-row mobile-row" data-id="{{ p.id }}" data-uploader="{{ p.uploaded_by or '' }}" data-category="{{ p.category }}" data-date="{{ (p.created_at|string)[:10] }}">
             <div class="flex items-start gap-3">
               <input type="checkbox" class="post-checkbox w-4 h-4 rounded accent-[#c4ff00] mt-1 shrink-0" value="{{ p.id }}" onchange="updateSelectedCount()">
               <div class="flex-1 min-w-0">
@@ -89,7 +108,7 @@
                   <span class="font-bold text-sm text-white truncate">{{ p.title }}</span>
                 </div>
                 <div class="flex items-center justify-between">
-                  <span class="text-zinc-500 text-xs">#{{ p.id }} · {{ (p.created_at|string)[:10] }}</span>
+                  <span class="text-zinc-500 text-xs">#{{ p.id }}{% if p.uploaded_by and uploaders.get(p.uploaded_by) %} · <span class="text-purple-400">{{ uploaders[p.uploaded_by] }}</span>{% endif %} · {{ (p.created_at|string)[:10] }}</span>
                   <div class="flex gap-2">
                     <a href="{{ url_for('admin_edit', post_id=p.id, next=url_for('admin_gallery')) }}"
                        class="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 transition text-xs font-bold">수정</a>
@@ -210,6 +229,34 @@ function showResult(type, title, message) {
 function closeResultModal() {
   document.getElementById('resultModal').classList.add('hidden');
   document.getElementById('resultModal').classList.remove('flex');
+}
+function applyFilter() {
+  var uploader = document.getElementById('filterUploader').value;
+  var category = document.getElementById('filterCategory').value;
+  var dateFrom = document.getElementById('filterDateFrom').value;
+  var dateTo = document.getElementById('filterDateTo').value;
+  var rows = document.querySelectorAll('.post-row');
+  var count = 0;
+  var total = 0;
+  rows.forEach(function(row) {
+    var show = true;
+    if (uploader && row.dataset.uploader !== uploader) show = false;
+    if (category && row.dataset.category !== category) show = false;
+    if (dateFrom && row.dataset.date < dateFrom) show = false;
+    if (dateTo && row.dataset.date > dateTo) show = false;
+    row.style.display = show ? '' : 'none';
+    if (show) count++;
+    total++;
+  });
+  var fc = document.getElementById('filteredCount');
+  var tc = document.getElementById('totalCount');
+  if (uploader || category || dateFrom || dateTo) {
+    fc.textContent = (count/2) + '개 필터됨';
+    tc.textContent = (count/2) + ' / ' + (total/2) + '개';
+  } else {
+    fc.textContent = '';
+    tc.textContent = '총 ' + (total/2) + '개';
+  }
 }
 </script>
 {% endblock %}

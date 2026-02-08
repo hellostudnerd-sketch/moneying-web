@@ -1,0 +1,101 @@
+
+{% extends "admin_base.html" %}
+
+{% block title %}이벤트 신청자 - MONEYING{% endblock %}
+
+{% block page_title %}프로핏가드 이벤트 신청자{% endblock %}
+
+{% block page_desc %}선착순 100명 무료체험 신청 현황 · <a href="/profitguard-event" target="_blank" class="text-[#a3e635] underline">이벤트 페이지 보기 →</a>{% endblock %}
+
+{% block content_admin %}
+
+
+
+<div class="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4 mb-6">
+
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-3 md:p-4 text-center">
+
+    <div class="text-xl md:text-2xl font-black text-[#c4ff00]">{{ total }}</div>
+
+    <div class="text-zinc-500 text-[11px] md:text-xs mt-1">총 신청자</div>
+
+  </div>
+
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-3 md:p-4 text-center">
+
+    <div class="text-xl md:text-2xl font-black text-white">{{ 100 - total }}</div>
+
+    <div class="text-zinc-500 text-[11px] md:text-xs mt-1">남은 자리</div>
+
+  </div>
+
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-3 md:p-4 text-center col-span-2 md:col-span-1">
+
+    <div class="text-xl md:text-2xl font-black {% if total >= 100 %}text-red-400{% else %}text-blue-400{% endif %}">{{ "마감" if total >= 100 else "진행중" }}</div>
+
+    <div class="text-zinc-500 text-[11px] md:text-xs mt-1">상태</div>
+
+  </div>
+
+</div>
+
+
+
+<div class="bg-zinc-900/60 border border-zinc-800 rounded-xl overflow-hidden">
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full text-sm">
+
+      <thead>
+
+        <tr class="border-b border-zinc-800 text-zinc-500 text-xs">
+
+          <th class="px-4 py-3 text-left">#</th>
+
+          <th class="px-4 py-3 text-left">이메일</th>
+
+          <th class="px-4 py-3 text-left">신청일시</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        {% for t in trials %}
+
+        <tr class="border-b border-zinc-800/50 hover:bg-zinc-800/30">
+
+          <td class="px-4 py-3 text-zinc-500">{{ loop.index }}</td>
+
+          <td class="px-4 py-3 text-white font-medium">{{ t.email }}</td>
+
+          <td class="px-4 py-3 text-zinc-400">{{ t.created_at.strftime('%Y-%m-%d %H:%M') if t.created_at else '-' }}</td>
+
+        </tr>
+
+        {% endfor %}
+
+        {% if not trials %}
+
+        <tr>
+
+          <td colspan="3" class="px-4 py-8 text-center text-zinc-500">아직 신청자가 없습니다.</td>
+
+        </tr>
+
+        {% endif %}
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>
+
+
+
+{% endblock %}
+

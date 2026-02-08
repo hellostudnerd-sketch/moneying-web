@@ -77,18 +77,22 @@
               </div>
               <div class="text-zinc-500 text-xs">
                 {% if sub.expires_at %}
-                  {{ sub.expires_at.strftime('%Y-%m-%d') }} 만료
+                  {% if sub.status == "cancelled" %}{{ sub.expires_at.strftime("%Y-%m-%d") }} 만료{% else %}다음 결제일 {{ sub.expires_at.strftime("%Y-%m-%d") }}{% endif %}
                 {% else %}
                   평생 이용
                 {% endif %}
               </div>
             </div>
           </div>
-          <span class="px-2 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-bold">이용중</span>
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-bold">이용중</span>
+            {% if sub.plan_type != "profitguard_lifetime" %}
+            <button onclick="openCancelModal('{{ sub.id }}', '{{ sub.plan_type }}')" class="px-2 py-1 rounded-full bg-zinc-800 text-zinc-500 text-xs hover:text-red-400 hover:bg-red-500/10 transition cursor-pointer">해지</button>
+            {% endif %}
+          </div>
         </div>
       </div>
       {% endfor %}
-    {% elif session.get("is_trial") %}
       <!-- 체험중 -->
       <div class="px-5 py-4 border-b border-zinc-800/50">
         <div class="flex items-center justify-between">
@@ -332,4 +336,72 @@ async function uploadProfilePhoto(input) {
   }
 }
 </script>
+<div id="cancel-modal" style="display:none" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
+
+  <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 max-w-sm w-full mx-4 text-center">
+
+    <div class="text-4xl mb-4">⚠️</div>
+
+    <h3 class="text-lg font-bold text-white mb-2">구독 해지</h3>
+
+    <p id="cancel-modal-msg" class="text-zinc-400 text-sm mb-6"></p>
+
+    <div class="flex gap-3">
+
+      <button onclick="document.getElementById('cancel-modal').style.display='none'" class="flex-1 py-3 bg-zinc-800 text-white rounded-xl font-bold hover:bg-zinc-700 transition">취소</button>
+
+      <button onclick="confirmCancel()" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition">해지하기</button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+var cancelSubId = null;
+
+function openCancelModal(subId, planType) {
+
+  cancelSubId = subId;
+
+  var names = {'gallery':'영상 갤러리','profitguard_lite':'프로핏가드 라이트','profitguard_pro':'프로핏가드 프로','profitguard_lifetime':'프로핏가드 평생','allinone':'올인원'};
+
+  var planName = names[planType] || planType;
+
+  document.getElementById('cancel-modal-msg').innerHTML = '<strong>' + planName + '</strong> 구독을 해지하시겠습니까?<br><span class="text-xs text-zinc-500">해지 후에도 만료일까지 이용 가능합니다.</span>';
+
+  document.getElementById('cancel-modal').style.display = 'flex';
+
+}
+
+function confirmCancel() {
+
+  fetch('/api/subscription/cancel', {
+
+    method: 'POST',
+
+    headers: {'Content-Type': 'application/json'},
+
+    body: JSON.stringify({subscription_id: cancelSubId})
+
+  })
+
+  .then(function(r) { return r.json(); })
+
+  .then(function(d) {
+
+    document.getElementById('cancel-modal').style.display = 'none';
+
+    if (d.result === 'SUCCESS') { location.reload(); }
+
+    else { document.getElementById('cancel-modal-msg').textContent = d.msg; document.getElementById('cancel-modal').style.display = 'flex'; }
+
+  });
+
+}
+
+</script>
+
 {% endblock %}

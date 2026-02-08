@@ -13,7 +13,7 @@
 <div class="max-w-2xl mx-auto">
 
   <div class="mb-6 md:mb-8">
-    <a href="/community/{{ post.id }}" class="text-zinc-500 hover:text-white transition text-sm">← 돌아가기</a>
+    <a href="{{ request.referrer or '/community/' ~ post.id }}" class="text-zinc-500 hover:text-white transition text-sm">← 돌아가기</a>
     <h1 class="text-2xl md:text-3xl font-black mt-4">글 수정</h1>
   </div>
 
@@ -96,7 +96,7 @@
 
     <div class="flex gap-3 pt-2 md:pt-4">
       <button type="submit" class="flex-1 bg-[#a3e635] text-black font-black py-3 md:py-4 rounded-lg hover:bg-white transition text-sm md:text-base">수정하기</button>
-      <a href="/community/{{ post.id }}" class="flex-1 bg-zinc-800 text-white font-bold py-3 md:py-4 rounded-lg hover:bg-zinc-700 transition text-center text-sm md:text-base">취소</a>
+      <a href="{{ request.referrer or '/community/' ~ post.id }}" class="flex-1 bg-zinc-800 text-white font-bold py-3 md:py-4 rounded-lg hover:bg-zinc-700 transition text-center text-sm md:text-base">취소</a>
     </div>
 
   </form>

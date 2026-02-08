@@ -14,12 +14,12 @@
       {% if session.get("admin") %}
         <a href="{{ url_for('admin_link_requests') }}"
            class="px-4 py-2 rounded-lg bg-zinc-800 text-gray-200 hover:bg-zinc-700 transition">
-          ← 목록으로
+          ← 뒤로가기
         </a>
       {% else %}
         <a href="{{ url_for('my_link_requests') }}"
            class="px-4 py-2 rounded-lg bg-zinc-800 text-gray-200 hover:bg-zinc-700 transition">
-          ← 목록으로
+          ← 뒤로가기
         </a>
       {% endif %}
     </div>

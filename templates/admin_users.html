@@ -53,6 +53,7 @@
           <th class="px-5 py-4">닉네임</th>
           <th class="px-5 py-4">상태</th>
           <th class="px-5 py-4">가입일</th>
+          <th class="px-5 py-4">관리자</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-zinc-800/50" id="userTableDesktop">
@@ -76,6 +77,13 @@
           </td>
           <td class="px-5 py-4 text-zinc-500 text-sm">
             {{ user.created_at.strftime('%Y-%m-%d') if user.created_at else '-' }}
+          </td>
+          <td class="px-5 py-4">
+            {% if user.is_staff %}
+            <button onclick="toggleStaff({{ user.id }}, this)" class="px-2 py-1 rounded-full bg-purple-500/20 text-purple-400 text-xs font-bold hover:bg-red-500/20 hover:text-red-400 transition cursor-pointer">관리자 ✓</button>
+            {% else %}
+            <button onclick="toggleStaff({{ user.id }}, this)" class="px-2 py-1 rounded-full bg-zinc-700 text-zinc-500 text-xs hover:bg-purple-500/20 hover:text-purple-400 transition cursor-pointer">관리자 지정</button>
+            {% endif %}
           </td>
         </tr>
         {% endfor %}
@@ -131,6 +139,21 @@ function filterUsers(type) {
     else if (type === 'normal') show = !isSubscriber && !isTrial;
 
     row.style.display = show ? '' : 'none';
+  });
+}
+function toggleStaff(userId, btn) {
+  fetch('/admin/api/toggle-staff/' + userId, { method: 'POST' })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.result === 'SUCCESS') {
+      if (d.is_staff) {
+        btn.className = 'px-2 py-1 rounded-full bg-purple-500/20 text-purple-400 text-xs font-bold hover:bg-red-500/20 hover:text-red-400 transition cursor-pointer';
+        btn.textContent = '관리자 ✓';
+      } else {
+        btn.className = 'px-2 py-1 rounded-full bg-zinc-700 text-zinc-500 text-xs hover:bg-purple-500/20 hover:text-purple-400 transition cursor-pointer';
+        btn.textContent = '관리자 지정';
+      }
+    }
   });
 }
 </script>

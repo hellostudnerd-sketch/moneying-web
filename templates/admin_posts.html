@@ -27,7 +27,8 @@
         <div class="col-span-1">ID</div>
         <div class="col-span-2">카테고리</div>
         <div class="col-span-6">제목</div>
-        <div class="col-span-2">생성일</div>
+        <div class="col-span-1">생성일</div>
+        <div class="col-span-1">업로더</div>
         <div class="col-span-1 text-right">액션</div>
       </div>
 
@@ -40,8 +41,11 @@
           </span>
         </div>
         <div class="col-span-6 font-bold truncate">{{ p.title }}</div>
-        <div class="col-span-2 text-zinc-500 text-[12px] font-bold">
+        <div class="col-span-1 text-zinc-500 text-[12px] font-bold">
           {{ (p.created_at|string)[:10] }}
+        </div>
+        <div class="col-span-1 text-[12px]">
+          {% if p.uploaded_by and uploaders.get(p.uploaded_by) %}<span class="text-purple-400 font-bold">{{ uploaders[p.uploaded_by] }}</span>{% else %}<span class="text-zinc-600">-</span>{% endif %}
         </div>
         <div class="col-span-1 flex justify-end gap-2">
           <a href="/admin/posts/{{ p.id }}/edit?next=/admin/posts"

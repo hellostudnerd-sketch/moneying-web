@@ -91,9 +91,9 @@
           <label class="text-sm font-black text-zinc-300">미리보기 영상 업로드</label>
           <p class="text-xs text-zinc-500 mt-1">720p로 자동 압축, 최대 60초</p>
           
-          <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
             <!-- 왼쪽: 영상 업로드 -->
-            <div id="videoDropzone" class="border-2 border-dashed border-zinc-700 rounded-2xl p-6 bg-zinc-950/40 min-h-[300px] flex flex-col">
+            <div id="videoDropzone" class="border-2 border-dashed border-zinc-700 rounded-2xl p-6 bg-zinc-950/40 flex flex-col">
               <p class="text-sm font-black text-zinc-300 mb-3">영상</p>
               
               <div id="videoUploadArea" class="flex-1 flex flex-col items-center justify-center {{ 'hidden' if post and post.preview_video else '' }}">
@@ -124,7 +124,7 @@
             </div>
             
             <!-- 오른쪽: 썸네일 -->
-            <div id="thumbSection" class="border-2 border-dashed border-zinc-700 rounded-2xl p-6 bg-zinc-950/40 min-h-[300px] flex flex-col {{ '' if post and post.preview_video else 'opacity-50' }}">
+            <div id="thumbSection" class="border-2 border-dashed border-zinc-700 rounded-2xl p-6 bg-zinc-950/40 flex flex-col {{ '' if post and post.preview_video else 'opacity-50' }}">
               <p class="text-sm font-black text-zinc-300 mb-3">썸네일</p>
               
               <div class="flex-1 flex items-center justify-center">

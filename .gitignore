@@ -1,1 +1,8 @@
 database.db
+__pycache__/
+*.bak
+venv/
+__pycache__/
+*.pyc
+*.bak
+database.db
