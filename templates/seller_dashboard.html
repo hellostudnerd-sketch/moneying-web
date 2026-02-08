@@ -4,6 +4,7 @@
 {% block content %}
 <div class="max-w-4xl mx-auto">
   
+  <a href="javascript:history.back()" class="text-zinc-500 hover:text-white transition text-sm mb-4 inline-block">← 뒤로가기</a>
   <div class="flex items-center justify-between mb-8">
     <div>
       <h1 class="text-3xl font-black">판매자 대시보드</h1>
@@ -45,9 +46,6 @@
         <div class="text-4xl mb-4">📹</div>
         <div class="text-zinc-500 font-bold mb-2">아직 등록한 영상이 없습니다</div>
         <p class="text-zinc-600 text-sm mb-6">첫 번째 영상을 업로드해보세요!</p>
-        <a href="/seller/upload" class="inline-block bg-[#a3e635] text-black font-bold px-6 py-3 rounded-lg hover:bg-white transition">
-          영상 업로드하기
-        </a>
       </div>
     {% else %}
       <div class="divide-y divide-zinc-800/70">
@@ -78,11 +76,6 @@
         {% endfor %}
       </div>
     {% endif %}
-  </div>
-
-  <div class="mt-6 flex gap-3">
-    <a href="/my" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-4 rounded-xl text-center transition">내정보로</a>
-    <a href="/gallery" class="flex-1 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white font-bold py-4 rounded-xl text-center transition">갤러리 보기</a>
   </div>
 
 </div>
