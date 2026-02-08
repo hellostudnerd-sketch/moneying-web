@@ -90,6 +90,7 @@
       <span class="text-xs font-bold {% if p.category == 'notice' %}cat-notice{% elif p.category == 'deal' %}cat-deal{% elif p.category == 'revenue' %}cat-revenue{% elif p.category == 'tips' %}cat-tips{% elif p.category == 'qna' %}cat-qna{% else %}cat-free{% endif %}">
         {% if p.category == 'notice' %}📢 공지사항{% elif p.category == 'deal' %}🛍️ 공구/협찬{% elif p.category == 'revenue' %}💸 수익인증{% elif p.category == 'tips' %}💡 꿀팁공유{% elif p.category == 'qna' %}❓ 질문답변{% else %}💬 자유게시판{% endif %}
       </span>
+      {% if p.category == 'deal' %}{% if p.deal_closed or not p.is_deal_available %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">마감</span>{% elif p.deal_deadline and p.deal_deadline < now %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">기간마감</span>{% elif p.deal_max_people and p.applications|length >= p.deal_max_people %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">인원마감</span>{% else %}<span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded font-bold ml-1">진행중</span>{% endif %}{% endif %}
       <h3 class="text-white font-bold mt-2 mb-2 line-clamp-1">{{ p.title }}</h3>
       <p class="text-zinc-400 text-sm line-clamp-2 mb-3">{{ p.content[:80] }}{% if p.content|length > 80 %}...{% endif %}</p>
       <div class="flex items-center gap-3 text-xs text-zinc-500">
@@ -157,6 +158,7 @@
           {% if p.category == 'notice' %}📢 공지사항{% elif p.category == 'deal' %}🛍️ 공구/협찬{% elif p.category == 'revenue' %}💸 수익인증{% elif p.category == 'tips' %}💡 꿀팁공유{% elif p.category == 'qna' %}❓ 질문답변{% else %}💬 자유게시판{% endif %}
         </span>
         
+        {% if p.category == 'deal' %}{% if p.deal_closed or not p.is_deal_available %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">마감</span>{% elif p.deal_deadline and p.deal_deadline < now %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">기간마감</span>{% elif p.deal_max_people and p.applications|length >= p.deal_max_people %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">인원마감</span>{% else %}<span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded font-bold ml-1">진행중</span>{% endif %}{% endif %}
         <h3 class="text-white font-bold mt-2 mb-1 line-clamp-1">{{ p.title }}</h3>
         <p class="text-zinc-400 text-sm line-clamp-1">{{ p.content[:100] }}{% if p.content|length > 100 %}...{% endif %}</p>
         
