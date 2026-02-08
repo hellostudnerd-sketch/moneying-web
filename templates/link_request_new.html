@@ -9,18 +9,14 @@
 
   <a href="javascript:history.back()" class="text-zinc-500 hover:text-white transition text-sm mb-4 inline-block">← 뒤로가기</a>
 
-  <div>
+  <h1 class="text-2xl font-black mb-1">링크요청 하기</h1>
 
-    <h1 class="text-2xl font-black">링크요청 하기</h1>
-
-    <p class="text-zinc-400 text-sm mt-1">오픈방 인증 후 원본 링크를 남겨주세요.</p>
-
-  </div>
+  <p class="text-zinc-400 text-sm mb-6">오픈방 인증 후 원본 링크를 남겨주세요.</p>
 
   </div>
 
   <!-- 이번 달 사용량 표시 -->
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 mb-6">
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 mb-6 max-w-lg mx-auto">
     <div class="flex items-center justify-between mb-2">
       <span class="text-sm font-bold text-zinc-400">이번 달 요청</span>
       <span class="font-black 
@@ -65,7 +61,7 @@
     
   {% else %}
     <!-- 폼 -->
-    <form method="POST" class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 space-y-6">
+    <form method="POST" class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 space-y-6 max-w-lg mx-auto">
 
       <!-- 오픈방 인증 섹션 (비구독자만) -->
       {% if not session.get('subscriber') %}
