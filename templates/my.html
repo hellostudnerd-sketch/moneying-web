@@ -120,7 +120,8 @@
       </a>
     {% endif %}
     
-    <!-- 링크요청 -->
+    <!-- 링크요청 (판매자는 숨김) -->
+    {% if not user_is_seller %}
     <a href="/link-requests/new" class="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition">
       <div class="flex items-center gap-3">
         <span class="text-xl">🔗</span>
