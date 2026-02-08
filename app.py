@@ -1819,7 +1819,7 @@ def community_page():
     for p in posts:
         post_likes[p.id] = CommunityLike.query.filter_by(post_id=p.id).count()
     
-    return render_template("community.html", posts=posts, my_linkreq_count=my_linkreq_count, post_likes=post_likes)
+    return render_template("community.html", posts=posts, my_linkreq_count=my_linkreq_count, post_likes=post_likes, now=datetime.utcnow())
 
 @app.route("/community/<int:post_id>")
 def community_detail(post_id):
