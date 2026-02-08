@@ -480,6 +480,9 @@
     }
 
     // ============ 폼 제출 ============
+    function scrollToForm() {
+      document.getElementById("formArea").scrollIntoView({ behavior: "smooth" });
+    }
     async function submitForm() {
       const email = document.getElementById('inputEmail').value.trim();
 
