@@ -12,26 +12,22 @@
     * { font-family: 'Noto Sans KR', sans-serif; }
     body { background: #0a0a0a; color: #e4e4e7; }
 
-    /* 카운터 애니메이션 */
     @keyframes pulse-glow {
       0%, 100% { box-shadow: 0 0 20px rgba(196, 255, 0, 0.15); }
       50% { box-shadow: 0 0 40px rgba(196, 255, 0, 0.3); }
     }
     .counter-glow { animation: pulse-glow 2s ease-in-out infinite; }
 
-    /* 프로그레스 바 */
     .progress-bar {
       background: linear-gradient(90deg, #c4ff00 0%, #a3e635 100%);
       transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* 히어로 그라디언트 배경 */
     .hero-bg {
       background: radial-gradient(ellipse at 50% 0%, rgba(196, 255, 0, 0.06) 0%, transparent 60%),
                   radial-gradient(ellipse at 80% 50%, rgba(196, 255, 0, 0.03) 0%, transparent 40%);
     }
 
-    /* 카드 호버 */
     .feature-card {
       transition: transform 0.3s ease, border-color 0.3s ease;
     }
@@ -40,7 +36,6 @@
       border-color: rgba(196, 255, 0, 0.4);
     }
 
-    /* CTA 버튼 */
     .cta-btn {
       background: #c4ff00;
       color: #000;
@@ -59,14 +54,12 @@
       box-shadow: none;
     }
 
-    /* 숫자 카운팅 애니메이션 */
     @keyframes countUp {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
     .count-animate { animation: countUp 0.6s ease-out forwards; }
 
-    /* 스크롤 페이드인 */
     .fade-in {
       opacity: 0;
       transform: translateY(30px);
@@ -77,14 +70,12 @@
       transform: translateY(0);
     }
 
-    /* 경고 깜빡임 */
     @keyframes blink-warn {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
     }
     .blink-warn { animation: blink-warn 1.5s ease-in-out infinite; }
 
-    /* 손실 금액 카운터 */
     @keyframes loss-count {
       0% { color: #ef4444; }
       50% { color: #f87171; }
@@ -99,13 +90,11 @@
   <section class="hero-bg min-h-screen flex items-center justify-center px-4 py-20">
     <div class="max-w-3xl mx-auto text-center">
 
-      <!-- 선착순 배지 -->
       <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 border border-red-500/30 mb-8">
         <span class="w-2 h-2 rounded-full bg-red-500 blink-warn"></span>
         <span class="text-red-400 text-sm font-bold">선착순 100명 한정</span>
       </div>
 
-      <!-- 메인 카피 -->
       <h1 class="text-4xl md:text-6xl font-black leading-tight mb-6">
         쿠팡 링크 <span class="text-red-400">품절</span>,<br>
         몰래 <span class="text-red-400">수익이 새고</span> 있습니다
@@ -123,14 +112,12 @@
           <span id="remainCount" class="text-5xl md:text-6xl font-black text-[#c4ff00] count-animate">--</span>
           <span class="text-zinc-500 text-2xl font-bold">/ 100</span>
         </div>
-        <!-- 프로그레스 바 -->
         <div class="w-full bg-zinc-800 rounded-full h-3 overflow-hidden">
           <div id="progressBar" class="progress-bar h-full rounded-full" style="width: 0%"></div>
         </div>
         <p class="text-zinc-600 text-xs mt-2" id="progressText">loading...</p>
       </div>
 
-      <!-- CTA -->
       <div>
         <button id="ctaHero" onclick="scrollToForm()" class="cta-btn text-lg font-black px-10 py-4 rounded-xl">
           무료체험 신청하기 →
@@ -153,7 +140,6 @@
       </div>
 
       <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 md:p-8">
-        <!-- 시뮬레이션 -->
         <div class="space-y-6">
           <div class="flex items-center justify-between py-3 border-b border-zinc-800">
             <span class="text-zinc-400">하루 평균 클릭수</span>
@@ -172,13 +158,17 @@
             <span class="text-red-400 font-bold">평균 3~7일 (모르고 지나감)</span>
           </div>
           <div class="flex items-center justify-between py-4 bg-red-500/10 rounded-xl px-4 -mx-1">
-            <span class="text-zinc-300 font-bold">월 예상 손실</span>
-            <span class="text-red-400 text-2xl md:text-3xl font-black loss-counter">₩30,000 ~ 150,000+</span>
+            <span class="text-zinc-300 font-bold">링크 1개 월 손실</span>
+            <span class="text-red-400 text-xl md:text-2xl font-black">₩30,000 ~ 150,000</span>
+          </div>
+          <div class="flex items-center justify-between py-4 bg-red-500/20 rounded-xl px-4 -mx-1 mt-3">
+            <span class="text-white font-bold">링크 10개면?</span>
+            <span class="text-red-400 text-2xl md:text-3xl font-black loss-counter">월 30만 ~ 150만원+</span>
           </div>
         </div>
 
         <p class="text-zinc-500 text-sm mt-6 text-center">
-          링크가 10개, 20개라면? 손실은 기하급수적으로 늘어납니다.
+          대부분 품절된 걸 모르고 며칠씩 방치합니다. 그 사이 수익은 계속 새고 있어요.
         </p>
       </div>
     </div>
@@ -220,14 +210,33 @@
 
       <!-- 스크린샷 -->
       <div class="mt-12 bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 md:p-8">
-        <!-- 프로그램 화면 (풀사이즈) -->
         <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-3">📊 프로핏가드 프로그램</p>
         <img src="/static/images/profitguard_app.png" alt="프로핏가드 프로그램 화면" class="w-full rounded-xl border border-zinc-700/50 mb-8">
 
-        <!-- 텔레그램 알림 (작게) -->
         <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-3">📱 텔레그램 실시간 알림 예시</p>
         <div class="flex justify-center">
           <img src="/static/images/profitguard_telegram.png" alt="텔레그램 품절 알림" class="w-1/2 md:w-1/3 rounded-xl border border-zinc-700/50">
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ====== 신뢰 요소 ====== -->
+  <section class="px-4 py-16 fade-in">
+    <div class="max-w-3xl mx-auto">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
+        <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5">
+          <p class="text-[#c4ff00] text-2xl md:text-3xl font-black">2년</p>
+          <p class="text-zinc-500 text-sm">쿠팡파트너스 실전 운영</p>
+        </div>
+        <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5">
+          <p class="text-[#c4ff00] text-2xl md:text-3xl font-black">10억+</p>
+          <p class="text-zinc-500 text-sm">누적 수익 달성</p>
+        </div>
+        <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 col-span-2 md:col-span-1">
+          <p class="text-[#c4ff00] text-2xl md:text-3xl font-black">수천 건</p>
+          <p class="text-zinc-500 text-sm">품절 링크 감지</p>
         </div>
       </div>
     </div>
@@ -284,7 +293,6 @@
       <p class="text-zinc-400 mb-10">체험 기간에는 Pro 전 기능을 사용할 수 있습니다</p>
 
       <div class="grid md:grid-cols-2 gap-5 max-w-2xl mx-auto">
-        <!-- 라이트 -->
         <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 text-left">
           <p class="text-zinc-400 text-sm font-bold mb-1">Lite</p>
           <p class="text-white text-3xl font-black mb-1">19,000<span class="text-zinc-500 text-base font-medium">원/월</span></p>
@@ -296,7 +304,6 @@
             <div class="flex items-center gap-2 text-zinc-500"><span class="text-zinc-600">—</span> 링크 등록 제한</div>
           </div>
         </div>
-        <!-- 프로 -->
         <div class="bg-zinc-900/60 border-2 border-[#c4ff00]/50 rounded-2xl p-6 text-left relative">
           <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-[#c4ff00] text-black text-xs font-black rounded-full">추천</div>
           <p class="text-[#c4ff00] text-sm font-bold mb-1">Pro</p>
@@ -329,29 +336,10 @@
         </div>
 
         <div id="formArea">
-          <div class="space-y-4">
-            <div>
-              <label class="text-zinc-400 text-sm font-medium block mb-1.5">이메일 *</label>
-              <input type="email" id="inputEmail" placeholder="example@email.com"
-                     class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-[#c4ff00]/50 transition">
-            </div>
-            <div>
-              <label class="text-zinc-400 text-sm font-medium block mb-1.5">채널/블로그 URL (선택)</label>
-              <input type="text" id="inputChannel" placeholder="인스타, 유튜브, 블로그 등"
-                     class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-[#c4ff00]/50 transition">
-            </div>
-            <div>
-              <label class="text-zinc-400 text-sm font-medium block mb-1.5">쿠팡파트너스 활동 유형 (선택)</label>
-              <select id="inputType"
-                      class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#c4ff00]/50 transition">
-                <option value="">선택해주세요</option>
-                <option value="youtube">유튜브 (직촬)</option>
-                <option value="instagram">인스타그램</option>
-                <option value="blog">블로그 / 카페</option>
-                <option value="shortform">숏폼 (2차가공)</option>
-                <option value="other">기타</option>
-              </select>
-            </div>
+          <div>
+            <label class="text-zinc-400 text-sm font-medium block mb-1.5">이메일</label>
+            <input type="email" id="inputEmail" placeholder="example@email.com"
+                   class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-[#c4ff00]/50 transition">
           </div>
 
           <button id="submitBtn" onclick="submitForm()" class="cta-btn w-full text-lg font-black py-4 rounded-xl mt-6">
@@ -363,7 +351,6 @@
           </p>
         </div>
 
-        <!-- 성공 메시지 (숨김) -->
         <div id="successArea" class="hidden text-center py-8">
           <div class="text-5xl mb-4">🎉</div>
           <h3 class="text-2xl font-black text-[#c4ff00] mb-2">신청 완료!</h3>
@@ -373,7 +360,6 @@
           </div>
         </div>
 
-        <!-- 마감 메시지 (숨김) -->
         <div id="closedArea" class="hidden text-center py-8">
           <div class="text-5xl mb-4">🔒</div>
           <h3 class="text-2xl font-black text-zinc-400 mb-2">무료체험이 마감되었습니다</h3>
@@ -387,7 +373,6 @@
   </section>
 
 
-  <!-- ====== 푸터 ====== -->
   <footer class="px-4 py-12 border-t border-zinc-900">
     <div class="max-w-3xl mx-auto text-center">
       <p class="text-[#c4ff00] font-black text-lg mb-2">PROFIT GUARD</p>
@@ -396,24 +381,12 @@
   </footer>
 
 
-  <!-- ====== JavaScript ====== -->
   <script>
-    // ============ 설정 ============
     const TOTAL_SLOTS = 100;
-
-    // ============ 카운터 업데이트 ============
-    // 실제 서버 연동 시: fetch('/api/profitguard-event/count') 로 교체
-    // 지금은 데모용 로컬 카운트
     let currentApplied = 0;
 
     async function loadCount() {
       try {
-        // TODO: 실제 서버 API로 교체
-        // const res = await fetch('/api/profitguard-event/count');
-        // const data = await res.json();
-        // currentApplied = data.count;
-
-        // 데모용: localStorage에서 읽기 (서버 연동 전)
         currentApplied = parseInt(localStorage.getItem('pg_event_count') || '0');
         updateCounter();
       } catch (e) {
@@ -436,7 +409,6 @@
         document.getElementById('progressText').className = 'text-zinc-600 text-xs mt-2';
       }
 
-      // 마감 시
       if (remain <= 0) {
         document.getElementById('formArea').classList.add('hidden');
         document.getElementById('closedArea').classList.remove('hidden');
@@ -445,11 +417,8 @@
       }
     }
 
-    // ============ 폼 제출 ============
     async function submitForm() {
       const email = document.getElementById('inputEmail').value.trim();
-      const channel = document.getElementById('inputChannel').value.trim();
-      const type = document.getElementById('inputType').value;
 
       if (!email || !email.includes('@')) {
         alert('이메일을 올바르게 입력해주세요.');
@@ -461,22 +430,10 @@
       btn.textContent = '신청 중...';
 
       try {
-        // TODO: 실제 서버 API로 교체
-        // const res = await fetch('/api/profitguard-event/apply', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ email, channel, type })
-        // });
-        // const data = await res.json();
-        // if (!data.ok) { alert(data.error); return; }
-
-        // 데모용: localStorage 카운트 증가
         currentApplied++;
         localStorage.setItem('pg_event_count', currentApplied.toString());
-
         updateCounter();
 
-        // 성공 표시
         document.getElementById('formArea').classList.add('hidden');
         document.getElementById('successArea').classList.remove('hidden');
 
@@ -487,12 +444,10 @@
       }
     }
 
-    // ============ 스크롤 이동 ============
     function scrollToForm() {
       document.getElementById('applyForm').scrollIntoView({ behavior: 'smooth' });
     }
 
-    // ============ 스크롤 페이드인 ============
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -503,7 +458,6 @@
 
     document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-    // ============ 초기 로드 ============
     loadCount();
   </script>
 
