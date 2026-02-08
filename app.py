@@ -3082,6 +3082,9 @@ def api_notifications_delete_all():
     db.session.commit()
     return jsonify({"ok": True})
 
+@app.route("/profitguard-event")
+def profitguard_event():
+    return render_template("profitguard_event.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
