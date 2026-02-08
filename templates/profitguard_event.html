@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>프로핏가드 무료체험 - 선착순 100명</title>
+  <meta name="description" content="쿠팡 파트너스 품절 링크, 몰래 수익이 새고 있습니다. 선착순 100명 14일 무료체험.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Noto Sans KR', sans-serif; }
+    body { background: #0a0a0a; color: #e4e4e7; }
+
+    /* 카운터 애니메이션 */
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(196, 255, 0, 0.15); }
+      50% { box-shadow: 0 0 40px rgba(196, 255, 0, 0.3); }
+    }
+    .counter-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+    /* 프로그레스 바 */
+    .progress-bar {
+      background: linear-gradient(90deg, #c4ff00 0%, #a3e635 100%);
+      transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* 히어로 그라디언트 배경 */
+    .hero-bg {
+      background: radial-gradient(ellipse at 50% 0%, rgba(196, 255, 0, 0.06) 0%, transparent 60%),
+                  radial-gradient(ellipse at 80% 50%, rgba(196, 255, 0, 0.03) 0%, transparent 40%);
+    }
+
+    /* 카드 호버 */
+    .feature-card {
+      transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(196, 255, 0, 0.4);
+    }
+
+    /* CTA 버튼 */
+    .cta-btn {
+      background: #c4ff00;
+      color: #000;
+      transition: all 0.3s ease;
+    }
+    .cta-btn:hover {
+      background: #d4ff33;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(196, 255, 0, 0.3);
+    }
+    .cta-btn:disabled {
+      background: #3f3f46;
+      color: #71717a;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* 숫자 카운팅 애니메이션 */
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .count-animate { animation: countUp 0.6s ease-out forwards; }
+
+    /* 스크롤 페이드인 */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* 경고 깜빡임 */
+    @keyframes blink-warn {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .blink-warn { animation: blink-warn 1.5s ease-in-out infinite; }
+
+    /* 손실 금액 카운터 */
+    @keyframes loss-count {
+      0% { color: #ef4444; }
+      50% { color: #f87171; }
+      100% { color: #ef4444; }
+    }
+    .loss-counter { animation: loss-count 2s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+
+  <!-- ====== 히어로 섹션 ====== -->
+  <section class="hero-bg min-h-screen flex items-center justify-center px-4 py-20">
+    <div class="max-w-3xl mx-auto text-center">
+
+      <!-- 선착순 배지 -->
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 border border-red-500/30 mb-8">
+        <span class="w-2 h-2 rounded-full bg-red-500 blink-warn"></span>
+        <span class="text-red-400 text-sm font-bold">선착순 100명 한정</span>
+      </div>
+
+      <!-- 메인 카피 -->
+      <h1 class="text-4xl md:text-6xl font-black leading-tight mb-6">
+        쿠팡 링크 <span class="text-red-400">품절</span>,<br>
+        몰래 <span class="text-red-400">수익이 새고</span> 있습니다
+      </h1>
+
+      <p class="text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed">
+        인포크링크에 정리해둔 쿠팡 링크, 품절된 거 알고 계셨나요?<br class="hidden md:block">
+        하루만 방치해도 수만 원의 수익이 사라집니다.
+      </p>
+
+      <!-- 실시간 카운터 -->
+      <div class="counter-glow inline-block bg-zinc-900/80 border border-zinc-700 rounded-2xl p-6 md:p-8 mb-10 w-full max-w-md">
+        <p class="text-zinc-500 text-sm font-medium mb-3">14일 무료체험 남은 자리</p>
+        <div class="flex items-center justify-center gap-3 mb-4">
+          <span id="remainCount" class="text-5xl md:text-6xl font-black text-[#c4ff00] count-animate">--</span>
+          <span class="text-zinc-500 text-2xl font-bold">/ 100</span>
+        </div>
+        <!-- 프로그레스 바 -->
+        <div class="w-full bg-zinc-800 rounded-full h-3 overflow-hidden">
+          <div id="progressBar" class="progress-bar h-full rounded-full" style="width: 0%"></div>
+        </div>
+        <p class="text-zinc-600 text-xs mt-2" id="progressText">loading...</p>
+      </div>
+
+      <!-- CTA -->
+      <div>
+        <button id="ctaHero" onclick="scrollToForm()" class="cta-btn text-lg font-black px-10 py-4 rounded-xl">
+          무료체험 신청하기 →
+        </button>
+        <p class="text-zinc-600 text-sm mt-3">카드 등록 없음 · 14일 후 자동 종료</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ====== 손실 시각화 섹션 ====== -->
+  <section class="px-4 py-20 fade-in">
+    <div class="max-w-3xl mx-auto">
+
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-black mb-4">
+          품절 링크 <span class="text-red-400">1개</span>가<br>
+          한 달에 얼마를 잃게 할까요?
+        </h2>
+      </div>
+
+      <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 md:p-8">
+        <!-- 시뮬레이션 -->
+        <div class="space-y-6">
+          <div class="flex items-center justify-between py-3 border-b border-zinc-800">
+            <span class="text-zinc-400">하루 평균 클릭수</span>
+            <span class="text-white font-bold">약 50회</span>
+          </div>
+          <div class="flex items-center justify-between py-3 border-b border-zinc-800">
+            <span class="text-zinc-400">평균 전환율</span>
+            <span class="text-white font-bold">3~5%</span>
+          </div>
+          <div class="flex items-center justify-between py-3 border-b border-zinc-800">
+            <span class="text-zinc-400">건당 수익</span>
+            <span class="text-white font-bold">약 500~1,500원</span>
+          </div>
+          <div class="flex items-center justify-between py-3 border-b border-zinc-800">
+            <span class="text-zinc-400">품절 방치 기간</span>
+            <span class="text-red-400 font-bold">평균 3~7일 (모르고 지나감)</span>
+          </div>
+          <div class="flex items-center justify-between py-4 bg-red-500/10 rounded-xl px-4 -mx-1">
+            <span class="text-zinc-300 font-bold">월 예상 손실</span>
+            <span class="text-red-400 text-2xl md:text-3xl font-black loss-counter">₩30,000 ~ 150,000+</span>
+          </div>
+        </div>
+
+        <p class="text-zinc-500 text-sm mt-6 text-center">
+          링크가 10개, 20개라면? 손실은 기하급수적으로 늘어납니다.
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ====== 해결책: 프로핏가드 ====== -->
+  <section class="px-4 py-20 fade-in">
+    <div class="max-w-4xl mx-auto">
+
+      <div class="text-center mb-14">
+        <div class="inline-block px-4 py-1 rounded-full bg-[#c4ff00]/10 border border-[#c4ff00]/30 text-[#c4ff00] text-sm font-bold mb-4">
+          PROFIT GUARD
+        </div>
+        <h2 class="text-3xl md:text-4xl font-black mb-4">
+          <span class="text-[#c4ff00]">프로핏가드</span>가 지켜드립니다
+        </h2>
+        <p class="text-zinc-400 text-lg">쿠팡 파트너스 링크 품절 감지 · 실시간 알림 · 수익 보호</p>
+      </div>
+
+      <!-- 기능 카드 3개 -->
+      <div class="grid md:grid-cols-3 gap-5">
+        <div class="feature-card bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+          <div class="w-12 h-12 rounded-xl bg-[#c4ff00]/10 flex items-center justify-center text-2xl mb-4">🔍</div>
+          <h3 class="text-white font-bold text-lg mb-2">자동 품절 감지</h3>
+          <p class="text-zinc-400 text-sm leading-relaxed">등록한 쿠팡 링크를 주기적으로 체크합니다. 품절, 단종, 페이지 삭제까지 자동으로 감지합니다.</p>
+        </div>
+        <div class="feature-card bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+          <div class="w-12 h-12 rounded-xl bg-[#c4ff00]/10 flex items-center justify-center text-2xl mb-4">📱</div>
+          <h3 class="text-white font-bold text-lg mb-2">텔레그램 실시간 알림</h3>
+          <p class="text-zinc-400 text-sm leading-relaxed">품절이 감지되면 텔레그램으로 즉시 알려드립니다. 빠르게 대체 상품으로 교체할 수 있어요.</p>
+        </div>
+        <div class="feature-card bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+          <div class="w-12 h-12 rounded-xl bg-[#c4ff00]/10 flex items-center justify-center text-2xl mb-4">📊</div>
+          <h3 class="text-white font-bold text-lg mb-2">대시보드 관리</h3>
+          <p class="text-zinc-400 text-sm leading-relaxed">모든 링크 상태를 한눈에 확인하세요. 정상, 품절, 삭제 상태를 실시간으로 보여줍니다.</p>
+        </div>
+      </div>
+
+      <!-- 스크린샷 -->
+      <div class="mt-12 bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 md:p-8">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-3">📊 대시보드 화면</p>
+            <img src="https://image2url.com/r2/default/images/1769514685498-d15ffccb-a9f4-480a-ad1c-215752ebcead.png" alt="프로핏가드 대시보드" class="w-full rounded-xl border border-zinc-700/50">
+          </div>
+          <div>
+            <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-3">📱 텔레그램 알림</p>
+            <img src="https://image2url.com/r2/default/images/1769514806003-5df231fe-b106-420a-86c4-82c39ff0f4b8.jpg" alt="텔레그램 알림" class="w-full rounded-xl border border-zinc-700/50">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ====== 이런 분들에게 ====== -->
+  <section class="px-4 py-20 fade-in">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-black text-center mb-12">
+        이런 분들에게 <span class="text-[#c4ff00]">딱</span>입니다
+      </h2>
+
+      <div class="space-y-4">
+        <div class="flex items-start gap-4 bg-zinc-900/40 border border-zinc-800/50 rounded-xl p-5">
+          <span class="text-[#c4ff00] text-xl mt-0.5">✓</span>
+          <div>
+            <p class="text-white font-bold">인포크링크에 쿠팡 링크를 정리해둔 분</p>
+            <p class="text-zinc-500 text-sm">링크가 많을수록 품절 관리가 어렵습니다</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4 bg-zinc-900/40 border border-zinc-800/50 rounded-xl p-5">
+          <span class="text-[#c4ff00] text-xl mt-0.5">✓</span>
+          <div>
+            <p class="text-white font-bold">직촬 유튜버 · 인스타 인플루언서</p>
+            <p class="text-zinc-500 text-sm">영상은 계속 돌아가는데, 링크가 죽어있으면 수익이 0입니다</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4 bg-zinc-900/40 border border-zinc-800/50 rounded-xl p-5">
+          <span class="text-[#c4ff00] text-xl mt-0.5">✓</span>
+          <div>
+            <p class="text-white font-bold">블로그 · 카페에 쿠팡 링크를 넣는 분</p>
+            <p class="text-zinc-500 text-sm">과거 글의 링크까지 일일이 확인하기 힘들죠</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4 bg-zinc-900/40 border border-zinc-800/50 rounded-xl p-5">
+          <span class="text-[#c4ff00] text-xl mt-0.5">✓</span>
+          <div>
+            <p class="text-white font-bold">쿠팡 파트너스로 월 수익을 만들고 있는 분</p>
+            <p class="text-zinc-500 text-sm">수익이 클수록, 품절 한 건의 손실도 큽니다</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ====== 체험 후 요금제 ====== -->
+  <section class="px-4 py-20 fade-in">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="text-3xl md:text-4xl font-black mb-4">
+        14일 체험 후, <span class="text-[#c4ff00]">선택</span>하세요
+      </h2>
+      <p class="text-zinc-400 mb-10">체험 기간에는 Pro 전 기능을 사용할 수 있습니다</p>
+
+      <div class="grid md:grid-cols-2 gap-5 max-w-2xl mx-auto">
+        <!-- 라이트 -->
+        <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 text-left">
+          <p class="text-zinc-400 text-sm font-bold mb-1">Lite</p>
+          <p class="text-white text-3xl font-black mb-1">19,000<span class="text-zinc-500 text-base font-medium">원/월</span></p>
+          <div class="h-px bg-zinc-800 my-4"></div>
+          <div class="space-y-3 text-sm">
+            <div class="flex items-center gap-2 text-zinc-300"><span class="text-[#c4ff00]">✓</span> 품절 자동 감지</div>
+            <div class="flex items-center gap-2 text-zinc-300"><span class="text-[#c4ff00]">✓</span> 대시보드 관리</div>
+            <div class="flex items-center gap-2 text-zinc-500"><span class="text-zinc-600">—</span> 텔레그램 알림 없음</div>
+            <div class="flex items-center gap-2 text-zinc-500"><span class="text-zinc-600">—</span> 링크 등록 제한</div>
+          </div>
+        </div>
+        <!-- 프로 -->
+        <div class="bg-zinc-900/60 border-2 border-[#c4ff00]/50 rounded-2xl p-6 text-left relative">
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-[#c4ff00] text-black text-xs font-black rounded-full">추천</div>
+          <p class="text-[#c4ff00] text-sm font-bold mb-1">Pro</p>
+          <p class="text-white text-3xl font-black mb-1">39,000<span class="text-zinc-500 text-base font-medium">원/월</span></p>
+          <div class="h-px bg-zinc-800 my-4"></div>
+          <div class="space-y-3 text-sm">
+            <div class="flex items-center gap-2 text-zinc-300"><span class="text-[#c4ff00]">✓</span> 품절 자동 감지</div>
+            <div class="flex items-center gap-2 text-zinc-300"><span class="text-[#c4ff00]">✓</span> 대시보드 관리</div>
+            <div class="flex items-center gap-2 text-white font-medium"><span class="text-[#c4ff00]">✓</span> 텔레그램 실시간 알림</div>
+            <div class="flex items-center gap-2 text-white font-medium"><span class="text-[#c4ff00]">✓</span> 링크 무제한 등록</div>
+          </div>
+        </div>
+      </div>
+
+      <p class="text-zinc-600 text-sm mt-6">14일 무료체험 종료 후 자동 결제 없음 · 직접 선택</p>
+    </div>
+  </section>
+
+
+  <!-- ====== 신청 폼 ====== -->
+  <section id="applyForm" class="px-4 py-20 fade-in">
+    <div class="max-w-lg mx-auto">
+
+      <div class="bg-zinc-900/80 border border-zinc-700 rounded-2xl p-8 md:p-10">
+        <div class="text-center mb-8">
+          <h2 class="text-2xl md:text-3xl font-black mb-2">
+            <span class="text-[#c4ff00]">14일</span> 무료체험 신청
+          </h2>
+          <p class="text-zinc-400 text-sm">Pro 전 기능 · 카드 등록 없음 · 자동결제 없음</p>
+        </div>
+
+        <div id="formArea">
+          <div class="space-y-4">
+            <div>
+              <label class="text-zinc-400 text-sm font-medium block mb-1.5">이메일 *</label>
+              <input type="email" id="inputEmail" placeholder="example@email.com"
+                     class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-[#c4ff00]/50 transition">
+            </div>
+            <div>
+              <label class="text-zinc-400 text-sm font-medium block mb-1.5">채널/블로그 URL (선택)</label>
+              <input type="text" id="inputChannel" placeholder="인스타, 유튜브, 블로그 등"
+                     class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-[#c4ff00]/50 transition">
+            </div>
+            <div>
+              <label class="text-zinc-400 text-sm font-medium block mb-1.5">쿠팡파트너스 활동 유형 (선택)</label>
+              <select id="inputType"
+                      class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#c4ff00]/50 transition">
+                <option value="">선택해주세요</option>
+                <option value="youtube">유튜브 (직촬)</option>
+                <option value="instagram">인스타그램</option>
+                <option value="blog">블로그 / 카페</option>
+                <option value="shortform">숏폼 (2차가공)</option>
+                <option value="other">기타</option>
+              </select>
+            </div>
+          </div>
+
+          <button id="submitBtn" onclick="submitForm()" class="cta-btn w-full text-lg font-black py-4 rounded-xl mt-6">
+            무료체험 신청하기
+          </button>
+
+          <p class="text-zinc-600 text-xs text-center mt-4">
+            신청 후 이메일로 프로핏가드 다운로드 링크가 발송됩니다.
+          </p>
+        </div>
+
+        <!-- 성공 메시지 (숨김) -->
+        <div id="successArea" class="hidden text-center py-8">
+          <div class="text-5xl mb-4">🎉</div>
+          <h3 class="text-2xl font-black text-[#c4ff00] mb-2">신청 완료!</h3>
+          <p class="text-zinc-400 mb-6">입력하신 이메일로 다운로드 링크를 보내드립니다.<br>잠시만 기다려주세요.</p>
+          <div class="bg-zinc-800/50 rounded-xl p-4">
+            <p class="text-zinc-500 text-sm">문의사항은 인스타그램 DM으로 연락주세요</p>
+          </div>
+        </div>
+
+        <!-- 마감 메시지 (숨김) -->
+        <div id="closedArea" class="hidden text-center py-8">
+          <div class="text-5xl mb-4">🔒</div>
+          <h3 class="text-2xl font-black text-zinc-400 mb-2">무료체험이 마감되었습니다</h3>
+          <p class="text-zinc-500 mb-6">100명이 모두 신청을 완료했습니다.</p>
+          <a href="/profitguard" class="inline-block bg-zinc-800 text-white font-bold px-8 py-3 rounded-xl hover:bg-zinc-700 transition">
+            요금제 확인하기 →
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ====== 푸터 ====== -->
+  <footer class="px-4 py-12 border-t border-zinc-900">
+    <div class="max-w-3xl mx-auto text-center">
+      <p class="text-[#c4ff00] font-black text-lg mb-2">PROFIT GUARD</p>
+      <p class="text-zinc-600 text-sm">by MONEYING · 쿠팡 파트너스 수익 보호 솔루션</p>
+    </div>
+  </footer>
+
+
+  <!-- ====== JavaScript ====== -->
+  <script>
+    // ============ 설정 ============
+    const TOTAL_SLOTS = 100;
+
+    // ============ 카운터 업데이트 ============
+    // 실제 서버 연동 시: fetch('/api/profitguard-event/count') 로 교체
+    // 지금은 데모용 로컬 카운트
+    let currentApplied = 0;
+
+    async function loadCount() {
+      try {
+        // TODO: 실제 서버 API로 교체
+        // const res = await fetch('/api/profitguard-event/count');
+        // const data = await res.json();
+        // currentApplied = data.count;
+
+        // 데모용: localStorage에서 읽기 (서버 연동 전)
+        currentApplied = parseInt(localStorage.getItem('pg_event_count') || '0');
+        updateCounter();
+      } catch (e) {
+        console.error('Count load error:', e);
+      }
+    }
+
+    function updateCounter() {
+      const remain = Math.max(0, TOTAL_SLOTS - currentApplied);
+      const percent = (currentApplied / TOTAL_SLOTS) * 100;
+
+      document.getElementById('remainCount').textContent = remain;
+      document.getElementById('progressBar').style.width = percent + '%';
+
+      if (remain <= 20) {
+        document.getElementById('progressText').textContent = `🔥 마감 임박! ${currentApplied}명 신청 완료`;
+        document.getElementById('progressText').className = 'text-red-400 text-xs mt-2 font-bold';
+      } else {
+        document.getElementById('progressText').textContent = `${currentApplied}명 신청 완료`;
+        document.getElementById('progressText').className = 'text-zinc-600 text-xs mt-2';
+      }
+
+      // 마감 시
+      if (remain <= 0) {
+        document.getElementById('formArea').classList.add('hidden');
+        document.getElementById('closedArea').classList.remove('hidden');
+        document.getElementById('ctaHero').disabled = true;
+        document.getElementById('ctaHero').textContent = '무료체험 마감';
+      }
+    }
+
+    // ============ 폼 제출 ============
+    async function submitForm() {
+      const email = document.getElementById('inputEmail').value.trim();
+      const channel = document.getElementById('inputChannel').value.trim();
+      const type = document.getElementById('inputType').value;
+
+      if (!email || !email.includes('@')) {
+        alert('이메일을 올바르게 입력해주세요.');
+        return;
+      }
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = '신청 중...';
+
+      try {
+        // TODO: 실제 서버 API로 교체
+        // const res = await fetch('/api/profitguard-event/apply', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({ email, channel, type })
+        // });
+        // const data = await res.json();
+        // if (!data.ok) { alert(data.error); return; }
+
+        // 데모용: localStorage 카운트 증가
+        currentApplied++;
+        localStorage.setItem('pg_event_count', currentApplied.toString());
+
+        updateCounter();
+
+        // 성공 표시
+        document.getElementById('formArea').classList.add('hidden');
+        document.getElementById('successArea').classList.remove('hidden');
+
+      } catch (e) {
+        alert('오류가 발생했습니다. 다시 시도해주세요.');
+        btn.disabled = false;
+        btn.textContent = '무료체험 신청하기';
+      }
+    }
+
+    // ============ 스크롤 이동 ============
+    function scrollToForm() {
+      document.getElementById('applyForm').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ============ 스크롤 페이드인 ============
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // ============ 초기 로드 ============
+    loadCount();
+  </script>
+
+</body>
+</html>
