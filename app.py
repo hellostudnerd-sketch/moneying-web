@@ -2242,13 +2242,51 @@ def community_write():
         if not title or not content:
             flash("제목/내용을 입력해주세요.", "error")
             return redirect(url_for("community_write"))
-        db.session.add(CommunityPost(
+
+        post = CommunityPost(
+
             category=category, title=title, content=content,
+
             author_email=session.get("user_email", "guest"),
+
             images_json=json.dumps(images, ensure_ascii=False)
-        ))
+
+        )
+
+        if category == "deal":
+
+            post.deal_type = request.form.get("deal_type", "groupbuy")
+
+            post.deal_max_people = request.form.get("deal_max_people", type=int)
+
+            post.deal_subscribers_only = bool(request.form.get("deal_subscribers_only"))
+
+            deadline = request.form.get("deal_deadline", "").strip()
+
+            if deadline:
+
+                try:
+
+                    post.deal_deadline = datetime.strptime(deadline, "%Y-%m-%d")
+
+                except:
+
+                    try:
+
+                        post.deal_deadline = datetime.strptime(deadline, "%Y-%m-%d %H:%M")
+
+                    except:
+
+                        post.deal_deadline = None
+
+        db.session.add(post)
+
         db.session.commit()
+
         return redirect(url_for("community_page"))
+
+    return render_template("community_write.html")
+
     return render_template("community_write.html")
 
 
