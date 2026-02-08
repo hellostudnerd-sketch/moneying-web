@@ -1844,7 +1844,6 @@ def community_delete(post_id):
     db.session.commit()
     return redirect(url_for("community_page"))
 
-@app.route("/community/<int:post_id>/like", methods=["POST"])
 
 
 
@@ -1904,19 +1903,37 @@ def community_edit(post_id):
 
     return render_template("community_edit.html", post=post)
 
+@app.route("/community/<int:post_id>/like", methods=["POST"])
+
 
 
 def community_like(post_id):
+
     if not session.get("user_id"):
-        return redirect(url_for("login", next=f"/community/{post_id}"))
+
+        return jsonify({"error": "login required"}), 401
+
     user_email = session.get("user_email")
+
     existing = CommunityLike.query.filter_by(post_id=post_id, user_email=user_email).first()
+
     if existing:
+
         db.session.delete(existing)
+
+        liked = False
+
     else:
+
         db.session.add(CommunityLike(post_id=post_id, user_email=user_email))
+
+        liked = True
+
     db.session.commit()
-    return redirect(url_for("community_detail", post_id=post_id))
+
+    count = CommunityLike.query.filter_by(post_id=post_id).count()
+
+    return jsonify({"liked": liked, "count": count})
 
 @app.route("/community/<int:post_id>/comment", methods=["POST"])
 def community_comment(post_id):
