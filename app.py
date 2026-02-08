@@ -1943,6 +1943,12 @@ def community_deal_apply(post_id):
 
     
 
+    if post.deal_deadline and post.deal_deadline < datetime.utcnow():
+
+        return jsonify({"ok": False, "error": "closed"})
+
+    
+
     existing = DealApplication.query.filter_by(post_id=post_id, user_id=session["user_id"]).first()
 
     if existing:
