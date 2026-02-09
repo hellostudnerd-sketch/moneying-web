@@ -65,6 +65,50 @@
             </div>
         </a>
         
+        {% for fp in fixed_products %}
+
+        <a href="{{ fp.file_url }}" class="product-card bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden transition cursor-pointer group flex flex-col" data-type="{{ fp.category }}">
+
+            <div class="relative h-56 bg-zinc-800 overflow-hidden">
+
+                <img src="{{ fp.image }}" class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition duration-500">
+
+                <div class="absolute top-3 left-3 bg-[#c4ff00] text-black text-xs font-black px-2 py-1 rounded">{{ fp.badge }}</div>
+
+                <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent opacity-90"></div>
+
+            </div>
+
+            <div class="p-6 flex-1 flex flex-col">
+
+                <div class="flex gap-2 mb-3">
+
+                    {% if fp.category == 'ebook' %}<span class="text-white text-[11px] font-bold border border-zinc-600 px-2 py-0.5 rounded">전자책</span>
+
+                    {% elif fp.category == 'tool' %}<span class="text-white text-[11px] font-bold border border-zinc-600 px-2 py-0.5 rounded">도구</span>
+
+                    {% endif %}
+
+                </div>
+
+                <h3 class="text-lg font-bold text-white mb-2 line-clamp-2">{{ fp.title }}</h3>
+
+                <div class="mt-auto pt-4 border-t border-zinc-800 flex justify-between items-center">
+
+                    <span class="text-gray-500 text-xs">MONEYING</span>
+
+                    <span class="text-white font-bold text-lg">{{ "{:,}".format(fp.price) }}원</span>
+
+                </div>
+
+            </div>
+
+        </a>
+
+        {% endfor %}
+
+
+
         {% for p in products %}
         <a href="/store/{{ p.id }}" class="product-card bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden transition cursor-pointer group flex flex-col" data-type="{{ p.category }}" data-topic="{{ p.topic }}">
             <div class="relative h-56 bg-zinc-800 overflow-hidden">
