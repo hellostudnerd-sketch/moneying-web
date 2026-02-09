@@ -1,0 +1,23 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+
+  <rect width="600" height="400" fill="#0a0a0a"/>
+
+  <rect x="0" y="0" width="600" height="400" fill="url(#g2)" opacity="0.3"/>
+
+  <defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#000"/></linearGradient></defs>
+
+  <text x="300" y="140" text-anchor="middle" fill="#c4ff00" font-size="48" font-weight="900" font-family="Arial">������️</text>
+
+  <text x="300" y="200" text-anchor="middle" fill="#fff" font-size="28" font-weight="900" font-family="Arial">ProfitGuard</text>
+
+  <text x="300" y="240" text-anchor="middle" fill="#a1a1aa" font-size="16" font-family="Arial">품절 링크 실시간 감시 · 텔레그램 알림</text>
+
+  <rect x="180" y="270" width="240" height="40" rx="8" fill="#c4ff00"/>
+
+  <text x="300" y="297" text-anchor="middle" fill="#000" font-size="18" font-weight="800" font-family="Arial">월 19,000원~</text>
+
+  <text x="300" y="370" text-anchor="middle" fill="#333" font-size="12" font-weight="800" font-family="Arial">MONEYING</text>
+
+</svg>
+

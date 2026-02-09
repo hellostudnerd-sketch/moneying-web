@@ -844,9 +844,9 @@ def store():
 
     fixed_products = [
 
-        {"id": "ebook", "title": "2차 가공 숏폼 수익화 전자책", "category": "ebook", "price": 29000, "badge": "12억 수익 인증", "image": "https://image2url.com/r2/default/images/1769514685498-d15ffccb-a9f4-480a-ad1c-215752ebcead.png", "file_url": "/store/ebook"},
+        {"id": "ebook", "title": "2차 가공 숏폼 수익화 전자책", "category": "ebook", "price": 29000, "badge": "12억 수익 인증", "image": "/static/images/store-ebook-thumb.svg", "file_url": "/store/ebook"},
 
-        {"id": "profitguard", "title": "프로핏가드 - 품절링크 실시간 감시", "category": "tool", "price": 19000, "badge": "월 구독", "image": "https://image2url.com/r2/default/images/1769514806003-5df231fe-b106-420a-86c4-82c39ff0f4b8.jpg", "file_url": "/profitguard"},
+        {"id": "profitguard", "title": "프로핏가드 - 품절링크 실시간 감시", "category": "tool", "price": 19000, "badge": "월 구독", "image": "/static/images/store-profitguard-thumb.svg", "file_url": "/profitguard"},
 
     ]
 
