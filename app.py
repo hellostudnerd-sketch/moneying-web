@@ -328,6 +328,7 @@ class Post(db.Model):
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     uploaded_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # 관리자 업로드 기록
     status = db.Column(db.String(20), default="approved")  # pending, approved, rejected
+    is_featured = db.Column(db.Boolean, default=False)  # 메인 추천 게시물
     
     # [FIX #9] seller relationship 추가 (N+1 쿼리 방지용)
     seller = db.relationship('User', foreign_keys=[seller_id], lazy='joined')
@@ -874,7 +875,7 @@ def serve_r2_file(filename):
 # ----------------------------
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", featured_posts=Post.query.filter_by(is_featured=True).limit(4).all())
 
 # [FIX #10] store 페이지는 로그인 무관 → 캐시 유지 OK
 @app.route("/store")
@@ -2053,6 +2054,10 @@ def community_like(post_id):
 
     user_email = session.get("user_email")
 
+    if not user_email:
+
+        return jsonify({"error": "session expired, please re-login"}), 401
+
     existing = CommunityLike.query.filter_by(post_id=post_id, user_email=user_email).first()
 
     if existing:
@@ -3059,7 +3064,13 @@ def admin_gallery():
 
             u = db.session.get(User, p.uploaded_by)
 
-            uploaders[p.uploaded_by] = u.nickname or u.email if u else '-'
+            uploaders[p.uploaded_by] = (u.nickname or u.email) if u else None
+
+        if p.seller_id and p.seller_id not in uploaders:
+
+            u = db.session.get(User, p.seller_id)
+
+            uploaders[p.seller_id] = (u.nickname or u.email) if u else None
 
     categories = Category.query.filter(
 
@@ -3070,6 +3081,32 @@ def admin_gallery():
     ).order_by(Category.sort_order).all()
 
     return render_template("admin_gallery.html", posts=posts, uploaders=uploaders, categories=categories)
+
+
+@app.route("/admin/gallery/toggle-featured/<int:post_id>", methods=["POST"])
+
+def admin_toggle_featured(post_id):
+
+    if not is_admin():
+
+        return jsonify({"error": "unauthorized"}), 403
+
+    post = Post.query.get_or_404(post_id)
+
+    if not post.is_featured:
+
+        featured_count = Post.query.filter_by(is_featured=True).count()
+
+        if featured_count >= 4:
+
+            return jsonify({"error": "max", "msg": "\uba54\uc778 \ucd94\ucc9c\uc740 \ucd5c\ub300 4\uac1c\uc785\ub2c8\ub2e4."}), 400
+
+    post.is_featured = not post.is_featured
+
+    db.session.commit()
+
+    return jsonify({"ok": True, "featured": post.is_featured})
+
 
 
 @app.route("/admin/gallery/bulk")
@@ -3555,6 +3592,7 @@ def api_save_post():
     last_post = Post.query.order_by(Post.id.desc()).first()
     next_num = (last_post.id + 1) if last_post else 1
     title = f"{next_num}. {title}"
+    uploaded_by_id = session.get("user_id")
     images = parse_json_list_field("images_json")
     if not images:
         return jsonify({"ok": False, "error": "images_required"}), 400
@@ -3679,6 +3717,7 @@ def seller_upload():
         
         post = Post(
             title=title,
+            uploaded_by=uploaded_by_id,
             category="seller",
             images_json=images_str,
             links_json=links_str,

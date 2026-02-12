@@ -96,6 +96,46 @@
   </style>
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+
+<style>
+
+@keyframes scrollUp {
+
+  0% { transform: translateY(0); }
+
+  100% { transform: translateY(-50%); }
+
+}
+
+@keyframes scrollDown {
+
+  0% { transform: translateY(-50%); }
+
+  100% { transform: translateY(0); }
+
+}
+
+.animate-scroll-up {
+
+  animation: scrollUp 40s linear infinite;
+
+}
+
+.animate-scroll-down {
+
+  animation: scrollDown 40s linear infinite;
+
+}
+
+.animate-scroll-up:hover, .animate-scroll-down:hover {
+
+  animation-play-state: paused;
+
+}
+
+</style>
+
 </head>
 <body class="pb-24 md:pb-0 overflow-x-hidden">
 {% include "partials/nav.html" %}
@@ -294,10 +334,25 @@
             </div>
             <div class="w-full md:w-1/2 scroll-animate delay-1">
                 <div class="grid grid-cols-2 gap-4 transform md:rotate-2 hover:rotate-0 transition duration-500 mb-6">
-                    <div class="relative aspect-[9/16] rounded-2xl overflow-hidden"><img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=300&h=400&fit=crop" class="object-cover w-full h-full opacity-80 hover:opacity-100 transition"></div>
-                    <div class="relative aspect-[9/16] rounded-2xl overflow-hidden mt-8"><img src="https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?q=80&w=400&fit=crop" class="object-cover w-full h-full opacity-80 hover:opacity-100 transition"></div>
-                    <div class="relative aspect-[9/16] rounded-2xl overflow-hidden"><img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?q=80&w=400&fit=crop" class="object-cover w-full h-full opacity-80 hover:opacity-100 transition"></div>
-                    <div class="relative aspect-[9/16] rounded-2xl overflow-hidden mt-8"><img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=400&fit=crop" class="object-cover w-full h-full opacity-80 hover:opacity-100 transition"></div>
+                    {% if featured_posts %}
+                      {% for fp in featured_posts %}
+                        <div class="relative aspect-[9/16] rounded-2xl overflow-hidden {% if loop.index is even %}mt-8{% endif %}">
+                          {% if fp.to_dict().images %}
+                            <img src="{{ fp.to_dict().images[0] }}" class="object-cover w-full h-full opacity-80 hover:opacity-100 transition" alt="{{ fp.title }}">
+                          {% else %}
+                            <div class="w-full h-full bg-zinc-800 flex items-center justify-center text-zinc-600">No Image</div>
+                          {% endif %}
+                          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+                            <span class="text-white text-xs font-bold truncate block">{{ fp.title }}</span>
+                          </div>
+                        </div>
+                      {% endfor %}
+                    {% else %}
+                      <div class="relative aspect-[9/16] rounded-2xl overflow-hidden"><img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=300&h=400&fit=crop" class="object-cover w-full h-full opacity-80 hover:opacity-100 transition"></div>
+                      <div class="relative aspect-[9/16] rounded-2xl overflow-hidden mt-8"><img src="https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?q=80&w=400&fit=crop" class="object-cover w-full h-full opacity-80 hover:opacity-100 transition"></div>
+                      <div class="relative aspect-[9/16] rounded-2xl overflow-hidden"><img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?q=80&w=400&fit=crop" class="object-cover w-full h-full opacity-80 hover:opacity-100 transition"></div>
+                      <div class="relative aspect-[9/16] rounded-2xl overflow-hidden mt-8"><img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=400&fit=crop" class="object-cover w-full h-full opacity-80 hover:opacity-100 transition"></div>
+                    {% endif %}
                 </div>
                 <a href="/gallery" class="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/10 text-white/60 hover:bg-white/5 hover:text-white transition">영상 갤러리 전체보기 <i class="fas fa-arrow-right"></i></a>
             </div>
@@ -428,5 +483,23 @@
     });
   });
 </script>
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function() {
+
+  var col1 = document.getElementById("scrollCol1");
+
+  var col2 = document.getElementById("scrollCol2");
+
+  if (col1) col1.innerHTML += col1.innerHTML;
+
+  if (col2) col2.innerHTML += col2.innerHTML;
+
+});
+
+</script>
+
 </body>
 </html>

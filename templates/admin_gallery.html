@@ -79,11 +79,11 @@
               <span class="text-xs px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-gray-200 font-bold">{{ p.category }}</span>
             </div>
             <div class="col-span-3 font-bold truncate">{{ p.title }}</div>
-            <div class="col-span-1 text-xs">{% if p.uploaded_by and uploaders.get(p.uploaded_by) %}<span class="text-purple-400 font-bold">{{ uploaders[p.uploaded_by] }}</span>{% else %}<span class="text-zinc-600">-</span>{% endif %}</div>
+            <div class="col-span-1 text-xs">{% if p.uploaded_by and uploaders.get(p.uploaded_by) %}<span class="text-purple-400 font-bold">{{ uploaders[p.uploaded_by] }}</span>{% elif p.seller_id and uploaders.get(p.seller_id) %}<span class="text-green-400 font-bold">{{ uploaders[p.seller_id] }}</span>{% else %}<span class="text-zinc-600">-</span>{% endif %}</div>
             <div class="col-span-2 text-right pr-6 text-zinc-500 text-xs font-bold">{{ (p.created_at|string)[:10] }}</div>
             <div class="col-span-2 flex justify-end gap-2">
-              <a href="{{ url_for('admin_edit', post_id=p.id, next=url_for('admin_gallery')) }}"
-                 class="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition text-sm font-bold">수정</a>
+              <button onclick="toggleFeatured({{ p.id }}, this)" class="px-3 py-2 rounded-lg {% if p.is_featured %}bg-yellow-500 text-black{% else %}bg-zinc-800 hover:bg-zinc-700{% endif %} transition text-sm font-bold">⭐</button>
+              <a href="{{ url_for('admin_edit', post_id=p.id, next=url_for('admin_gallery')) }}" class="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition text-sm font-bold">수정</a>
               <form method="POST" action="{{ url_for('admin_delete', post_id=p.id) }}" onsubmit="return confirm('정말 삭제할까요?');">
                 <button type="submit" class="px-3 py-2 rounded-lg bg-red-600 hover:bg-red-500 transition text-sm font-bold">삭제</button>
               </form>
@@ -259,4 +259,36 @@ function applyFilter() {
   }
 }
 </script>
+
+
+<script>
+
+function toggleFeatured(postId, btn) {
+
+  fetch('/admin/gallery/toggle-featured/' + postId, {method:'POST'})
+
+  .then(r => r.json())
+
+  .then(data => {
+
+    if (data.error === 'max') { alert(data.msg); return; }
+
+    if (data.featured) {
+
+      btn.className = btn.className.replace('bg-zinc-800 hover:bg-zinc-700', 'bg-yellow-500 text-black');
+
+      btn.className = btn.className.replace('bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600', 'bg-yellow-500 text-black');
+
+    } else {
+
+      btn.className = btn.className.replace('bg-yellow-500 text-black', 'bg-zinc-800 hover:bg-zinc-700');
+
+    }
+
+  });
+
+}
+
+</script>
+
 {% endblock %}
