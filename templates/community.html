@@ -65,7 +65,7 @@
   </div>
   <div class="flex items-center gap-2 shrink-0">
     <!-- 카톡 오픈방 -->
-    <a href="https://open.kakao.com/o/gYyHLsoh" target="_blank"
+    <a href="https://open.kakao.com/o/p5qEFCfi" target="_blank"
        class="bg-[#FEE500] text-[#3C1E1E] font-bold px-4 py-2.5 rounded-md hover:bg-[#FDD800] transition flex items-center gap-2 text-sm">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.83 1.89 5.29 4.68 6.68-.15.53-.53 1.94-.61 2.24-.1.37.14.37.29.27.12-.08 1.87-1.23 2.63-1.73.65.09 1.32.14 2.01.14 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/></svg>
       <span class="hidden md:inline">오픈방 입장</span><span class="md:hidden">오픈방</span>
@@ -90,7 +90,7 @@
       <span class="text-xs font-bold {% if p.category == 'notice' %}cat-notice{% elif p.category == 'deal' %}cat-deal{% elif p.category == 'revenue' %}cat-revenue{% elif p.category == 'tips' %}cat-tips{% elif p.category == 'qna' %}cat-qna{% else %}cat-free{% endif %}">
         {% if p.category == 'notice' %}📢 공지사항{% elif p.category == 'deal' %}🛍️ 공구/협찬{% elif p.category == 'revenue' %}💸 수익인증{% elif p.category == 'tips' %}💡 꿀팁공유{% elif p.category == 'qna' %}❓ 질문답변{% else %}💬 자유게시판{% endif %}
       </span>
-      {% if p.category == 'deal' %}{% if p.deal_closed or not p.is_deal_available %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">마감</span>{% elif p.deal_deadline and p.deal_deadline < now %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">기간마감</span>{% elif p.deal_max_people and p.applications|length >= p.deal_max_people %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">인원마감</span>{% else %}<span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded font-bold ml-1">진행중</span>{% endif %}{% endif %}
+      {% if p.category == 'deal' %}{% if p.deal_closed or not p.is_deal_available %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">마감</span>{% elif p.deal_deadline and p.deal_deadline < now %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">기간마감</span>{% elif p.deal_max_people and p.applications|selectattr('status','equalto','approved')|list|length >= p.deal_max_people %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">인원마감</span>{% else %}<span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded font-bold ml-1">진행중</span>{% endif %}{% endif %}
       <h3 class="text-white font-bold mt-2 mb-2 line-clamp-1">{{ p.title }}</h3>
       <p class="text-zinc-400 text-sm line-clamp-2 mb-3">{{ p.content[:80] }}{% if p.content|length > 80 %}...{% endif %}</p>
       <div class="flex items-center gap-3 text-xs text-zinc-500">
@@ -158,7 +158,7 @@
           {% if p.category == 'notice' %}📢 공지사항{% elif p.category == 'deal' %}🛍️ 공구/협찬{% elif p.category == 'revenue' %}💸 수익인증{% elif p.category == 'tips' %}💡 꿀팁공유{% elif p.category == 'qna' %}❓ 질문답변{% else %}💬 자유게시판{% endif %}
         </span>
         
-        {% if p.category == 'deal' %}{% if p.deal_closed or not p.is_deal_available %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">마감</span>{% elif p.deal_deadline and p.deal_deadline < now %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">기간마감</span>{% elif p.deal_max_people and p.applications|length >= p.deal_max_people %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">인원마감</span>{% else %}<span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded font-bold ml-1">진행중</span>{% endif %}{% endif %}
+        {% if p.category == 'deal' %}{% if p.deal_closed or not p.is_deal_available %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">마감</span>{% elif p.deal_deadline and p.deal_deadline < now %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">기간마감</span>{% elif p.deal_max_people and p.applications|selectattr('status','equalto','approved')|list|length >= p.deal_max_people %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">인원마감</span>{% else %}<span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded font-bold ml-1">진행중</span>{% endif %}{% endif %}
         <h3 class="text-white font-bold mt-2 mb-1 line-clamp-1">{{ p.title }}</h3>
         <p class="text-zinc-400 text-sm line-clamp-1">{{ p.content[:100] }}{% if p.content|length > 100 %}...{% endif %}</p>
         

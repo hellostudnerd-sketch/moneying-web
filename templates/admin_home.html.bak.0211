@@ -160,14 +160,6 @@
         <div class="px-4 md:px-5 py-6 text-center text-zinc-500 text-sm">게시물이 없습니다</div>
         {% endif %}
       </div>
-
-      <a href="/admin/event-trials" class="bg-zinc-800/50 rounded-xl p-3 md:p-4 text-center min-w-0 hover:bg-zinc-700/50 transition block">
-
-        <div class="text-xl md:text-2xl font-black text-yellow-400 truncate">{{ pg_event_count }}</div>
-
-        <div class="text-zinc-500 text-[11px] md:text-xs mt-1">PG 무료체험</div>
-
-      </a>
     </div>
 
     <!-- 최근 링크요청 -->

@@ -124,8 +124,8 @@ def get_s3_client():
 db = SQLAlchemy(app)
 
 # 링크요청 월 제한
-LINK_REQUEST_LIMIT_FREE = 1
-LINK_REQUEST_LIMIT_TRIAL = 3
+LINK_REQUEST_LIMIT_FREE = 3
+LINK_REQUEST_LIMIT_TRIAL = 1
 LINK_REQUEST_LIMIT_SUBSCRIBER = 10
 LINK_REQUEST_LIMIT_ALLINONE = 20
 
@@ -291,8 +291,6 @@ class User(db.Model):
     pg_password_set = db.Column(db.Boolean, default=False)  # 프로핏가드용 비밀번호 설정 여부
     is_staff = db.Column(db.Boolean, default=False)  # 관리자 권한
     phone = db.Column(db.String(20), nullable=True)
-
-    onboarding_done = db.Column(db.Boolean, default=False)
 
     
 class Category(db.Model):
@@ -527,7 +525,6 @@ class GroupBuyApplication(db.Model):
     
     name = db.Column(db.String(50), nullable=True)
     phone = db.Column(db.String(20), nullable=True)
-
     sns_url = db.Column(db.String(500), nullable=True)
     message = db.Column(db.Text, nullable=True)
     
@@ -549,7 +546,6 @@ class DealApplication(db.Model):
     
     name = db.Column(db.String(50), nullable=True)
     phone = db.Column(db.String(20), nullable=True)
-
     sns_url = db.Column(db.String(500), nullable=True)
     message = db.Column(db.Text, nullable=True)
     
@@ -622,12 +618,10 @@ class Notification(db.Model):
 
 
 class EventTrialApply(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(200), unique=True, nullable=False)
-    phone = db.Column(db.String(20), nullable=True)
 
-    user_id = db.Column(db.Integer, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    id = db.Column(db.Integer, primary_key=True)
+
+    email = db.Column(db.String(200), unique=True, nullable=False)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -653,7 +647,7 @@ def inject_globals():
     """모든 템플릿에서 사용 가능한 전역 변수/함수"""
     unread_count = 0
     if session.get("user_id"):
-        unread_count = Notification.query.filter(Notification.user_id==session["user_id"], Notification.is_read==False, ~Notification.type.like("quest_%")).count()
+        unread_count = Notification.query.filter_by(user_id=session["user_id"], is_read=False).count()
     return dict(
         get_nickname=get_nickname,
         unread_notifications_count=unread_count
@@ -804,12 +798,7 @@ def get_link_request_limit(user_id):
         return LINK_REQUEST_LIMIT_ALLINONE
     if has_active_subscription(user_id, "gallery"):
         return LINK_REQUEST_LIMIT_SUBSCRIBER
-    if has_active_subscription(user_id, "profitguard_lifetime"):
-
-        return LINK_REQUEST_LIMIT_ALLINONE
-
-    if has_active_subscription(user_id, "profitguard_pro") or has_active_subscription(user_id, "profitguard_lite"):
-
+    if has_active_subscription(user_id, "profitguard_pro") or has_active_subscription(user_id, "profitguard_lite") or has_active_subscription(user_id, "profitguard_lifetime"):
         return LINK_REQUEST_LIMIT_SUBSCRIBER
     if is_trial_active(user_id):
         return LINK_REQUEST_LIMIT_TRIAL
@@ -2372,11 +2361,7 @@ def link_request_new():
         db.session.commit()
         return redirect(url_for("my_link_requests", success=1))
 
-    user_email = session.get("user_email", "")
-
-    items = LinkRequest.query.filter_by(requester_email=user_email).order_by(LinkRequest.id.desc()).limit(10).all() if user_email else []
-
-    return render_template("link_request_new.html", monthly_used=monthly_used, monthly_limit=monthly_limit, items=items)
+    return render_template("link_request_new.html", monthly_used=monthly_used, monthly_limit=monthly_limit)
 
 @app.route("/link-requests")
 def link_requests():
@@ -2421,7 +2406,7 @@ def link_request_detail(request_id):
                     type="link_completed",
                     title="링크요청 완료",
                     message=f"'{it.title}' 요청의 쿠팡 링크가 등록되었습니다!",
-                    link="/link-requests/new"
+                    link="/my/link-requests"
                 )
                 db.session.add(noti)
                 db.session.commit()
@@ -2494,14 +2479,7 @@ def register():
 
 @app.route("/auth/kakao")
 def kakao_login():
-    next_url = request.args.get("next", "")
-    state = ""
-    if next_url:
-        import base64
-        state = base64.urlsafe_b64encode(next_url.encode()).decode()
     kakao_auth_url = f"https://kauth.kakao.com/oauth/authorize?client_id={KAKAO_REST_API_KEY}&redirect_uri={KAKAO_REDIRECT_URI}&response_type=code"
-    if state:
-        kakao_auth_url += f"&state={state}"
     return redirect(kakao_auth_url)
 
 @app.route("/auth/kakao/callback")
@@ -2592,49 +2570,11 @@ def kakao_callback():
     db.session.commit()
     
     session.clear()
-
     session["user_id"] = user.id
-
     session["user_email"] = user.email
-
     session["session_token"] = new_token
-
     update_session_status(user.id)
-
     
-
-    state = request.args.get("state", "")
-
-    if state:
-
-        try:
-
-            import base64
-
-            next_url = base64.urlsafe_b64decode(state.encode()).decode()
-
-            if next_url == "profitguard-event-apply":
-
-                try:
-
-                    _apply_profitguard_event(user)
-
-                except Exception as e:
-
-                    print(f"[PG EVENT] auto-apply error: {e}")
-
-                return redirect("/profitguard-event?applied=1")
-
-            if next_url.startswith("/"):
-
-                return redirect(next_url)
-
-        except Exception as e:
-
-            print(f"[KAKAO] state decode error: {e}")
-
-    
-
     return redirect(url_for("index"))
 
 @app.route("/login", methods=["GET", "POST"])
@@ -2872,7 +2812,6 @@ def admin_home():
         pending_sellers=pending_sellers,
         pending_rewards=pending_rewards,
         pending_posts=pending_posts,
-        pg_event_count=EventTrialApply.query.count() if EventTrialApply else 0,
         
         user_count=User.query.count(),
         subscriber_count=db.session.query(Subscription.user_id).filter_by(status="active").distinct().count(),
@@ -3826,26 +3765,7 @@ def admin_revenue_reject(proof_id):
 
     proof.status = "rejected"
 
-    db.session.add(Notification(
-
-        user_id=proof.user_id,
-
-        type="revenue_rejected",
-
-        title="수익인증 리워드 거절",
-
-        message="수익인증이 거절되었습니다. 조건을 확인 후 다시 신청해주세요."
-
-    ))
-
-    post = CommunityPost.query.get(proof.post_id)
-
-    if post:
-
-        post.reward_approved = False
-
     db.session.commit()
-
     return redirect(url_for("admin_revenue_proofs"))
 
 
@@ -4296,7 +4216,15 @@ def my_posts():
 
 @app.route("/my/link-requests")
 def my_link_requests():
-    return redirect("/link-requests/new")
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    
+    user_email = session.get("user_email")
+    requests_list = LinkRequest.query.filter_by(
+        requester_email=user_email
+    ).order_by(LinkRequest.created_at.desc()).all()
+    
+    return render_template("my_link_requests.html", requests=requests_list)
 
 
 # ----------------------------
@@ -4372,15 +4300,12 @@ def my_rewards():
 
 
 
-    rejected_post_ids = [r.post_id for r in RevenueRewardHistory.query.filter_by(user_id=user.id, status="rejected").all()]
-
     return render_template("my_rewards.html", 
         user=user,
         invited_users=invited_users,
         revenue_posts=revenue_posts,
         monthly_approved=monthly_approved,
-        monthly_pending=monthly_pending,
-        rejected_post_ids=rejected_post_ids
+        monthly_pending=monthly_pending
     )
 
 @app.route("/my/nickname", methods=["GET", "POST"])
@@ -4531,7 +4456,7 @@ def notifications():
     if not session.get("user_id"):
         return redirect(url_for("login"))
     
-    notis = Notification.query.filter(Notification.user_id==session["user_id"], ~Notification.type.like("quest_%")).order_by(Notification.created_at.desc()).limit(50).all()
+    notis = Notification.query.filter_by(user_id=session["user_id"]).order_by(Notification.created_at.desc()).limit(50).all()
     
     return render_template("notifications.html", notifications=notis, timedelta=timedelta)
 
@@ -4552,7 +4477,7 @@ def api_notifications_count():
         resp = make_response(jsonify({"count": 0, "user_id": None}))
     else:
         user_id = session["user_id"]
-        count = Notification.query.filter(Notification.user_id==user_id, Notification.is_read==False, ~Notification.type.like("quest_%")).count()
+        count = Notification.query.filter_by(user_id=user_id, is_read=False).count()
         resp = make_response(jsonify({"count": count, "user_id": user_id}))
     
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
@@ -4585,111 +4510,13 @@ def api_notifications_delete_all():
 
 
 
-
-
-def _apply_profitguard_event(user):
-
-    import secrets as _secrets, string as _string
-
-    if EventTrialApply.query.filter_by(email=user.email).first():
-
-        return
-
-    if EventTrialApply.query.count() >= 100:
-
-        return
-
-    db.session.add(EventTrialApply(email=user.email, phone=user.phone or "", user_id=user.id))
-
-    temp_pw = None
-
-    if not user.pg_password_set:
-
-        temp_pw = "".join(_secrets.choice(_string.ascii_letters + _string.digits) for _ in range(10))
-
-        user.pw_hash = generate_password_hash(temp_pw)
-
-        user.pg_password_set = True
-
-    existing_sub = Subscription.query.filter_by(user_id=user.id, plan_type="profitguard_pro", status="active").first()
-
-    if not existing_sub:
-
-        db.session.add(Subscription(user_id=user.id, plan_type="profitguard_pro", status="active", price=0, expires_at=datetime.utcnow() + timedelta(days=14)))
-
-    db.session.commit()
-
-    if user.phone:
-
-        try:
-
-            pw_text = temp_pw if temp_pw else "(existing password)"
-
-            msg = "\ud504\ub85c\ud54f\uac00\ub4dc 14\uc77c \ubb34\ub8cc\uccb4\ud5d8 \uc2e0\uccad\uc774 \uc644\ub8cc\ub418\uc5c8\uc2b5\ub2c8\ub2e4.\n\n\uc774\uba54\uc77c: " + user.email + "\n\uc784\uc2dc \ube44\ubc00\ubc88\ud638: " + pw_text + "\n\uccb4\ud5d8 \uae30\uac04: 14\uc77c\n\n\uc544\ub798 \ubc84\ud2bc\uc5d0\uc11c \ub85c\uadf8\uc778 \ud6c4\n\ud504\ub85c\ud54f\uac00\ub4dc\ub97c \ub2e4\uc6b4\ub85c\ub4dc\ud558\uc138\uc694."
-
-            button = {"button": [{"name": "\ucc44\ub110 \ucd94\uac00", "type": "AC"}, {"name": "\ud504\ub85c\ud54f\uac00\ub4dc \ubc14\ub85c\uac00\uae30", "type": "WL", "url_mobile": "https://moneying.biz/profitguard", "url_pc": "https://moneying.biz/profitguard"}]}
-
-            send_alimtalk(user.phone, "\ud504\ub85c\ud54f\uac00\ub4dc \ubb34\ub8cc\uccb4\ud5d8 \uc548\ub0b4", msg, "UF_4244", button)
-
-        except Exception as e:
-
-            print(f"[PG EVENT] alimtalk fail: {e}")
-
-
-
-@app.route("/api/me")
-
-def api_me():
-
-    uid = session.get("user_id")
-
-    if not uid:
-
-        return jsonify({"ok": False})
-
-    return jsonify({"ok": True, "user_id": uid, "email": session.get("user_email", "")})
-
-
-
-@app.route("/api/profitguard-event/apply-loggedin", methods=["POST"])
-
-def profitguard_event_apply_loggedin():
-
-    uid = session.get("user_id")
-
-    if not uid:
-
-        return jsonify({"ok": False, "error": "login required"})
-
-    user = User.query.get(uid)
-
-    if not user:
-
-        return jsonify({"ok": False, "error": "user not found"})
-
-    try:
-
-        _apply_profitguard_event(user)
-
-        return jsonify({"ok": True, "count": EventTrialApply.query.count()})
-
-    except Exception as e:
-
-        return jsonify({"ok": False, "error": str(e)})
-
-
-
 @app.route("/api/profitguard-event/count")
 
 def profitguard_event_count():
 
     count = EventTrialApply.query.count()
 
-    resp = jsonify({"ok": True, "count": count})
-
-    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-
-    return resp
+    return jsonify({"ok": True, "count": count})
 
 
 
@@ -4767,68 +4594,5 @@ def profitguard_event_apply():
 def profitguard_event():
     return render_template("profitguard_event.html")
 
-# --- onboarding quest ---
-@app.route("/api/onboarding/status")
-def api_onboarding_status():
-    uid = session.get("user_id")
-    if not uid:
-        return jsonify({"ok": False})
-    user = User.query.get(uid)
-    if not user or user.onboarding_done:
-        return jsonify({"ok": True, "done": True, "quests": []})
-    from sqlalchemy import text
-    quests = []
-    done_ids = set()
-    try:
-        with db.engine.connect() as conn:
-            r = conn.execute(text("SELECT COUNT(*) FROM notification WHERE user_id=:uid AND type='quest_gallery'"), {"uid": uid})
-            if r.scalar() > 0: done_ids.add("gallery")
-            r = conn.execute(text("SELECT COUNT(*) FROM notification WHERE user_id=:uid AND type='quest_profitguard'"), {"uid": uid})
-            if r.scalar() > 0: done_ids.add("profitguard")
-            r = conn.execute(text("SELECT COUNT(*) FROM notification WHERE user_id=:uid AND type='quest_chrome'"), {"uid": uid})
-            if r.scalar() > 0: done_ids.add("chrome")
-            r = conn.execute(text("SELECT COUNT(*) FROM link_request WHERE requester_email=(SELECT email FROM user WHERE id=:uid)"), {"uid": uid})
-            if r.scalar() > 0: done_ids.add("linkreq")
-    except:
-        pass
-    quests.append({"id": "gallery", "title": "gallery", "done": "gallery" in done_ids, "link": "/gallery"})
-    quests.append({"id": "profitguard", "title": "profitguard", "done": "profitguard" in done_ids, "link": "/profitguard"})
-    quests.append({"id": "chrome", "title": "chrome", "done": "chrome" in done_ids, "link": "/store/chrome-extension"})
-    quests.append({"id": "linkreq", "title": "linkreq", "done": "linkreq" in done_ids, "link": "/link-requests/new"})
-    done_count = len(done_ids)
-    all_done = done_count == len(quests)
-    if all_done and not user.onboarding_done:
-        user.onboarding_done = True
-        db.session.commit()
-    return jsonify({"ok": True, "done": all_done, "quests": quests, "done_count": done_count, "total": len(quests)})
-
-@app.route("/api/onboarding/visit", methods=["POST"])
-def api_onboarding_visit():
-    uid = session.get("user_id")
-    if not uid:
-        return jsonify({"ok": False})
-    data = request.get_json() or {}
-    quest_id = data.get("quest_id", "")
-    valid = {"gallery": "quest_gallery", "profitguard": "quest_profitguard", "chrome": "quest_chrome"}
-    ntype = valid.get(quest_id)
-    if not ntype:
-        return jsonify({"ok": False})
-    from sqlalchemy import text
-    with db.engine.connect() as conn:
-        r = conn.execute(text("SELECT COUNT(*) FROM notification WHERE user_id=:uid AND type=:t"), {"uid": uid, "t": ntype})
-        if r.scalar() == 0:
-            db.session.add(Notification(user_id=uid, type=ntype, title="", message=""))
-            db.session.commit()
-    return jsonify({"ok": True})
-
-@app.route("/api/onboarding/complete", methods=["POST"])
-def api_onboarding_complete():
-    uid = session.get("user_id")
-    if not uid:
-        return jsonify({"ok": False})
-    user = User.query.get(uid)
-    if user:
-        user.onboarding_done = True
-        db.session.commit()
-    return jsonify({"ok": True})
-
+if __name__ == "__main__":
+    app.run(debug=True)

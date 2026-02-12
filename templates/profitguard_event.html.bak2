@@ -381,15 +381,40 @@
         <div id="formArea">
           <div class="space-y-4">
             <div>
-              <div id="kakaoArea"><a href="/auth/kakao?next=profitguard-event-apply" class="w-full text-lg font-black py-4 rounded-xl mt-2 flex items-center justify-center gap-3" style="text-decoration:none;display:flex;background:#FEE500;color:#191919;border-radius:12px;"><svg width="22" height="22" viewBox="0 0 256 256"><path d="M128 36C70.6 36 24 72.7 24 118c0 29.3 19.5 55 48.8 69.5l-10 36.8c-.8 2.9 2.5 5.3 5 3.6l42.8-28.5c5.7.7 11.5 1.1 17.4 1.1 57.4 0 104-36.7 104-82.5S185.4 36 128 36z" fill="#191919"/></svg>카카오로 무료체험 시작하기</a></div><div id="loggedInArea" class="hidden"><button id="applyBtn" onclick="applyLoggedIn()" class="cta-btn w-full text-lg font-black py-4 rounded-xl mt-2">무료체험 신청하기</button></div>
+              <label class="text-zinc-400 text-sm font-medium block mb-1.5">이메일 *</label>
+              <input type="email" id="inputEmail" placeholder="example@email.com"
+                     class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-[#c4ff00]/50 transition">
+
+          <button id="submitBtn" onclick="submitForm()" class="cta-btn w-full text-lg font-black py-4 rounded-xl mt-6">
+            무료체험 신청하기
+          </button>
 
           <p class="text-zinc-600 text-xs text-center mt-4">
-            신청 완료 시 카카오톡으로 안내가 발송됩니다.
+            신청 후 이메일로 프로핏가드 다운로드 링크가 발송됩니다.
           </p>
         </div>
 
         <!-- 성공 메시지 (숨김) -->
-        <div id="successArea" class="hidden text-center py-8"><div class="text-5xl mb-4">🎉</div><h3 class="text-2xl font-black text-[#c4ff00] mb-4">신청 완료!</h3><div class="bg-zinc-800/50 rounded-xl p-5 mb-5 text-left"><div class="flex items-center gap-2 mb-3"><span class="text-lg">📩</span><p class="text-zinc-300 text-sm font-medium">카카오톡으로 로그인 정보가 발송되었습니다</p></div><div class="flex items-center gap-2 mb-3"><span class="text-lg">⬇️</span><p class="text-zinc-300 text-sm font-medium">아래 버튼을 눌러 프로핏가드를 다운로드하세요</p></div><div class="flex items-center gap-2"><span class="text-lg">🔑</span><p class="text-zinc-300 text-sm font-medium">카톡으로 받은 이메일/비밀번호로 로그인</p></div></div><a href="/profitguard" class="cta-btn inline-block text-lg font-black px-10 py-4 rounded-xl" style="text-decoration:none;">프로핏가드 다운로드 →</a><div class="bg-zinc-800/50 rounded-xl p-4 mt-5"><p class="text-zinc-500 text-sm">문의사항은 인스타그램 DM으로 연락주세요</p></div></div>
+        <div id="successArea" class="hidden text-center py-8">
+          <div class="text-5xl mb-4">🎉</div>
+          <h3 class="text-2xl font-black text-[#c4ff00] mb-2">신청 완료!</h3>
+          <p class="text-zinc-400 mb-6">입력하신 이메일로 다운로드 링크를 보내드립니다.<br>잠시만 기다려주세요.</p>
+          <div class="bg-zinc-800/50 rounded-xl p-4">
+            <p class="text-zinc-500 text-sm">문의사항은 인스타그램 DM으로 연락주세요</p>
+          </div>
+        </div>
+
+        <!-- 마감 메시지 (숨김) -->
+        <div id="closedArea" class="hidden text-center py-8">
+          <div class="text-5xl mb-4">🔒</div>
+          <h3 class="text-2xl font-black text-zinc-400 mb-2">무료체험이 마감되었습니다</h3>
+          <p class="text-zinc-500 mb-6">100명이 모두 신청을 완료했습니다.</p>
+          <a href="/profitguard" class="inline-block bg-zinc-800 text-white font-bold px-8 py-3 rounded-xl hover:bg-zinc-700 transition">
+            요금제 확인하기 →
+          </a>
+        </div>
+      </div>
+    </div>
   </section>
 
 
@@ -408,18 +433,18 @@
     const TOTAL_SLOTS = 100;
 
     // ============ 카운터 업데이트 ============
-    // 실제 서버 연동 시: fetch('/api/profitguard-event/count?t='+Date.now()) 로 교체
+    // 실제 서버 연동 시: fetch('/api/profitguard-event/count') 로 교체
     // 지금은 데모용 로컬 카운트
     let currentApplied = 0;
 
     async function loadCount() {
       try {
-        // const res = await fetch('/api/profitguard-event/count?t='+Date.now());
+        // const res = await fetch('/api/profitguard-event/count');
         // const data = await res.json();
         // currentApplied = data.count;
 
         // 데모용: localStorage에서 읽기 (서버 연동 전)
-        const res = await fetch('/api/profitguard-event/count?t='+Date.now());
+        const res = await fetch('/api/profitguard-event/count');
 
         const data = await res.json();
 
@@ -520,16 +545,7 @@
     document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
     // ============ 초기 로드 ============
-    if(new URLSearchParams(window.location.search).get("applied")==="1"){setTimeout(()=>{const f=document.getElementById("formArea");const s=document.getElementById("successArea");document.getElementById("kakaoArea").style.display="none";document.getElementById("loggedInArea").style.display="none";if(s)s.classList.remove("hidden");loadCount();},300);}
-
-    (async function(){try{const r=await fetch("/api/me");const d=await r.json();if(d.ok&&d.user_id){const ka=document.getElementById("kakaoArea");const la=document.getElementById("loggedInArea");if(ka)ka.classList.add("hidden");if(la)la.classList.remove("hidden");}}catch(e){}})();
-
-    function showModal(t,m,e){const o=document.createElement('div');o.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;';const b=document.createElement('div');b.style.cssText='background:#18181b;border:1px solid #333;border-radius:16px;padding:32px;max-width:380px;width:90%;text-align:center;';b.innerHTML='<div style="font-size:40px;margin-bottom:12px;">'+(e?'\u26a0\ufe0f':'\u2705')+'</div><div style="font-size:18px;font-weight:800;color:'+(e?'#ef4444':'#c4ff00')+';margin-bottom:8px;">'+t+'</div><div style="color:#a1a1aa;font-size:14px;line-height:1.6;margin-bottom:20px;">'+m+'</div><button style="background:#c4ff00;color:#000;font-weight:700;padding:10px 32px;border-radius:10px;border:none;cursor:pointer;font-size:15px;" onclick="this.closest(\'div[style]\').parentElement.remove()">\ud655\uc778</button>';o.appendChild(b);o.onclick=function(ev){if(ev.target===o)o.remove();};document.body.appendChild(o);}
-
-    async function applyLoggedIn(){const b=document.getElementById("applyBtn");b.disabled=true;b.textContent="\uc2e0\uccad \uc911...";try{const r=await fetch("/api/profitguard-event/apply-loggedin",{method:"POST",headers:{"Content-Type":"application/json"}});const d=await r.json();if(!d.ok){showModal("\uc2e0\uccad \uc2e4\ud328",d.error,true);b.disabled=false;b.textContent="\ubb34\ub8cc\uccb4\ud5d8 \uc2e0\uccad\ud558\uae30";return;}currentApplied=d.count;updateCounter();document.getElementById("kakaoArea").style.display="none";document.getElementById("loggedInArea").style.display="none";document.getElementById("successArea").classList.remove("hidden");}catch(e){showModal("\uc624\ub958","\ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694.",true);b.disabled=false;b.textContent="\ubb34\ub8cc\uccb4\ud5d8 \uc2e0\uccad\ud558\uae30";}}
-
     loadCount();
-
   </script>
 
 </body>

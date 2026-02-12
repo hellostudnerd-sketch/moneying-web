@@ -101,6 +101,8 @@
           <div class="flex items-center gap-2 shrink-0 ml-2">
             {% if post.reward_approved %}
               <span class="text-green-400 text-xs">✓ 승인</span>
+            {% elif post.reward_requested and post.id in rejected_post_ids %}
+              <span class="text-red-400 text-xs">거절</span>
             {% elif post.reward_requested %}
               <span class="text-yellow-400 text-xs">대기중</span>
             {% else %}

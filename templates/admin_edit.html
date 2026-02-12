@@ -27,13 +27,10 @@
           <div>
             <label class="text-sm font-black text-zinc-300">카테고리</label>
             <select name="category" class="mt-2 w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-3">
-              {% set cat = post.category if post else 'all' %}
-              <option value="all"   {{ "selected" if cat=="all" else "" }}>all</option>
-              <option value="seller"{{ "selected" if cat=="seller" else "" }}>📸 판매자 직촬</option>
-              <option value="beauty"{{ "selected" if cat=="beauty" else "" }}>beauty</option>
-              <option value="living"{{ "selected" if cat=="living" else "" }}>living</option>
-              <option value="food"  {{ "selected" if cat=="food" else "" }}>food</option>
-              <option value="tech"  {{ "selected" if cat=="tech" else "" }}>tech</option>
+              {% set cat = post.category if post else "all" %}
+              {% for c in categories %}
+              <option value="{{ c.key }}" {{ "selected" if cat == c.key else "" }}>{{ c.name }}</option>
+              {% endfor %}
             </select>
           </div>
 

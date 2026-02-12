@@ -28,7 +28,7 @@
    class="btn-glow bg-[#c4ff00] text-black font-black px-8 py-4 rounded-md transition text-lg">
       링크요청 하기 →
     </button>
-    <a href="https://open.kakao.com/o/gYyHLsoh" target="_blank"
+    <a href="https://open.kakao.com/o/p5qEFCfi" target="_blank"
        class="bg-[#FEE500] text-[#3C1E1E] font-black px-6 py-4 rounded-md hover:bg-[#FDD800] transition flex items-center gap-2 text-lg">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.83 1.89 5.29 4.68 6.68-.15.53-.53 1.94-.61 2.24-.1.37.14.37.29.27.12-.08 1.87-1.23 2.63-1.73.65.09 1.32.14 2.01.14 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/></svg>
       오픈방 입장
@@ -37,9 +37,9 @@
   
   <!-- 이용 횟수 안내 (작게) -->
   <div class="flex justify-center gap-4 mt-8 text-sm text-zinc-500">
-    <span>체험중 <strong class="text-zinc-300"> 1회</strong></span>
+    <span>체험중 <strong class="text-zinc-300"> 3회</strong></span>
     <span class="text-zinc-700">|</span>
-    <span>가입자 <strong class="text-zinc-300">월 3회</strong></span>
+    <span>가입자 <strong class="text-zinc-300">퀘스트 1회</strong></span>
     <span class="text-zinc-700">|</span>
     <span>구독자 <strong class="text-zinc-300">월 10회</strong></span>
     <span class="text-zinc-700">|</span>
@@ -48,7 +48,7 @@
   
   <!-- 비구독자 안내 -->
   <div class="mt-6 text-center">
-    <p class="text-zinc-400 text-sm">비구독자는 <a href="https://open.kakao.com/o/gYyHLsoh" target="_blank" class="text-[#FEE500] font-bold hover:underline">오픈채팅방</a> 입장 후 이용 가능합니다.</p>
+    <p class="text-zinc-400 text-sm">비구독자는 <a href="https://open.kakao.com/o/p5qEFCfi" target="_blank" class="text-[#FEE500] font-bold hover:underline">오픈채팅방</a> 입장 후 이용 가능합니다.</p>
   </div>
 </section>
 
@@ -89,7 +89,7 @@
   <h2 class="text-3xl md:text-5xl font-black text-center mb-4 leading-snug md:leading-normal">간단한 이용 방법</h2>
   <p class="text-base md:text-xl text-white/60 text-center mb-12">3단계면 끝!</p>
   
-  <div class="max-w-3xl mx-auto">
+  <div class="max-w-4xl mx-auto">
     <div class="flex flex-col md:flex-row items-center gap-6 md:gap-4">
       
       <!-- Step 1 -->
@@ -221,8 +221,8 @@
       showLinkRequestModal(userStatus);
       return;
     }
-    // 구독자 + 한도 내면 바로 이동 (체험 중은 제외)
-    if (userStatus.isLoggedIn && userStatus.isSubscriber && !userStatus.isTrial) {
+    // 구독자 또는 체험중 + 한도 내면 바로 이동
+    if (userStatus.isLoggedIn && (userStatus.isSubscriber || userStatus.isTrial)) {
       if (userStatus.monthlyUsed < userStatus.monthlyLimit) {
         location.href = '/link-requests/new';
         return;
@@ -251,7 +251,7 @@
           <a href="/signup" class="flex-1 py-3 border border-zinc-600 text-white rounded-xl font-bold text-center hover:bg-zinc-800 transition">회원가입</a>
         </div>
       `;
-    } else if (!status.isSubscriber || status.isTrial) {
+    } else if (!status.isSubscriber && !status.isTrial) {
       // 가입자 (비구독) 또는 체험중
       title = '🔗 링크요청 이용 안내';
       message = '<strong class="text-white">구독자</strong>는 월 10~20회 이용 가능<br><strong class="text-white">오픈채팅 멤버</strong>는 월 3회 무료!';
@@ -263,7 +263,7 @@
             <span class="text-zinc-500 text-xs">또는 오픈채팅 멤버라면</span>
             <div class="flex-1 h-px bg-zinc-700"></div>
           </div>
-          <a href="https://open.kakao.com/o/gYyHLsoh" target="_blank" class="w-full py-3 bg-[#FEE500] text-[#3C1E1E] rounded-xl font-bold text-center hover:bg-yellow-300 transition flex items-center justify-center gap-2">
+          <a href="https://open.kakao.com/o/p5qEFCfi" target="_blank" class="w-full py-3 bg-[#FEE500] text-[#3C1E1E] rounded-xl font-bold text-center hover:bg-yellow-300 transition flex items-center justify-center gap-2">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.8 1.8 5.27 4.5 6.7-.2.74-.7 2.68-.8 3.1-.13.5.18.5.38.36.16-.1 2.46-1.66 3.46-2.33.48.07.97.1 1.46.1 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/></svg>
             오픈채팅 입장하기
           </a>
@@ -275,9 +275,15 @@
       `;
     } else if (status.monthlyUsed >= status.monthlyLimit) {
       // 한도 초과
-      title = '⚠️ 이번 달 한도 초과';
-      message = `이번 달 링크요청 <strong>${status.monthlyLimit}회</strong>를 모두 사용했어요.<br>다음 달 1일에 초기화됩니다.`;
-      buttons = '<button onclick="closeLinkModal()" class="w-full py-3 bg-zinc-700 text-white rounded-xl font-bold hover:bg-zinc-600 transition">확인</button>';
+      if (status.isTrial) {
+        title = "⚠ 링크요청 한도 초과";
+        message = "무료체험 기간 중 링크요청 <strong>3회</strong>를 모두 사용했어요.<br>구독하시면 월 10~20회까지 요청할 수 있어요!";
+        buttons = '<div class="space-y-3"><a href="/pricing" class="w-full py-3 bg-[#c4ff00] text-black rounded-xl font-bold text-center hover:bg-white transition block">구독하기</a><button onclick="closeLinkModal()" class="w-full py-3 bg-zinc-700 text-white rounded-xl font-bold hover:bg-zinc-600 transition mt-2">확인</button></div>';
+      } else {
+        title = "⚠ 이번 달 한도 초과";
+        message = `이번 달 링크요청 <strong>${status.monthlyLimit}회</strong>를 모두 사용했어요.<br>다음 달 1일에 초기화됩니다.`;
+        buttons = '<button onclick="closeLinkModal()" class="w-full py-3 bg-zinc-700 text-white rounded-xl font-bold hover:bg-zinc-600 transition">확인</button>';
+      }
     }
     
     const modalHtml = `

@@ -3,7 +3,7 @@
 
 {% block content %}
 
-<div class="max-w-2xl mx-auto">
+<div class="max-w-4xl mx-auto">
 
   <!-- 헤더 -->
 
@@ -16,7 +16,7 @@
   </div>
 
   <!-- 이번 달 사용량 표시 -->
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 mb-6 max-w-lg mx-auto">
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 mb-6 max-w-4xl mx-auto">
     <div class="flex items-center justify-between mb-2">
       <span class="text-sm font-bold text-zinc-400">이번 달 요청</span>
       <span class="font-black 
@@ -33,15 +33,23 @@
     </div>
   </div>
 
-  {% if (monthly_used or 0) >= (monthly_limit or 3) %}
+{% if (monthly_used or 0) >= (monthly_limit or 3) %}
     <!-- 한도 초과 -->
-    <div class="bg-red-500/10 border border-red-500/30 rounded-2xl p-8 text-center">
-      <div class="text-4xl mb-4">⚠️</div>
+    <div class="bg-red-500/10 border border-red-500/30 rounded-2xl p-8 text-center max-w-4xl mx-auto">
+      <div class="text-4xl mb-4">⚠</div>
+      {% if session.get("is_trial") %}
+      <h2 class="text-xl font-black text-red-400 mb-2">링크요청 한도 초과</h2>
+      <p class="text-zinc-400 mb-6">
+        무료체험 기간 중 링크요청 3회를 모두 사용했어요.<br>
+        구독하시면 월 10~20회까지 요청할 수 있어요!
+      </p>
+      {% else %}
       <h2 class="text-xl font-black text-red-400 mb-2">이번 달 한도 초과</h2>
       <p class="text-zinc-400 mb-6">
         이번 달 링크요청 한도({{ monthly_limit }}회)를 모두 사용했어요.<br>
         다음 달 1일에 초기화됩니다.
       </p>
+      {% endif %}
       
       {% if not (session.get("subscriber") or session.get("is_trial")) %}
         <div class="bg-zinc-800/50 rounded-xl p-4 mb-6">
@@ -61,10 +69,10 @@
     
   {% else %}
     <!-- 폼 -->
-    <form method="POST" class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 space-y-6 max-w-lg mx-auto">
+    <form method="POST" class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 space-y-6 max-w-4xl mx-auto">
 
       <!-- 오픈방 인증 섹션 (비구독자만) -->
-      {% if not session.get('subscriber') %}
+      {% if not session.get('subscriber') and not session.get('is_trial') %}
       <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-2">
         <div class="flex items-center gap-2 mb-3">
           <span class="text-yellow-400">⚠</span>
@@ -140,5 +148,32 @@
   {% endif %}
 
 </div>
+
+
+  <!-- my request list -->
+  {% if items %}
+  <div class="max-w-4xl mx-auto mt-10">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-black">내 요청 목록</h2>
+    </div>
+    <div class="space-y-2">
+      {% for it in items %}
+      <a href="/link-requests/{{ it.id }}" class="block bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 hover:border-zinc-700 transition">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0">
+            <div class="font-medium text-white text-sm truncate">{{ it.title or it.original_url[:40] }}</div>
+            <div class="text-zinc-600 text-xs mt-1">{{ it.created_at.strftime("%Y-%m-%d") }}</div>
+          </div>
+          {% if it.coupang_url %}
+            <span class="bg-[#c4ff00]/10 text-[#c4ff00] text-xs font-bold px-3 py-1 rounded-full shrink-0 ml-3">완료</span>
+          {% else %}
+            <span class="bg-yellow-500/10 text-yellow-400 text-xs font-bold px-3 py-1 rounded-full shrink-0 ml-3">대기중</span>
+          {% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
 
 {% endblock %}

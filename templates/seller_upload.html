@@ -1,220 +1,653 @@
+
 {% extends "base.html" %}
+
 {% block title %}영상 업로드 - MONEYING{% endblock %}
+
+
 
 {% block main_class %}max-w-4xl mx-auto px-4 md:px-6 pt-24 md:pt-28 pb-20{% endblock %}
 
+
+
 {% block content %}
+
 <style>
+
   .dropzone.dragover { border-color:#a3e635; box-shadow:0 0 0 3px rgba(163,230,53,0.15); }
+
 </style>
 
+
+
 <div class="mb-8">
-  <a href="javascript:history.back()" class="text-zinc-500 hover:text-white text-sm">← 뒤로가기</a>
-  <h1 class="text-3xl font-black mt-4">📸 직촬 영상 업로드</h1>
+
+  <a href="javascript:history.back()" class="text-zinc-500 hover:text-white text-sm">&larr; 뒤로가기</a>
+
+  <h1 class="text-3xl font-black mt-4"> 직촬 영상 업로드</h1>
+
   <p class="text-zinc-400 mt-2">제품 영상과 캡처 이미지를 등록하면 크리에이터들에게 노출됩니다.</p>
+
 </div>
+
+
 
 <!-- 안내 -->
+
 <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 mb-8">
+
   <p class="text-zinc-400 text-sm">
-    <strong class="text-white">📌 업로드 안내</strong><br>
-    • <span class="text-red-400 font-bold">원본영상</span>과 <span class="text-red-400 font-bold">쿠팡 링크</span>는 <strong class="text-white">필수</strong>입니다.<br>
-    • 이미지는 1~5장까지 업로드 가능합니다.<br>
-    • 관리자 승인 후 갤러리에 노출됩니다.
+
+    <strong class="text-white"> 업로드 안내</strong><br>
+
+    &bull; <span class="text-red-400 font-bold">영상</span>과 <span class="text-red-400 font-bold">쿠팡 링크</span>는 <strong class="text-white">필수</strong>입니다.<br>
+
+    &bull; 영상은 720p로 자동 압축되며 최대 60초까지 지원됩니다.<br>
+
+    &bull; 관리자 승인 후 갤러리에 노출됩니다.
+
   </p>
+
 </div>
 
+
+
 <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 md:p-8">
+
   <div class="grid md:grid-cols-2 gap-6">
 
+
+
     <!-- 왼쪽: 정보 입력 -->
+
     <div>
+
       <label class="text-xs font-black tracking-widest text-zinc-500 uppercase">카테고리</label>
+
       <div class="mt-2 w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-[#a3e635] font-bold">
-        📸 판매자 직촬
+
+         판매자 직촬
+
       </div>
+
       <p class="text-zinc-500 text-xs mt-2">판매자 영상은 자동으로 "판매자 직촬" 카테고리로 분류됩니다.</p>
 
+
+
       <label class="block mt-6 text-xs font-black tracking-widest text-zinc-500 uppercase">제목 <span class="text-red-400">*</span></label>
+
       <input id="title" type="text" placeholder="예: 미니 손선풍기"
+
              class="mt-2 w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white font-black focus:border-[#a3e635] focus:outline-none"/>
 
+
+
       <label class="block mt-6 text-xs font-black tracking-widest text-zinc-500 uppercase">쿠팡 링크 <span class="text-red-400">*</span></label>
+
       <input id="coupang" type="text" placeholder="link.coupang.com/a/..."
+
              class="mt-2 w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white font-bold focus:border-[#a3e635] focus:outline-none"/>
+
       <p class="text-zinc-500 text-xs mt-2">쿠팡 파트너스 링크를 입력해주세요.</p>
 
+
+
       <label class="block mt-6 text-xs font-black tracking-widest text-zinc-500 uppercase">참고 영상 링크 (선택, 최대 3개)</label>
+
       <p class="text-zinc-500 text-xs mt-1 mb-2">틱톡, 도우인, 인스타, 유튜브, 네이버 MYBOX 등 지원</p>
+
       <input id="link1" type="text" placeholder="링크 1"
+
              class="mt-2 w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none"/>
+
       <input id="link2" type="text" placeholder="링크 2"
+
              class="mt-2 w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none"/>
+
       <input id="link3" type="text" placeholder="링크 3"
+
              class="mt-2 w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none"/>
+
     </div>
 
-    <!-- 오른쪽: 이미지 업로드 -->
-    <div>
-      <label class="text-xs font-black tracking-widest text-zinc-500 uppercase">원본영상 업로드 <span class="text-red-400">*</span></label>
 
-      <div id="dropzone" class="dropzone mt-2 bg-zinc-900/60 border border-zinc-700 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#a3e635] transition min-h-[200px]">
-        <i class="fas fa-cloud-upload-alt text-3xl text-[#a3e635] mb-3"></i>
-        <p class="font-black">드래그앤드롭으로 이미지 올리기</p>
-        <p class="text-xs text-zinc-500 mt-1">또는 클릭해서 선택 (jpg/png/webp/gif)</p>
-        <input id="fileInput" type="file" accept="image/*" multiple class="hidden"/>
-      </div>
 
-      <div class="mt-4">
-        <div class="flex items-center justify-between">
-          <p class="text-sm font-black">업로드된 이미지</p>
-          <p id="countText" class="text-xs text-zinc-500">0/5</p>
+    <!-- 오른쪽: 영상 + 썸네일 -->
+
+    <div class="flex flex-col h-full">
+
+      <label class="text-xs font-black tracking-widest text-zinc-500 uppercase">미리보기 영상 업로드 <span class="text-red-400">*</span></label>
+
+      <p class="text-zinc-500 text-xs mt-1 mb-3">720p로 자동 압축, 최대 60초</p>
+
+
+
+      <div class="grid grid-cols-2 gap-3 items-stretch">
+
+        <div id="videoDropzone" class="border-2 border-dashed border-zinc-700 rounded-2xl p-4 bg-zinc-950/40 flex flex-col min-h-[300px]">
+
+          <p class="text-sm font-black text-zinc-300 mb-2">영상</p>
+
+          <div id="videoUploadArea" class="flex-1 flex flex-col items-center justify-center text-center cursor-pointer">
+
+            <i class="fas fa-video text-2xl text-[#a3e635] mb-2"></i>
+
+            <p class="font-black text-sm">드래그앤드롭으로 영상 올리기</p>
+
+            <p class="text-xs text-zinc-500 mt-1">또는 클릭해서 선택</p>
+
+            <input id="videoInput" type="file" accept="video/*" class="hidden"/>
+
+          </div>
+
+          <div id="videoPreviewArea" class="flex-1 flex flex-col hidden">
+
+            <video id="previewVideo" class="w-full flex-1 bg-black rounded-lg object-contain" controls controlsList="nodownload"></video>
+
+            <div class="mt-2 flex gap-2">
+
+              <button type="button" id="captureThumbBtn" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white px-2 py-1.5 rounded-lg text-xs font-bold">썸네일로</button>
+
+              <button type="button" id="removeVideo" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded-lg text-xs font-bold">삭제</button>
+
+            </div>
+
+          </div>
+
+          <canvas id="captureCanvas" class="hidden"></canvas>
+
         </div>
-        <div id="preview" class="mt-3 grid grid-cols-3 gap-3"></div>
-        <p class="text-[11px] text-zinc-500 mt-3">* 첫 번째 이미지가 카드 썸네일로 사용됩니다.</p>
+
+        <div id="thumbSection" class="border-2 border-dashed border-zinc-700 rounded-2xl p-4 bg-zinc-950/40 flex flex-col min-h-[300px] opacity-50">
+
+          <p class="text-sm font-black text-zinc-300 mb-2">썸네일</p>
+
+          <div class="flex-1 flex items-center justify-center">
+
+            <img id="thumbImg" class="max-h-full max-w-full object-contain rounded-lg border border-zinc-700 hidden" />
+
+            <div id="thumbPlaceholder" class="text-center text-zinc-500">
+
+              <div class="text-2xl mb-2">&#x1f5bc;</div>
+
+              <div class="text-xs">영상 업로드 시<br>자동 생성됩니다</div>
+
+            </div>
+
+          </div>
+
+          <label id="thumbChangeBtn" class="mt-2 bg-zinc-700 hover:bg-zinc-600 text-white px-2 py-1.5 rounded-lg text-xs font-bold text-center cursor-pointer hidden">
+
+            변경
+
+            <input type="file" id="thumbInput" accept="image/*" class="hidden" />
+
+          </label>
+
+        </div>
+
       </div>
 
-      <button id="saveBtn" class="mt-6 w-full bg-[#a3e635] text-black py-4 rounded-xl font-black text-lg hover:bg-white transition">
+
+
+      <div id="uploadProgress" class="hidden mt-4">
+
+        <div class="flex items-center justify-between mb-1">
+
+          <span id="uploadStatus" class="text-xs text-zinc-400">업로드 중...</span>
+
+          <span id="progressText" class="text-xs text-[#a3e635] font-bold">0%</span>
+
+        </div>
+
+        <div class="w-full bg-zinc-800 rounded-full h-2">
+
+          <div id="progressBar" class="bg-[#a3e635] h-2 rounded-full transition-all" style="width:0%"></div>
+
+        </div>
+
+      </div>
+
+
+
+      <button id="saveBtn" class="mt-4 w-full bg-[#a3e635] text-black py-4 rounded-xl font-black text-lg hover:bg-white transition">
+
         영상 등록하기
+
       </button>
 
       <div id="msg" class="mt-3 text-sm font-bold text-zinc-400"></div>
+
     </div>
 
+
+
   </div>
+
 </div>
 
+
+
 <script>
-const dropzone = document.getElementById("dropzone");
-const fileInput = document.getElementById("fileInput");
-const preview = document.getElementById("preview");
-const countText = document.getElementById("countText");
+
+const videoDropzone = document.getElementById("videoDropzone");
+
+const videoUploadArea = document.getElementById("videoUploadArea");
+
+const videoInput = document.getElementById("videoInput");
+
+const videoPreviewArea = document.getElementById("videoPreviewArea");
+
+const previewVideo = document.getElementById("previewVideo");
+
+const removeVideoBtn = document.getElementById("removeVideo");
+
+const captureThumbBtn = document.getElementById("captureThumbBtn");
+
+const captureCanvas = document.getElementById("captureCanvas");
+
+const thumbImg = document.getElementById("thumbImg");
+
+const thumbPlaceholder = document.getElementById("thumbPlaceholder");
+
+const thumbSection = document.getElementById("thumbSection");
+
+const thumbChangeBtn = document.getElementById("thumbChangeBtn");
+
+const thumbInput = document.getElementById("thumbInput");
+
+const uploadProgress = document.getElementById("uploadProgress");
+
+const progressBar = document.getElementById("progressBar");
+
+const progressText = document.getElementById("progressText");
+
+const uploadStatus = document.getElementById("uploadStatus");
+
 const msg = document.getElementById("msg");
+
 const saveBtn = document.getElementById("saveBtn");
 
-let uploadedFiles = [];
+
+
+let uploadedVideoUrl = "";
+
+let uploadedThumbUrl = "";
+
+
+
+// 영상 업로드
+
+async function uploadVideo(file) {
+
+  uploadProgress.classList.remove("hidden");
+
+  progressBar.style.width = "0%";
+
+  progressText.innerText = "0%";
+
+  uploadStatus.innerText = "영상 업로드 및 압축 중... (최대 1분 소요)";
+
+
+
+  const fd = new FormData();
+
+  fd.append("file", file);
+
+
+
+  try {
+
+    let progress = 0;
+
+    const progressInterval = setInterval(() => {
+
+      if (progress < 90) {
+
+        progress += Math.random() * 10;
+
+        progressBar.style.width = Math.min(progress, 90) + "%";
+
+        progressText.innerText = Math.round(Math.min(progress, 90)) + "%";
+
+      }
+
+    }, 500);
+
+
+
+    const res = await fetch("/api/upload_video", { method: "POST", body: fd });
+
+    clearInterval(progressInterval);
+
+    const data = await res.json();
+
+
+
+    if (!res.ok) throw new Error(data.error || "업로드 실패");
+
+
+
+    progressBar.style.width = "100%";
+
+    progressText.innerText = "100%";
+
+    uploadStatus.innerText = "업로드 완료!";
+
+
+
+    uploadedVideoUrl = data.video_url;
+
+    uploadedThumbUrl = data.thumb_url;
+
+
+
+    previewVideo.src = uploadedVideoUrl;
+
+    videoUploadArea.classList.add("hidden");
+
+    videoPreviewArea.classList.remove("hidden");
+
+    thumbImg.src = uploadedThumbUrl;
+
+    thumbImg.classList.remove("hidden");
+
+    thumbPlaceholder.classList.add("hidden");
+
+    thumbSection.classList.remove("opacity-50");
+
+    thumbChangeBtn.classList.remove("hidden");
+
+
+
+    setTimeout(() => { uploadProgress.classList.add("hidden"); }, 1000);
+
+  } catch (e) {
+
+    uploadProgress.classList.add("hidden");
+
+    msg.innerText = "영상 업로드 실패: " + e.message;
+
+    msg.className = "mt-3 text-sm font-bold text-red-400";
+
+  }
+
+}
+
+
+
+// 영상 삭제
+
+removeVideoBtn.addEventListener("click", () => {
+
+  uploadedVideoUrl = "";
+
+  uploadedThumbUrl = "";
+
+  previewVideo.src = "";
+
+  thumbImg.src = "";
+
+  videoPreviewArea.classList.add("hidden");
+
+  videoUploadArea.classList.remove("hidden");
+
+  thumbImg.classList.add("hidden");
+
+  thumbPlaceholder.classList.remove("hidden");
+
+  thumbSection.classList.add("opacity-50");
+
+  thumbChangeBtn.classList.add("hidden");
+
+});
+
+
+
+// 현재 장면 캡처해서 썸네일로
+
+captureThumbBtn.addEventListener("click", async () => {
+
+  const video = previewVideo;
+
+  if (!video.src || video.readyState < 2) { alert("영상을 먼저 로드해주세요."); return; }
+
+
+
+  const canvas = captureCanvas;
+
+  canvas.width = 720; canvas.height = 1280;
+
+  const ctx = canvas.getContext("2d");
+
+  const videoRatio = video.videoWidth / video.videoHeight;
+
+  const canvasRatio = 720 / 1280;
+
+  let drawWidth, drawHeight, drawX, drawY;
+
+  if (videoRatio > canvasRatio) {
+
+    drawHeight = 1280; drawWidth = drawHeight * videoRatio;
+
+    drawX = (720 - drawWidth) / 2; drawY = 0;
+
+  } else {
+
+    drawWidth = 720; drawHeight = drawWidth / videoRatio;
+
+    drawX = 0; drawY = (1280 - drawHeight) / 2;
+
+  }
+
+  ctx.fillStyle = "#000"; ctx.fillRect(0, 0, 720, 1280);
+
+  ctx.drawImage(video, drawX, drawY, drawWidth, drawHeight);
+
+
+
+  canvas.toBlob(async (blob) => {
+
+    if (!blob) { alert("캡처 실패"); return; }
+
+    const fd = new FormData();
+
+    fd.append("file", blob, "thumb_capture.webp");
+
+    captureThumbBtn.innerText = "업로드 중...";
+
+    captureThumbBtn.disabled = true;
+
+    try {
+
+      const res = await fetch("/api/upload_public", { method: "POST", body: fd });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || "업로드 실패");
+
+      const thumbUrl = data.filename.startsWith("/") ? data.filename : "/r2/" + data.filename;
+
+      thumbImg.src = thumbUrl;
+
+      uploadedThumbUrl = thumbUrl;
+
+      msg.innerText = "썸네일 캡처 완료!";
+
+      msg.className = "mt-3 text-sm font-bold text-green-400";
+
+    } catch (e) {
+
+      alert("썸네일 업로드 실패: " + e.message);
+
+    } finally {
+
+      captureThumbBtn.innerText = "썸네일로";
+
+      captureThumbBtn.disabled = false;
+
+    }
+
+  }, "image/webp", 0.9);
+
+});
+
+
+
+// 썸네일 변경
+
+thumbChangeBtn.addEventListener("click", () => thumbInput.click());
+
+thumbInput.addEventListener("change", async (e) => {
+
+  const file = e.target.files[0];
+
+  if (!file) return;
+
+  const fd = new FormData();
+
+  fd.append("file", file);
+
+  try {
+
+    const res = await fetch("/api/upload_public", { method: "POST", body: fd });
+
+    const data = await res.json();
+
+    if (res.ok) {
+
+      uploadedThumbUrl = data.url;
+
+      thumbImg.src = uploadedThumbUrl;
+
+    }
+
+  } catch (e) { msg.innerText = "썸네일 업로드 실패"; }
+
+  thumbInput.value = "";
+
+});
+
+
 
 // 드래그앤드롭
-dropzone.addEventListener("click", () => fileInput.click());
-dropzone.addEventListener("dragover", e => { e.preventDefault(); dropzone.classList.add("dragover"); });
-dropzone.addEventListener("dragleave", e => { e.preventDefault(); dropzone.classList.remove("dragover"); });
-dropzone.addEventListener("drop", e => {
-  e.preventDefault();
-  dropzone.classList.remove("dragover");
-  handleFiles(e.dataTransfer.files);
+
+videoUploadArea.addEventListener("click", () => videoInput.click());
+
+videoInput.addEventListener("change", (e) => {
+
+  if (e.target.files[0]) uploadVideo(e.target.files[0]);
+
+  videoInput.value = "";
+
 });
-fileInput.addEventListener("change", e => handleFiles(e.target.files));
 
-function handleFiles(files) {
-  for (const f of files) {
-    if (uploadedFiles.length >= 5) break;
-    if (!f.type.startsWith("image/")) continue;
-    uploadFile(f);
-  }
-}
+videoDropzone.addEventListener("dragover", (e) => { e.preventDefault(); e.stopPropagation(); videoDropzone.classList.add("border-[#a3e635]"); });
 
-async function uploadFile(file) {
-  const fd = new FormData();
-  fd.append("file", file);
-  msg.textContent = "업로드 중...";
-  
-  try {
-    const res = await fetch("/api/upload_public", { method: "POST", body: fd });
-    const data = await res.json();
-    if (data.ok) {
-      uploadedFiles.push(data.filename);
-      renderPreview();
-      msg.textContent = "";
-    } else {
-      msg.textContent = "업로드 실패: " + (data.error || "");
-    }
-  } catch (e) {
-    msg.textContent = "업로드 오류";
-  }
-}
+videoDropzone.addEventListener("dragleave", (e) => { e.preventDefault(); e.stopPropagation(); videoDropzone.classList.remove("border-[#a3e635]"); });
 
-function renderPreview() {
-  preview.innerHTML = "";
-  uploadedFiles.forEach((fn, i) => {
-    const div = document.createElement("div");
-    div.className = "relative aspect-[9/16] rounded-lg overflow-hidden border border-zinc-700 group";
-    // 변경 후
-const imgUrl = fn.startsWith('http') || fn.startsWith('/r2/') ? fn : `/static/uploads/${fn}`;
-div.innerHTML = `
-  <img src="${imgUrl}" class="w-full h-full object-cover"/>
-      ${i === 0 ? '<span class="absolute top-1 left-1 bg-[#a3e635] text-black text-[10px] font-black px-1.5 py-0.5 rounded">MAIN</span>' : ''}
-      <button onclick="removeImg(${i})" class="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full text-xs font-bold opacity-0 group-hover:opacity-100 transition">×</button>
-    `;
-    preview.appendChild(div);
-  });
-  countText.textContent = uploadedFiles.length + "/5";
-}
+videoDropzone.addEventListener("drop", (e) => {
 
-function removeImg(i) {
-  uploadedFiles.splice(i, 1);
-  renderPreview();
-}
+  e.preventDefault(); e.stopPropagation();
+
+  videoDropzone.classList.remove("border-[#a3e635]");
+
+  const files = e.dataTransfer.files;
+
+  if (files && files.length > 0 && files[0].type.startsWith("video/")) uploadVideo(files[0]);
+
+});
+
+
 
 // 저장
+
 saveBtn.addEventListener("click", async () => {
+
   const title = document.getElementById("title").value.trim();
+
   const coupang = document.getElementById("coupang").value.trim();
+
   const link1 = document.getElementById("link1").value.trim();
+
   const link2 = document.getElementById("link2").value.trim();
+
   const link3 = document.getElementById("link3").value.trim();
 
-  // 필수값 검증
-  if (!title) {
-    msg.textContent = "❌ 제목을 입력해주세요.";
-    msg.className = "mt-3 text-sm font-bold text-red-400";
-    return;
-  }
-  if (uploadedFiles.length === 0) {
-    msg.textContent = "❌ 원본영상을 업로드해주세요.(60초이내)";
-    msg.className = "mt-3 text-sm font-bold text-red-400";
-    return;
-  }
-  if (!coupang) {
-    msg.textContent = "❌ 쿠팡 링크를 입력해주세요.";
-    msg.className = "mt-3 text-sm font-bold text-red-400";
-    return;
-  }
+
+
+  if (!title) { msg.innerText = "제목을 입력해주세요."; msg.className = "mt-3 text-sm font-bold text-red-400"; return; }
+
+  if (!uploadedVideoUrl) { msg.innerText = "영상을 업로드해주세요."; msg.className = "mt-3 text-sm font-bold text-red-400"; return; }
+
+  if (!coupang) { msg.innerText = "쿠팡 링크를 입력해주세요."; msg.className = "mt-3 text-sm font-bold text-red-400"; return; }
+
+
 
   const links = [link1, link2, link3].filter(x => x);
 
+
+
   const fd = new FormData();
+
   fd.append("title", title);
+
   fd.append("coupang_link", coupang);
-  fd.append("images_json", JSON.stringify(uploadedFiles));
+
+  fd.append("images_json", JSON.stringify([uploadedThumbUrl]));
+
   fd.append("links_json", JSON.stringify(links));
 
+  fd.append("preview_video", uploadedVideoUrl);
+
+
+
   saveBtn.disabled = true;
+
   saveBtn.textContent = "등록 중...";
 
+
+
   try {
-    const res = await fetch("/seller/upload", { 
-      method: "POST",
-      body: fd
-    });
+
+    const res = await fetch("/seller/upload", { method: "POST", body: fd });
+
     const data = await res.json();
+
     if (data.ok) {
-      msg.textContent = "✅ 등록 완료! 관리자 승인 후 갤러리에 노출됩니다.";
+
+      msg.innerText = "등록 완료! 관리자 승인 후 갤러리에 노출됩니다.";
+
       msg.className = "mt-3 text-sm font-bold text-green-400";
-      setTimeout(() => {
-        window.location.href = "/seller/dashboard";
-      }, 1500);
+
+      setTimeout(() => { window.location.href = "/seller/dashboard"; }, 1500);
+
     } else {
-      msg.textContent = "❌ " + (data.error || "등록 실패");
+
+      msg.innerText = (data.error || "등록 실패");
+
       msg.className = "mt-3 text-sm font-bold text-red-400";
+
       saveBtn.disabled = false;
+
       saveBtn.textContent = "영상 등록하기";
+
     }
+
   } catch (e) {
-    msg.textContent = "❌ 서버 오류";
+
+    msg.innerText = "서버 오류";
+
     msg.className = "mt-3 text-sm font-bold text-red-400";
+
     saveBtn.disabled = false;
+
     saveBtn.textContent = "영상 등록하기";
+
   }
+
 });
+
 </script>
+
 {% endblock %}
+

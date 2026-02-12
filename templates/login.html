@@ -19,6 +19,30 @@
     {% endif %}
   {% endwith %}
 
+  <!-- 카카오 로그인 -->
+
+  <a href="/auth/kakao" class="w-full bg-[#FEE500] text-[#3C1E1E] font-bold py-3.5 md:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-[#F5DC00] transition text-sm md:text-base mb-6">
+
+    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+
+      <path d="M12 3C6.48 3 2 6.58 2 11c0 2.8 1.8 5.27 4.5 6.7-.2.74-.7 2.68-.8 3.1-.13.5.18.5.38.36.16-.1 2.46-1.66 3.46-2.33.48.07.97.1 1.46.1 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
+
+    </svg>
+
+    카카오로 시작하기
+
+  </a>
+
+  <div class="flex items-center gap-3 mb-6">
+
+    <div class="flex-1 h-px bg-zinc-800"></div>
+
+    <span class="text-zinc-600 text-xs">또는</span>
+
+    <div class="flex-1 h-px bg-zinc-800"></div>
+
+  </div>
+
   <form method="POST" class="space-y-4 md:space-y-5" autocomplete="off">
     <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
     
@@ -51,15 +75,4 @@
     </p>
   </div>
 
-  <!-- 카카오 로그인 -->
-  <div class="mt-6 pt-6 border-t border-zinc-800">
-    <a href="/auth/kakao" class="w-full bg-[#FEE500] text-[#3C1E1E] font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#F5DC00] transition text-sm md:text-base">
-      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 3C6.48 3 2 6.58 2 11c0 2.8 1.8 5.27 4.5 6.7-.2.74-.7 2.68-.8 3.1-.13.5.18.5.38.36.16-.1 2.46-1.66 3.46-2.33.48.07.97.1 1.46.1 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
-      </svg>
-      카카오로 시작하기
-    </a>
-  </div>
-
-</div>
 {% endblock %}

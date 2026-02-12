@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+</script>
+
 {% block title %}회원가입 - MONEYING{% endblock %}
 
 {% block content %}
@@ -28,10 +30,31 @@
 
     <div>
       <label class="block text-sm font-bold text-zinc-300 mb-2">비밀번호</label>
-      <input type="password" name="password" required minlength="6"
-             class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-base focus:border-[#a3e635] focus:outline-none transition">
+      <div class="relative">
+        <input type="password" id="pw1" name="password" required minlength="6"
+               class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 pr-12 text-white text-base focus:border-[#a3e635] focus:outline-none transition">
+        <button type="button" onclick="togglePw('pw1',this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
+      </div>
       <p class="text-zinc-500 text-xs mt-2">6자 이상 입력해주세요</p>
     </div>
+    <div>
+      <label class="block text-sm font-bold text-zinc-300 mb-2">비밀번호 확인</label>
+      <div class="relative">
+        <input type="password" id="pw2" name="password_confirm" id="pw2" required minlength="6" oninput="checkPwMatch()"
+               class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 pr-12 text-white text-base focus:border-[#a3e635] focus:outline-none transition">
+        <button type="button" onclick="togglePw('pw2',this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
+      </div>
+    </div>
+    <div>
+
+      <label class="block text-sm font-bold text-zinc-300 mb-2">전화번호 <span class="text-zinc-500 font-normal">(선택)</span></label>
+
+      <input type="tel" name="phone" placeholder="010-0000-0000"
+
+             class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-base focus:border-[#a3e635] focus:outline-none transition">
+
+    </div>
+
 
     <div>
       <label class="block text-sm font-bold text-zinc-300 mb-2">
@@ -57,15 +80,19 @@
     </p>
   </div>
 
-  <!-- 카카오 로그인 (추후) -->
+  <!-- 카카오 로그인 -->
   <div class="mt-6 pt-6 border-t border-zinc-800">
-    <button disabled class="w-full bg-[#FEE500] text-[#3C1E1E] font-bold py-3 rounded-xl flex items-center justify-center gap-2 opacity-50 cursor-not-allowed text-sm md:text-base">
+    <a href="/auth/kakao" class="w-full bg-[#FEE500] text-[#3C1E1E] font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#F5DC00] transition text-sm md:text-base">
       <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 3C6.48 3 2 6.58 2 11c0 2.8 1.8 5.27 4.5 6.7-.2.74-.7 2.68-.8 3.1-.13.5.18.5.38.36.16-.1 2.46-1.66 3.46-2.33.48.07.97.1 1.46.1 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
       </svg>
-      카카오로 시작하기 (준비중)
-    </button>
+      카카오로 시작하기
+    </a>
   </div>
 
 </div>
+<script>
+function togglePw(id,btn){var i=document.getElementById(id);if(i.type==="password"){i.type="text";btn.innerHTML='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>';}else{i.type="password";btn.innerHTML='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>';}}
+document.getElementById("pw2").addEventListener("blur",checkPwMatch);function checkPwMatch(){var p1=document.getElementById("pw1").value;var p2=document.getElementById("pw2").value;var msg=document.getElementById("pwMsg");if(!msg){msg=document.createElement("p");msg.id="pwMsg";msg.style.cssText="font-size:12px;margin-top:6px;";document.getElementById("pw2").closest(".relative").parentNode.appendChild(msg);}if(!p2){msg.textContent="";}else if(p1!==p2){msg.textContent="비밀번호가 일치하지 않습니다";msg.style.color="#f87171";}else{msg.textContent="비밀번호가 일치합니다";msg.style.color="#a3e635";}}
+</script>
 {% endblock %}

@@ -133,6 +133,10 @@
 
         갤러리
 
+      <a href="/admin/seller-posts"
+         class="shrink-0 px-4 py-2.5 rounded-xl transition font-bold text-sm whitespace-nowrap
+                {% if request.path.startswith('/admin/seller-posts') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
+        판매자게시물
       </a>
 
       <a href="/admin/link-requests"

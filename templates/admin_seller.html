@@ -63,7 +63,8 @@
                   <button onclick="showModal('approve', {{ user.id }}, '{{ user.email }}')" class="px-3 py-1 bg-green-600 hover:bg-green-500 text-white rounded text-sm font-bold mr-2">승인</button>
                   <button onclick="showModal('reject', {{ user.id }}, '{{ user.email }}')" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-sm font-bold">거절</button>
                 {% elif user.seller_status == 'approved' %}
-                  <span class="text-zinc-500 text-sm">활동중</span>
+                  <span class="text-zinc-500 text-sm mr-2">활동중</span>
+                  <button onclick="showModal('revoke', {{ user.id }}, '{{ user.email }}')" class="px-3 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded text-sm font-bold">해제</button>
                 {% else %}
                   <button onclick="showModal('approve', {{ user.id }}, '{{ user.email }}')" class="px-3 py-1 bg-zinc-700 hover:bg-zinc-600 text-white rounded text-sm font-bold">재승인</button>
                 {% endif %}
@@ -119,7 +120,20 @@ function showModal(action, userId, email) {
     desc.textContent = `${email} 님을 판매자로 승인하시겠습니까?`;
     btn.className = 'flex-1 py-3 rounded-xl font-bold bg-green-500 text-black hover:bg-green-400 transition';
     btn.textContent = '승인';
+  } else if (action === 'revoke') {
+
+    icon.textContent = '⚠️';
+
+    title.textContent = '판매자 해제';
+
+    desc.textContent = `${email} 님의 판매자 자격을 해제하시겠습니까?`;
+
+    btn.className = 'flex-1 py-3 rounded-xl font-bold bg-orange-500 text-black hover:bg-orange-400 transition';
+
+    btn.textContent = '해제';
+
   } else {
+
     icon.textContent = '❌';
     title.textContent = '판매자 거절';
     desc.textContent = `${email} 님의 신청을 거절하시겠습니까?`;
@@ -142,8 +156,9 @@ function closeModal() {
 function confirmAction() {
   if (!currentUserId) return;
   
-  const url = currentAction === 'approve' 
+  const url = currentAction === 'approve'
     ? `/admin/sellers/${currentUserId}/approve`
+    : currentAction === 'revoke' ? `/admin/sellers/${currentUserId}/revoke`
     : `/admin/sellers/${currentUserId}/reject`;
   
   fetch(url, { method: 'POST' })

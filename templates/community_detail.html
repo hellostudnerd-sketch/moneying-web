@@ -332,25 +332,33 @@ if (dealForm) {
     }
   });
 }
-function showDeleteModal() { document.getElementById("deleteModal").classList.remove("hidden"); }
-function closeDeal() { document.getElementById("closeModal").classList.remove("hidden"); }
-function confirmClose() { fetch("/my/deals/{{ post.id }}/close", {method:"POST"}).then(r=>r.json()).then(data=>{ if(data.ok){location.reload();}else{document.getElementById("closeModal").classList.add("hidden");} }); }
-function cancelClose() { document.getElementById("closeModal").classList.add("hidden"); }
-</script>
 
-
-
-<script>
 
 let liked = {{ 'true' if user_liked else 'false' }};
 
 function toggleLike() {
 
-  fetch('/community/{{ post.id }}/like', {method:'POST'})
+  fetch('/community/{{ post.id }}/like', {method:'POST', credentials:'same-origin'})
 
-    .then(r => r.json())
+    .then(r => {
+
+      console.log('Like response:', r.status, r.redirected, r.url);
+
+      if (r.redirected || !r.ok) {
+
+        alert('좋아요 실패: ' + r.status + ' (redirected:' + r.redirected + ')');
+
+        return null;
+
+      }
+
+      return r.json();
+
+    })
 
     .then(data => {
+
+      if (!data) return;
 
       liked = data.liked;
 
@@ -399,6 +407,7 @@ function confirmClose() {
 function cancelClose() {
 
   document.getElementById("closeModal").classList.add("hidden");
+}
 </script>
 
 

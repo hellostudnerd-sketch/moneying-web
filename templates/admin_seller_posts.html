@@ -1,127 +1,309 @@
+
 {% extends "admin_base.html" %}
+
 {% block title %}판매자 게시물 관리 - MONEYING Admin{% endblock %}
 
-{% block content %}
-<div class="max-w-6xl mx-auto">
+
+
+{% block page_title %}판매자 게시물 관리{% endblock %}
+{% block page_desc %}판매자가 업로드한 영상 승인/거절{% endblock %}
+{% block content_admin %}
+
+
   
-  <div class="flex items-center justify-between mb-8">
-    <div>
-      <h1 class="text-3xl font-black">판매자 게시물 관리</h1>
-      <p class="text-zinc-400 mt-2">판매자가 업로드한 영상 승인/거절</p>
-    </div>
+
+
+
+
   </div>
+
+
 
   <!-- 필터 탭 -->
+
   <div class="flex gap-2 mb-6">
+
     <a href="?status=pending" class="px-4 py-2 rounded-lg font-bold text-sm transition {% if status_filter == 'pending' %}bg-[#a3e635] text-black{% else %}bg-zinc-800 text-zinc-400 hover:bg-zinc-700{% endif %}">
+
       대기중
+
     </a>
+
     <a href="?status=approved" class="px-4 py-2 rounded-lg font-bold text-sm transition {% if status_filter == 'approved' %}bg-[#a3e635] text-black{% else %}bg-zinc-800 text-zinc-400 hover:bg-zinc-700{% endif %}">
+
       승인됨
+
     </a>
+
     <a href="?status=rejected" class="px-4 py-2 rounded-lg font-bold text-sm transition {% if status_filter == 'rejected' %}bg-[#a3e635] text-black{% else %}bg-zinc-800 text-zinc-400 hover:bg-zinc-700{% endif %}">
+
       거절됨
+
     </a>
+
     <a href="?status=all" class="px-4 py-2 rounded-lg font-bold text-sm transition {% if status_filter == 'all' %}bg-[#a3e635] text-black{% else %}bg-zinc-800 text-zinc-400 hover:bg-zinc-700{% endif %}">
+
       전체
+
     </a>
+
   </div>
 
+
+
   <!-- 목록 -->
+
   <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
+
     {% if posts|length == 0 %}
+
       <div class="p-10 text-center">
-        <div class="text-4xl mb-4">📹</div>
+
+        <div class="text-4xl mb-4">&#x1f4ed;</div>
+
         <div class="text-zinc-500 font-bold">게시물이 없습니다</div>
+
       </div>
+
     {% else %}
+
       <table class="w-full">
+
         <thead class="bg-zinc-800/50">
+
           <tr>
+
             <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">제목</th>
-            <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">카테고리</th>
+
+            <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">판매자</th>
+
             <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">영상 링크</th>
+
             <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">등록일</th>
+
             <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">상태</th>
+
             <th class="px-6 py-4 text-right text-xs font-bold text-zinc-500 uppercase">액션</th>
+
           </tr>
+
         </thead>
+
         <tbody class="divide-y divide-zinc-800/70">
+
           {% for post in posts %}
+
             <tr class="hover:bg-zinc-800/30 transition" id="post-row-{{ post.id }}">
+
               <td class="px-6 py-4">
+
                 <div class="font-bold text-white">{{ post.title }}</div>
+
               </td>
-              <td class="px-6 py-4 text-zinc-300">{{ post.category }}</td>
+
+              <td class="px-6 py-4 text-zinc-300 text-sm">
+
+                {% if post.seller_id %}
+
+                  {{ post.seller.nickname or post.seller.email if post.seller else '-' }}
+
+                {% else %}-{% endif %}
+
+              </td>
+
               <td class="px-6 py-4">
+
                 {% if post.video_url %}
+
                   <a href="{{ post.video_url }}" target="_blank" class="text-blue-400 hover:underline text-sm">링크1</a>
+
                 {% endif %}
+
                 {% if post.video_url2 %}
+
                   <a href="{{ post.video_url2 }}" target="_blank" class="text-blue-400 hover:underline text-sm ml-2">링크2</a>
+
                 {% endif %}
+
                 {% if post.video_url3 %}
+
                   <a href="{{ post.video_url3 }}" target="_blank" class="text-blue-400 hover:underline text-sm ml-2">링크3</a>
+
                 {% endif %}
+
               </td>
+
               <td class="px-6 py-4 text-zinc-500 text-sm">{{ post.created_at.strftime('%Y-%m-%d') }}</td>
+
               <td class="px-6 py-4">
+
                 {% if post.status == 'approved' %}
+
                   <span class="px-3 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 text-xs font-bold">승인됨</span>
+
                 {% elif post.status == 'pending' %}
+
                   <span class="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 text-xs font-bold">대기중</span>
+
                 {% else %}
+
                   <span class="px-3 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-bold">거절됨</span>
+
                 {% endif %}
+
               </td>
+
               <td class="px-6 py-4 text-right">
+
                 {% if post.status == 'pending' %}
-                  <button onclick="approvePost({{ post.id }})" class="px-3 py-1 bg-green-600 hover:bg-green-500 text-white rounded text-sm font-bold mr-2">승인</button>
-                  <button onclick="rejectPost({{ post.id }})" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-sm font-bold">거절</button>
+
+                  <button onclick="showActionModal({{ post.id }}, 'approve')" class="px-3 py-1 bg-green-600 hover:bg-green-500 text-white rounded text-sm font-bold mr-2">승인</button>
+
+                  <button onclick="showActionModal({{ post.id }}, 'reject')" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-sm font-bold">거절</button>
+
                 {% elif post.status == 'approved' %}
-                  <a href="/gallery/{{ post.id }}" target="_blank" class="text-[#a3e635] text-sm font-bold hover:underline">보기</a>
+
+                  <a href="/admin/posts/{{ post.id }}/edit?next=/admin/seller-posts?status=approved" class="text-[#a3e635] text-sm font-bold hover:underline">수정</a>
+
                 {% else %}
-                  <button onclick="approvePost({{ post.id }})" class="px-3 py-1 bg-zinc-700 hover:bg-zinc-600 text-white rounded text-sm font-bold">재승인</button>
+
+                  <button onclick="showActionModal({{ post.id }}, 'approve')" class="px-3 py-1 bg-zinc-700 hover:bg-zinc-600 text-white rounded text-sm font-bold">재승인</button>
+
                 {% endif %}
+
               </td>
+
             </tr>
+
           {% endfor %}
+
         </tbody>
+
       </table>
+
     {% endif %}
+
+  </div>
+
+
+
+</div>
+
+
+
+<!-- 모달 -->
+
+<div id="actionModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm hidden" onclick="if(event.target===this) closeModal()">
+
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl">
+
+    <h3 id="modalTitle" class="text-xl font-bold text-white text-center mb-3"></h3>
+
+    <p id="modalMessage" class="text-zinc-400 text-center mb-6"></p>
+
+    <div id="modalButtons" class="flex gap-3"></div>
+
   </div>
 
 </div>
 
+
+
 <script>
-function approvePost(postId) {
-  if (!confirm('이 게시물을 승인하시겠습니까?')) return;
-  
-  fetch(`/admin/seller-posts/${postId}/approve`, { method: 'POST' })
-    .then(r => r.json())
-    .then(data => {
-      if (data.ok) {
-        alert('승인되었습니다.');
-        location.reload();
-      } else {
-        alert('오류: ' + (data.error || 'unknown'));
-      }
-    });
+
+let pendingAction = { postId: null, type: null };
+
+
+
+function showActionModal(postId, type) {
+
+  pendingAction = { postId, type };
+
+  const modal = document.getElementById('actionModal');
+
+  const title = document.getElementById('modalTitle');
+
+  const message = document.getElementById('modalMessage');
+
+  const buttons = document.getElementById('modalButtons');
+
+
+
+  if (type === 'approve') {
+
+    title.textContent = '게시물 승인';
+
+    message.textContent = '이 게시물을 승인하시겠습니까?';
+
+    buttons.innerHTML = '<button onclick="confirmAction()" class="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-500 transition">승인</button><button onclick="closeModal()" class="flex-1 py-3 bg-zinc-700 text-white rounded-xl font-bold hover:bg-zinc-600 transition">취소</button>';
+
+  } else {
+
+    title.textContent = '게시물 거절';
+
+    message.textContent = '이 게시물을 거절하시겠습니까?';
+
+    buttons.innerHTML = '<button onclick="confirmAction()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-500 transition">거절</button><button onclick="closeModal()" class="flex-1 py-3 bg-zinc-700 text-white rounded-xl font-bold hover:bg-zinc-600 transition">취소</button>';
+
+  }
+
+  modal.classList.remove('hidden');
+
 }
 
-function rejectPost(postId) {
-  if (!confirm('이 게시물을 거절하시겠습니까?')) return;
-  
-  fetch(`/admin/seller-posts/${postId}/reject`, { method: 'POST' })
-    .then(r => r.json())
-    .then(data => {
-      if (data.ok) {
-        alert('거절되었습니다.');
-        location.reload();
-      } else {
-        alert('오류: ' + (data.error || 'unknown'));
-      }
-    });
+
+
+function closeModal() {
+
+  document.getElementById('actionModal').classList.add('hidden');
+
 }
+
+
+
+function confirmAction() {
+
+  const { postId, type } = pendingAction;
+
+  closeModal();
+
+  fetch(`/admin/seller-posts/${postId}/${type}`, { method: 'POST' })
+
+    .then(r => r.json())
+
+    .then(data => {
+
+      if (data.ok) {
+
+        showResultModal(type === 'approve' ? '승인 완료' : '거절 완료', type === 'approve' ? '게시물이 승인되었습니다.' : '게시물이 거절되었습니다.');
+
+      } else {
+
+        showResultModal('오류', data.error || '처리 중 오류가 발생했습니다.');
+
+      }
+
+    });
+
+}
+
+
+
+function showResultModal(title, message) {
+
+  const modal = document.getElementById('actionModal');
+
+  document.getElementById('modalTitle').textContent = title;
+
+  document.getElementById('modalMessage').textContent = message;
+
+  document.getElementById('modalButtons').innerHTML = '<button onclick="closeModal(); location.reload();" class="flex-1 py-3 bg-zinc-700 text-white rounded-xl font-bold hover:bg-zinc-600 transition">확인</button>';
+
+  modal.classList.remove('hidden');
+
+}
+
 </script>
+
 {% endblock %}
+

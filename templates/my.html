@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}내정보 - MONEYING
+{% block title %}내정보 - MONEYING{% endblock %}
 
 <!-- 판매자 안내 모달 -->
 
@@ -67,7 +67,6 @@ function closeSellerModal() {
 
 </script>
 
-{% endblock %}
 
 {% block content %}
 
@@ -119,6 +118,48 @@ function closeSellerModal() {
   </div>
 </div>
 
+  <!-- onboarding quest -->
+  <div id="questCard" class="bg-gradient-to-br from-zinc-900 to-zinc-900/80 border border-[#c4ff00]/20 rounded-2xl mb-4 overflow-hidden" style="display:none;">
+    <div class="px-5 pt-4 pb-3">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-base">&#x1F3AF;</span>
+          <span class="font-bold text-sm text-white" id="questTitle"></span>
+        </div>
+        <button onclick="skipOnboarding()" class="text-zinc-600 text-xs hover:text-zinc-400 transition">&#xAC74;&#xB108;&#xB6F0;&#xAE30;</button>
+      </div>
+      <div class="w-full bg-zinc-800 rounded-full h-2 mb-1">
+        <div id="questBar" class="h-2 rounded-full bg-gradient-to-r from-[#c4ff00] to-[#a3e635] transition-all duration-700" style="width:0%"></div>
+      </div>
+    </div>
+    <div id="questList" class="px-2 pb-3"></div>
+  </div>
+  <script>
+  (function(){
+    var M={gallery:{t:"\uc601\uc0c1 \uac24\ub7ec\ub9ac \ub458\ub7ec\ubcf4\uae30",d:"\uc778\uae30 \uc601\uc0c1 \ucf58\ud150\uce20 \ud655\uc778",i:"\ud83c\udfa5",c:"#c4ff00"},profitguard:{t:"\ud504\ub85c\ud54f\uac00\ub4dc \uc54c\uc544\ubcf4\uae30",d:"\ucfe0\ud321 \ud488\uc808 \ub9c1\ud06c \uc790\ub3d9 \uac10\uc9c0",i:"\ud83d\udee1\ufe0f",c:"#60a5fa"},chrome:{t:"\ud06c\ub86c \ud655\uc7a5\ud504\ub85c\uadf8\ub7a8",d:"\uba38\ub2dd \ud06c\ub86c \ud655\uc7a5 \uc124\uce58",i:"\ud83e\udde9",c:"#f472b6"},linkreq:{t:"\ub9c1\ud06c\uc694\uccad \ud574\ubcf4\uae30",d:"\uc6d0\ud558\ub294 \uc601\uc0c1\uc758 \ucfe0\ud321 \ub9c1\ud06c \uc694\uccad",i:"\ud83d\udd17",c:"#fbbf24"}};
+    fetch("/api/onboarding/status").then(function(r){return r.json();}).then(function(d){
+      if(!d.ok||d.done)return;
+      var c=document.getElementById("questCard");c.style.display="block";
+      document.getElementById("questTitle").textContent="\uc2dc\uc791 \uac00\uc774\ub4dc "+d.done_count+"/"+d.total;
+      document.getElementById("questBar").style.width=(d.done_count/d.total*100)+"%";
+      var l=document.getElementById("questList");
+      d.quests.forEach(function(q){
+        var m=M[q.id]||{t:q.id,d:"",i:"?",c:"#fff"};
+        var a=document.createElement("a");a.href=q.link;
+        a.className="flex items-center gap-3 px-3 py-2.5 mx-1 my-0.5 rounded-xl hover:bg-zinc-800/60 transition group";
+        a.onclick=function(){if(!q.done)fetch("/api/onboarding/visit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({quest_id:q.id})});};
+        var check=q.done ? '<div class="w-7 h-7 rounded-lg bg-[#c4ff00]/20 flex items-center justify-center shrink-0"><span class="text-[#c4ff00] text-sm">\u2713</span></div>' : '<div class="w-7 h-7 rounded-lg border-2 border-zinc-700 group-hover:border-zinc-500 flex items-center justify-center shrink-0"><span class="text-lg">'+m.i+'</span></div>';
+        var cls=q.done?"text-zinc-500":"text-white";
+        var dcls=q.done?"text-zinc-600":"text-zinc-400";
+        a.innerHTML=check+'<div class="flex-1 min-w-0"><div class="text-sm font-medium '+cls+'">'+m.t+'</div><div class="text-xs '+dcls+'">'+m.d+'</div></div>';
+        l.appendChild(a);
+      });
+    });
+  })();
+  function skipOnboarding(){fetch("/api/onboarding/complete",{method:"POST"}).then(function(){document.getElementById("questCard").style.display="none";});}
+  </script>
+
+
   <!-- 나의 구독 -->
   <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl mb-4 overflow-hidden">
     <div class="px-5 py-3 border-b border-zinc-800">
@@ -145,7 +186,7 @@ function closeSellerModal() {
               </div>
               <div class="text-zinc-500 text-xs">
                 {% if sub.expires_at %}
-                  {% if sub.status == "cancelled" %}{{ sub.expires_at.strftime("%Y-%m-%d") }} 만료{% else %}다음 결제일 {{ sub.expires_at.strftime("%Y-%m-%d") }}{% endif %}
+                  {% if sub.price == 0 %}이벤트 무료체험 · {{ sub.expires_at.strftime("%Y-%m-%d") }} 만료{% elif sub.status == "cancelled" %}{{ sub.expires_at.strftime("%Y-%m-%d") }} 만료{% else %}다음 결제일 {{ sub.expires_at.strftime("%Y-%m-%d") }}{% endif %}
                 {% else %}
                   평생 이용
                 {% endif %}
@@ -153,8 +194,8 @@ function closeSellerModal() {
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <span class="px-2 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-bold">이용중</span>
-            {% if sub.plan_type != "profitguard_lifetime" %}
+            {% if sub.price == 0 %}<span class="px-2 py-1 rounded-full bg-yellow-500/10 text-yellow-400 text-xs font-bold">무료체험</span>{% else %}<span class="px-2 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-bold">이용중</span>{% endif %}
+            {% if sub.plan_type != "profitguard_lifetime" and sub.price != 0 %}
             <button onclick="openCancelModal('{{ sub.id }}', '{{ sub.plan_type }}')" class="px-2 py-1 rounded-full bg-zinc-800 text-zinc-500 text-xs hover:text-red-400 hover:bg-red-500/10 transition cursor-pointer">해지</button>
             {% endif %}
           </div>

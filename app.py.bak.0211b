@@ -124,8 +124,8 @@ def get_s3_client():
 db = SQLAlchemy(app)
 
 # 링크요청 월 제한
-LINK_REQUEST_LIMIT_FREE = 1
-LINK_REQUEST_LIMIT_TRIAL = 3
+LINK_REQUEST_LIMIT_FREE = 3
+LINK_REQUEST_LIMIT_TRIAL = 1
 LINK_REQUEST_LIMIT_SUBSCRIBER = 10
 LINK_REQUEST_LIMIT_ALLINONE = 20
 
@@ -653,7 +653,7 @@ def inject_globals():
     """모든 템플릿에서 사용 가능한 전역 변수/함수"""
     unread_count = 0
     if session.get("user_id"):
-        unread_count = Notification.query.filter(Notification.user_id==session["user_id"], Notification.is_read==False, ~Notification.type.like("quest_%")).count()
+        unread_count = Notification.query.filter_by(user_id=session["user_id"], is_read=False).count()
     return dict(
         get_nickname=get_nickname,
         unread_notifications_count=unread_count
@@ -804,12 +804,7 @@ def get_link_request_limit(user_id):
         return LINK_REQUEST_LIMIT_ALLINONE
     if has_active_subscription(user_id, "gallery"):
         return LINK_REQUEST_LIMIT_SUBSCRIBER
-    if has_active_subscription(user_id, "profitguard_lifetime"):
-
-        return LINK_REQUEST_LIMIT_ALLINONE
-
-    if has_active_subscription(user_id, "profitguard_pro") or has_active_subscription(user_id, "profitguard_lite"):
-
+    if has_active_subscription(user_id, "profitguard_pro") or has_active_subscription(user_id, "profitguard_lite") or has_active_subscription(user_id, "profitguard_lifetime"):
         return LINK_REQUEST_LIMIT_SUBSCRIBER
     if is_trial_active(user_id):
         return LINK_REQUEST_LIMIT_TRIAL
@@ -2372,11 +2367,7 @@ def link_request_new():
         db.session.commit()
         return redirect(url_for("my_link_requests", success=1))
 
-    user_email = session.get("user_email", "")
-
-    items = LinkRequest.query.filter_by(requester_email=user_email).order_by(LinkRequest.id.desc()).limit(10).all() if user_email else []
-
-    return render_template("link_request_new.html", monthly_used=monthly_used, monthly_limit=monthly_limit, items=items)
+    return render_template("link_request_new.html", monthly_used=monthly_used, monthly_limit=monthly_limit)
 
 @app.route("/link-requests")
 def link_requests():
@@ -2421,7 +2412,7 @@ def link_request_detail(request_id):
                     type="link_completed",
                     title="링크요청 완료",
                     message=f"'{it.title}' 요청의 쿠팡 링크가 등록되었습니다!",
-                    link="/link-requests/new"
+                    link="/my/link-requests"
                 )
                 db.session.add(noti)
                 db.session.commit()
@@ -4296,7 +4287,15 @@ def my_posts():
 
 @app.route("/my/link-requests")
 def my_link_requests():
-    return redirect("/link-requests/new")
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    
+    user_email = session.get("user_email")
+    requests_list = LinkRequest.query.filter_by(
+        requester_email=user_email
+    ).order_by(LinkRequest.created_at.desc()).all()
+    
+    return render_template("my_link_requests.html", requests=requests_list)
 
 
 # ----------------------------
@@ -4531,7 +4530,7 @@ def notifications():
     if not session.get("user_id"):
         return redirect(url_for("login"))
     
-    notis = Notification.query.filter(Notification.user_id==session["user_id"], ~Notification.type.like("quest_%")).order_by(Notification.created_at.desc()).limit(50).all()
+    notis = Notification.query.filter_by(user_id=session["user_id"]).order_by(Notification.created_at.desc()).limit(50).all()
     
     return render_template("notifications.html", notifications=notis, timedelta=timedelta)
 
@@ -4552,7 +4551,7 @@ def api_notifications_count():
         resp = make_response(jsonify({"count": 0, "user_id": None}))
     else:
         user_id = session["user_id"]
-        count = Notification.query.filter(Notification.user_id==user_id, Notification.is_read==False, ~Notification.type.like("quest_%")).count()
+        count = Notification.query.filter_by(user_id=user_id, is_read=False).count()
         resp = make_response(jsonify({"count": count, "user_id": user_id}))
     
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
@@ -4767,68 +4766,128 @@ def profitguard_event_apply():
 def profitguard_event():
     return render_template("profitguard_event.html")
 
-# --- onboarding quest ---
+
+
+# --- 온보딩 퀘스트 ---
+
 @app.route("/api/onboarding/status")
+
 def api_onboarding_status():
+
     uid = session.get("user_id")
+
     if not uid:
+
         return jsonify({"ok": False})
+
     user = User.query.get(uid)
+
     if not user or user.onboarding_done:
+
         return jsonify({"ok": True, "done": True, "quests": []})
-    from sqlalchemy import text
+
+    
+
     quests = []
-    done_ids = set()
+
+    # 1. 프로필 설정 (닉네임 변경)
+
+    has_nickname = user.nickname and user.nickname != user.email.split("@")[0]
+
+    quests.append({"id": "profile", "title": "프로필 설정하기", "desc": "닉네임을 설정해보세요", "done": bool(has_nickname), "link": "/my/nickname"})
+
+    
+
+    # 2. 갤러리 둘러보기
+
+    from sqlalchemy import text
+
+    visited_gallery = False
+
     try:
+
         with db.engine.connect() as conn:
-            r = conn.execute(text("SELECT COUNT(*) FROM notification WHERE user_id=:uid AND type='quest_gallery'"), {"uid": uid})
-            if r.scalar() > 0: done_ids.add("gallery")
-            r = conn.execute(text("SELECT COUNT(*) FROM notification WHERE user_id=:uid AND type='quest_profitguard'"), {"uid": uid})
-            if r.scalar() > 0: done_ids.add("profitguard")
-            r = conn.execute(text("SELECT COUNT(*) FROM notification WHERE user_id=:uid AND type='quest_chrome'"), {"uid": uid})
-            if r.scalar() > 0: done_ids.add("chrome")
-            r = conn.execute(text("SELECT COUNT(*) FROM link_request WHERE requester_email=(SELECT email FROM user WHERE id=:uid)"), {"uid": uid})
-            if r.scalar() > 0: done_ids.add("linkreq")
+
+            r = conn.execute(text("SELECT COUNT(*) FROM notification WHERE user_id=:uid AND type='gallery_visited'"), {"uid": uid})
+
+            visited_gallery = r.scalar() > 0
+
     except:
+
         pass
-    quests.append({"id": "gallery", "title": "gallery", "done": "gallery" in done_ids, "link": "/gallery"})
-    quests.append({"id": "profitguard", "title": "profitguard", "done": "profitguard" in done_ids, "link": "/profitguard"})
-    quests.append({"id": "chrome", "title": "chrome", "done": "chrome" in done_ids, "link": "/store/chrome-extension"})
-    quests.append({"id": "linkreq", "title": "linkreq", "done": "linkreq" in done_ids, "link": "/link-requests/new"})
-    done_count = len(done_ids)
+
+    quests.append({"id": "gallery", "title": "영상 갤러리 둘러보기", "desc": "인기 영상을 확인해보세요", "done": visited_gallery, "link": "/gallery"})
+
+    
+
+    # 3. 커뮤니티 구경
+
+    has_community = CommunityPost.query.filter_by(author_email=user.email).count() > 0
+
+    quests.append({"id": "community", "title": "커뮤니티 구경하기", "desc": "다른 크리에이터들의 글을 봐보세요", "done": has_community, "link": "/community"})
+
+    
+
+    # 4. 링크요청 해보기
+
+    from sqlalchemy import text as sqtext
+
+    has_link_req = False
+
+    try:
+
+        with db.engine.connect() as conn:
+
+            r = conn.execute(sqtext("SELECT COUNT(*) FROM link_request WHERE user_id=:uid"), {"uid": uid})
+
+            has_link_req = r.scalar() > 0
+
+    except:
+
+        pass
+
+    quests.append({"id": "linkreq", "title": "링크요청 해보기", "desc": "원하는 영상의 쿠팡 링크를 요청해보세요", "done": has_link_req, "link": "/my/link-requests"})
+
+    
+
+    done_count = sum(1 for q in quests if q["done"])
+
     all_done = done_count == len(quests)
+
+    
+
     if all_done and not user.onboarding_done:
+
         user.onboarding_done = True
+
         db.session.commit()
+
+    
+
     return jsonify({"ok": True, "done": all_done, "quests": quests, "done_count": done_count, "total": len(quests)})
 
-@app.route("/api/onboarding/visit", methods=["POST"])
-def api_onboarding_visit():
-    uid = session.get("user_id")
-    if not uid:
-        return jsonify({"ok": False})
-    data = request.get_json() or {}
-    quest_id = data.get("quest_id", "")
-    valid = {"gallery": "quest_gallery", "profitguard": "quest_profitguard", "chrome": "quest_chrome"}
-    ntype = valid.get(quest_id)
-    if not ntype:
-        return jsonify({"ok": False})
-    from sqlalchemy import text
-    with db.engine.connect() as conn:
-        r = conn.execute(text("SELECT COUNT(*) FROM notification WHERE user_id=:uid AND type=:t"), {"uid": uid, "t": ntype})
-        if r.scalar() == 0:
-            db.session.add(Notification(user_id=uid, type=ntype, title="", message=""))
-            db.session.commit()
-    return jsonify({"ok": True})
+
 
 @app.route("/api/onboarding/complete", methods=["POST"])
+
 def api_onboarding_complete():
+
     uid = session.get("user_id")
+
     if not uid:
+
         return jsonify({"ok": False})
+
     user = User.query.get(uid)
+
     if user:
+
         user.onboarding_done = True
+
         db.session.commit()
+
     return jsonify({"ok": True})
 
+
+if __name__ == "__main__":
+    app.run(debug=True)

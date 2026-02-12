@@ -25,8 +25,10 @@
 {% endblock %}
 
 
+{% block page_title %}새 상품 등록{% endblock %}
+{% block page_desc %}상품 정보를 입력하고 등록하세요.{% endblock %}
 {% block content_admin %}
-<form method="POST" class="space-y-6 max-w-4xl">
+<form method="POST" class="space-y-6">
     
     <!-- 기본 정보 -->
     <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
@@ -61,16 +63,31 @@
         </div>
         
         <div>
-          <div class="flex items-center gap-2 mb-2">
-            <input type="checkbox" id="freeCheck" onchange="toggleFree(this)" class="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-[#a3e635]">
-            <label for="freeCheck" class="text-sm text-zinc-400 cursor-pointer">무료 상품</label>
+
+          <div class="flex items-center justify-between mb-2">
+
+            <label class="text-sm font-bold text-zinc-300">가격 (원) <span class="text-red-400">*</span></label>
+
+            <div class="flex items-center gap-2">
+
+              <input type="checkbox" id="freeCheck" onchange="toggleFree(this)" class="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-[#a3e635]">
+
+              <label for="freeCheck" class="text-sm text-zinc-400 cursor-pointer">무료 상품</label>
+
+            </div>
+
           </div>
-          <label class="block text-sm font-bold text-zinc-300 mb-2">가격 (원) <span class="text-red-400">*</span></label>
+
           <input type="number" name="price" required min="0"
+
                  class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none"
+
+                 placeholder="39000" />
+
           <div id="free-label" style="display:none" class="w-full bg-zinc-900 border border-[#a3e635] rounded-xl px-4 py-3 text-[#c4ff00] font-black text-lg">무료</div>
-                 placeholder="39000">
+
         </div>
+
         
         <div>
           <label class="block text-sm font-bold text-zinc-300 mb-2">뱃지</label>
@@ -87,10 +104,19 @@
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-bold text-zinc-300 mb-2">썸네일 이미지 URL</label>
-          <input type="url" name="image"
-                 class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none"
-                 placeholder="https://...">
+          <label class="block text-sm font-bold text-zinc-300 mb-2">썸네일 이미지</label>
+          <div class="flex gap-2 items-end">
+            <input type="text" name="image" id="thumb-url"
+                   class="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none text-sm"
+                   placeholder="URL 직접 입력 또는 파일 업로드">
+            <label class="cursor-pointer bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold px-4 py-3 rounded-xl transition whitespace-nowrap">
+              파일 선택
+              <input type="file" accept="image/*" class="hidden" onchange="uploadThumb(this)">
+            </label>
+          </div>
+          <div id="thumb-preview" class="mt-2 hidden">
+            <img id="thumb-img" class="h-24 rounded-lg object-cover">
+          </div>
         </div>
         
         <div>
@@ -112,7 +138,6 @@
         <button type="button" onclick="showTab('code')" id="tab-code" class="px-4 py-2 rounded-lg bg-zinc-700 text-white font-bold text-sm">코드 입력</button>
         <button type="button" onclick="showTab('preview')" id="tab-preview" class="px-4 py-2 rounded-lg bg-zinc-700 text-white font-bold text-sm">미리보기</button>
 
-        <button type="button" onclick="showTab('preview')" id="tab-preview" class="px-4 py-2 rounded-lg bg-zinc-700 text-white font-bold text-sm">미리보기</button>
       </div>
       
       <!-- 블로그 에디터 -->
@@ -277,5 +302,63 @@ function toggleFree(cb) {
     freeLabel.style.display = 'none';
   }
 }
+
+
+function uploadThumb(input) {
+
+  if (!input.files || !input.files[0]) return;
+
+  var file = input.files[0];
+
+  var formData = new FormData();
+
+  formData.append('file', file);
+
+  var btn = input.parentElement;
+
+  btn.textContent = '업로드중...';
+
+  fetch('/api/upload_file', {
+
+    method: 'POST',
+
+    body: formData
+
+  })
+
+  .then(function(r) { return r.json(); })
+
+  .then(function(d) {
+
+    if (d.url) {
+
+      document.getElementById('thumb-url').value = d.url;
+
+      document.getElementById('thumb-img').src = d.url;
+
+      document.getElementById('thumb-preview').classList.remove('hidden');
+
+      btn.innerHTML = '<span>파일 선택</span><input type="file" accept="image/*" class="hidden" onchange="uploadThumb(this)">';
+
+    } else {
+
+      alert('업로드 실패');
+
+      btn.innerHTML = '<span>파일 선택</span><input type="file" accept="image/*" class="hidden" onchange="uploadThumb(this)">';
+
+    }
+
+  })
+
+  .catch(function() {
+
+    alert('업로드 실패');
+
+    btn.innerHTML = '<span>파일 선택</span><input type="file" accept="image/*" class="hidden" onchange="uploadThumb(this)">';
+
+  });
+
+}
+
 </script>
 {% endblock %}
