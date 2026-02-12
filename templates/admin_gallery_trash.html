@@ -1,0 +1,52 @@
+{% extends "admin_base.html" %}
+
+{% block title %}휴지통 - 갤러리{% endblock %}
+
+{% block page_title %}갤러리 휴지통{% endblock %}
+
+{% block page_desc %}삭제된 게시물을 복원할 수 있습니다.{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+
+  <a href="/admin/gallery" class="text-zinc-500 hover:text-white text-sm">&larr; 갤러리로 돌아가기</a>
+
+</div>
+
+{% if posts %}
+
+<div class="space-y-2">
+
+  {% for p in posts %}
+
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 flex items-center justify-between">
+
+    <div>
+
+      <span class="font-bold text-white">{{ p.title }}</span>
+
+      <span class="text-zinc-500 text-xs ml-2">{{ (p.created_at|string)[:10] }}</span>
+
+    </div>
+
+    <form method="POST" action="/admin/gallery/restore/{{ p.id }}">
+
+      <button type="submit" class="px-4 py-2 bg-[#c4ff00] text-black font-bold rounded-lg hover:bg-white transition text-sm">복원</button>
+
+    </form>
+
+  </div>
+
+  {% endfor %}
+
+</div>
+
+{% else %}
+
+<div class="text-center text-zinc-500 py-20">휴지통이 비어있습니다.</div>
+
+{% endif %}
+
+{% endblock %}
+

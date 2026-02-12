@@ -329,6 +329,7 @@ class Post(db.Model):
     uploaded_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # 관리자 업로드 기록
     status = db.Column(db.String(20), default="approved")  # pending, approved, rejected
     is_featured = db.Column(db.Boolean, default=False)  # 메인 추천 게시물
+    is_deleted = db.Column(db.Boolean, default=False)  # 소프트 삭제
     
     # [FIX #9] seller relationship 추가 (N+1 쿼리 방지용)
     seller = db.relationship('User', foreign_keys=[seller_id], lazy='joined')
@@ -875,7 +876,7 @@ def serve_r2_file(filename):
 # ----------------------------
 @app.route("/")
 def index():
-    return render_template("index.html", featured_posts=Post.query.filter_by(is_featured=True).limit(4).all())
+    return render_template("index.html", featured_posts=Post.query.filter_by(is_featured=True).filter(Post.is_deleted != True).limit(4).all())
 
 # [FIX #10] store 페이지는 로그인 무관 → 캐시 유지 OK
 @app.route("/store")
@@ -3054,7 +3055,7 @@ def api_gallery_view(post_id):
 def admin_gallery():
     if not is_admin():
         return redirect(url_for("admin_login"))
-    posts = Post.query.order_by(Post.id.desc()).all()
+    posts = Post.query.filter(Post.is_deleted != True).order_by(Post.id.desc()).all()
 
     uploaders = {}
 
@@ -3081,6 +3082,40 @@ def admin_gallery():
     ).order_by(Category.sort_order).all()
 
     return render_template("admin_gallery.html", posts=posts, uploaders=uploaders, categories=categories)
+
+
+@app.route("/admin/gallery/trash")
+
+def admin_gallery_trash():
+
+    if not is_admin():
+
+        return redirect(url_for("admin_login"))
+
+    posts = Post.query.filter_by(is_deleted=True).order_by(Post.id.desc()).all()
+
+    return render_template("admin_gallery_trash.html", posts=posts)
+
+
+
+@app.route("/admin/gallery/restore/<int:post_id>", methods=["POST"])
+
+def admin_gallery_restore(post_id):
+
+    if not is_admin():
+
+        return redirect(url_for("admin_login"))
+
+    post = Post.query.get_or_404(post_id)
+
+    post.is_deleted = False
+
+    db.session.commit()
+
+    flash("게시물이 복원되었습니다.", "success")
+
+    return redirect(url_for("admin_gallery_trash"))
+
 
 
 @app.route("/admin/gallery/toggle-featured/<int:post_id>", methods=["POST"])
@@ -3274,9 +3309,22 @@ def admin_edit(post_id):
     return render_template("admin_edit.html", post=p, post_data=p.to_dict(), next_url=next_url, categories=categories)
 
 @app.route("/admin/posts/<int:post_id>/delete", methods=["POST"])
+
 def admin_delete(post_id):
+
     if not is_admin():
+
         return redirect(url_for("admin_login"))
+
+    post = Post.query.get_or_404(post_id)
+
+    post.is_deleted = True
+
+    db.session.commit()
+
+    flash("게시물이 삭제되었습니다. (복원 가능)", "success")
+
+    return redirect(request.args.get("next") or url_for("admin_gallery")))
     db.session.delete(Post.query.get_or_404(post_id))
     db.session.commit()
     return redirect(url_for("admin_posts"))
