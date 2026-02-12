@@ -81,115 +81,44 @@
 
 
 
-  <div class="admin-tabs-wrap mb-6 md:mb-8">
+  {% set tab_cls_on = "bg-[#a3e635] text-black border border-[#a3e635]" %}
+  {% set tab_cls_off = "bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800" %}
+  {% set tab_base = "shrink-0 px-4 py-2.5 rounded-xl transition font-bold text-sm whitespace-nowrap" %}
+  {% set is_more_active = request.path.startswith('/admin/users') or request.path.startswith('/admin/subscriptions') or request.path.startswith('/admin/link-requests') or request.path.startswith('/admin/revenue-proofs') or request.path.startswith('/admin/sellers') or request.path.startswith('/admin/seller-posts') or request.path.startswith('/admin/event-trials') %}
 
-    <div class="admin-tabs flex gap-2 overflow-x-auto pb-2 md:pb-0 md:flex-wrap">
+  <div class="flex gap-2 items-start mb-6 md:mb-8">
+    <!-- 메인 탭 -->
+    <a href="/admin" class="{{ tab_base }} {% if request.path == '/admin' %}{{ tab_cls_on }}{% else %}{{ tab_cls_off }}{% endif %}">홈</a>
+    <a href="/admin/stats" class="{{ tab_base }} {% if request.path.startswith('/admin/stats') %}{{ tab_cls_on }}{% else %}{{ tab_cls_off }}{% endif %}">통계</a>
+    <a href="/admin/gallery" class="{{ tab_base }} {% if request.path.startswith('/admin/gallery') or request.path.startswith('/admin/posts') or request.path.startswith('/admin/upload') %}{{ tab_cls_on }}{% else %}{{ tab_cls_off }}{% endif %}">갤러리</a>
+    <a href="/admin/store" class="{{ tab_base }} {% if request.path.startswith('/admin/store') %}{{ tab_cls_on }}{% else %}{{ tab_cls_off }}{% endif %}">스토어</a>
 
-      <a href="/admin"
-
-         class="shrink-0 px-4 py-2.5 rounded-xl transition font-bold text-sm whitespace-nowrap
-
-                {% if request.path == '/admin' %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
-
-        홈
-
-      </a>
-
-      <a href="/admin/stats"
-
-         class="shrink-0 px-4 py-2.5 rounded-xl transition font-bold text-sm whitespace-nowrap
-
-                {% if request.path.startswith('/admin/stats') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
-
-        통계
-
-      </a>
-
-      <a href="/admin/users"
-
-         class="shrink-0 px-4 py-2.5 rounded-xl transition font-bold text-sm whitespace-nowrap
-
-                {% if request.path.startswith('/admin/users') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
-
-        가입자
-
-      </a>
-
-      <a href="/admin/subscriptions"
-
-         class="shrink-0 px-4 py-2.5 rounded-xl transition font-bold text-sm whitespace-nowrap
-
-                {% if request.path.startswith('/admin/subscriptions') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
-
-        구독
-
-      </a>
-
-      <a href="/admin/gallery"
-
-         class="shrink-0 px-4 py-2.5 rounded-xl transition font-bold text-sm whitespace-nowrap
-
-                {% if request.path.startswith('/admin/gallery') or request.path.startswith('/admin/posts') or request.path.startswith('/admin/upload') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
-
-        갤러리
-
-      <a href="/admin/seller-posts"
-         class="shrink-0 px-4 py-2.5 rounded-xl transition font-bold text-sm whitespace-nowrap
-                {% if request.path.startswith('/admin/seller-posts') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
-        판매자게시물
-      </a>
-
-      <a href="/admin/link-requests"
-
-         class="shrink-0 px-4 py-2.5 rounded-xl transition font-bold text-sm whitespace-nowrap
-
-                {% if request.path.startswith('/admin/link-requests') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
-
-        링크요청
-
-      </a>
-
-      <a href="/admin/revenue-proofs"
-
-         class="shrink-0 px-4 py-2.5 rounded-xl transition font-bold text-sm whitespace-nowrap
-
-                {% if request.path.startswith('/admin/revenue-proofs') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
-
-        수익인증
-
-      </a>
-      <a href="/admin/sellers"
-
-              class="shrink-0 px-4 py-2.5 rounded-xl transition font-bold text-sm whitespace-nowrap
-
-                {% if request.path.startswith('/admin/sellers') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
-
-        판매자
-
-      </a>
-
-      <a href="/admin/store"
-
-         class="shrink-0 px-4 py-2.5 rounded-xl transition font-bold text-sm whitespace-nowrap
-
-                {% if request.path.startswith('/admin/store') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
-
-        스토어
-
-      </a>
-
-      <a href="/admin/event-trials"
-
-              class="shrink-0 px-4 py-2.5 rounded-xl transition font-bold text-sm whitespace-nowrap
-
-                {% if request.path.startswith('/admin/event-trials') %}bg-[#a3e635] text-black border border-[#a3e635]{% else %}bg-zinc-900/60 text-gray-200 border border-zinc-800 hover:bg-zinc-800{% endif %}">
-
-        이벤트신청
-
-      </a>
-
+    <!-- 더보기 드롭다운 -->
+    <div class="relative shrink-0" id="moreMenuWrap">
+      <button onclick="toggleMoreMenu()" id="moreMenuBtn"
+              class="{{ tab_base }} {% if is_more_active %}{{ tab_cls_on }}{% else %}{{ tab_cls_off }}{% endif %} flex items-center gap-1">
+        {% if is_more_active %}
+          {% if request.path.startswith('/admin/users') %}가입자
+          {% elif request.path.startswith('/admin/subscriptions') %}구독
+          {% elif request.path.startswith('/admin/link-requests') %}링크요청
+          {% elif request.path.startswith('/admin/revenue-proofs') %}수익인증
+          {% elif request.path.startswith('/admin/seller-posts') %}판매자게시물
+          {% elif request.path.startswith('/admin/sellers') %}판매자
+          {% elif request.path.startswith('/admin/event-trials') %}이벤트신청
+          {% endif %}
+        {% else %}더보기{% endif %}
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div id="moreMenuDropdown" class="hidden absolute top-full left-0 mt-2 w-44 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl z-50 overflow-hidden">
+        <a href="/admin/users" class="block px-4 py-2.5 text-sm hover:bg-zinc-800 transition {% if request.path.startswith('/admin/users') %}text-[#c4ff00] font-bold{% else %}text-zinc-300{% endif %}">가입자</a>
+        <a href="/admin/subscriptions" class="block px-4 py-2.5 text-sm hover:bg-zinc-800 transition {% if request.path.startswith('/admin/subscriptions') %}text-[#c4ff00] font-bold{% else %}text-zinc-300{% endif %}">구독</a>
+        <a href="/admin/link-requests" class="block px-4 py-2.5 text-sm hover:bg-zinc-800 transition {% if request.path.startswith('/admin/link-requests') %}text-[#c4ff00] font-bold{% else %}text-zinc-300{% endif %}">링크요청</a>
+        <a href="/admin/sellers" class="block px-4 py-2.5 text-sm hover:bg-zinc-800 transition {% if request.path.startswith('/admin/sellers') %}text-[#c4ff00] font-bold{% else %}text-zinc-300{% endif %}">판매자</a>
+        <a href="/admin/seller-posts" class="block px-4 py-2.5 text-sm hover:bg-zinc-800 transition {% if request.path.startswith('/admin/seller-posts') %}text-[#c4ff00] font-bold{% else %}text-zinc-300{% endif %}">판매자게시물</a>
+        <a href="/admin/revenue-proofs" class="block px-4 py-2.5 text-sm hover:bg-zinc-800 transition {% if request.path.startswith('/admin/revenue-proofs') %}text-[#c4ff00] font-bold{% else %}text-zinc-300{% endif %}">수익인증</a>
+        <a href="/admin/event-trials" class="block px-4 py-2.5 text-sm hover:bg-zinc-800 transition {% if request.path.startswith('/admin/event-trials') %}text-[#c4ff00] font-bold{% else %}text-zinc-300{% endif %}">이벤트신청</a>
+      </div>
     </div>
-
   </div>
 
 
@@ -199,39 +128,36 @@
 
 
 <script>
-
 document.addEventListener('DOMContentLoaded', function() {
-
   var tabs = document.querySelector('.admin-tabs');
-
   var wrap = document.querySelector('.admin-tabs-wrap');
-
   if (!tabs || !wrap) return;
 
   function checkScroll() {
-
     var atEnd = tabs.scrollLeft + tabs.clientWidth >= tabs.scrollWidth - 10;
-
     if (atEnd) { wrap.classList.add('scrolled-end'); }
-
     else { wrap.classList.remove('scrolled-end'); }
-
   }
-
   tabs.addEventListener('scroll', checkScroll);
-
   checkScroll();
 
-  var activeTab = tabs.querySelector('a[class*="bg-"]');
-
+  var activeTab = tabs.querySelector('a[class*="bg-\\["]');
   if (activeTab) {
-
     activeTab.scrollIntoView({ inline: 'center', block: 'nearest' });
-
   }
-
 });
 
+/* 더보기 드롭다운 */
+function toggleMoreMenu() {
+  var dd = document.getElementById('moreMenuDropdown');
+  dd.classList.toggle('hidden');
+}
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('moreMenuWrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('moreMenuDropdown').classList.add('hidden');
+  }
+});
 </script>
 
 

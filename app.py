@@ -2868,23 +2868,51 @@ def admin_home():
         pending_rewards = 0
     
     pending_posts = Post.query.filter_by(status="pending").count()
-    
+
+    # 인라인 액션용 실제 pending 객체
+    pending_link_items = LinkRequest.query.filter(
+        (LinkRequest.coupang_url == None) | (LinkRequest.coupang_url == "")
+    ).order_by(desc(LinkRequest.id)).limit(3).all()
+
+    pending_seller_items = User.query.filter_by(
+        seller_status="pending"
+    ).order_by(desc(User.id)).limit(3).all()
+
+    pending_post_items = Post.query.filter_by(
+        status="pending"
+    ).order_by(desc(Post.id)).limit(3).all()
+
+    try:
+        pending_reward_items = RevenueRewardHistory.query.filter_by(
+            status="pending"
+        ).order_by(desc(RevenueRewardHistory.id)).limit(3).all()
+        for p in pending_reward_items:
+            p._user = User.query.get(p.user_id)
+            p._post = CommunityPost.query.get(p.post_id)
+    except:
+        pending_reward_items = []
+
     return render_template("admin_home.html",
         today=today,
         today_users=today_users,
         today_links=today_links,
-        
+
         pending_links=pending_links,
         pending_sellers=pending_sellers,
         pending_rewards=pending_rewards,
         pending_posts=pending_posts,
         pg_event_count=EventTrialApply.query.count() if EventTrialApply else 0,
-        
+
+        pending_link_items=pending_link_items,
+        pending_seller_items=pending_seller_items,
+        pending_post_items=pending_post_items,
+        pending_reward_items=pending_reward_items,
+
         user_count=User.query.count(),
         subscriber_count=db.session.query(Subscription.user_id).filter_by(status="active").distinct().count(),
         gallery_count=Post.query.count(),
         store_count=StoreProduct.query.count(),
-        
+
         recent_link_requests=LinkRequest.query.order_by(desc(LinkRequest.id)).limit(5).all(),
         recent_posts=Post.query.order_by(desc(Post.id)).limit(5).all()
     )
@@ -2998,47 +3026,170 @@ def admin_users():
 def admin_stats():
     if not is_admin():
         return redirect(url_for("admin_login"))
-    
+
     from datetime import date, timedelta as td
     today = date.today()
-    
+    now = datetime.utcnow()
+
+    # ── 핵심 지표 ──
     total_users = User.query.count()
     new_users_today = User.query.filter(db.func.date(User.created_at) == today).count()
+    new_users_7d = User.query.filter(User.created_at >= now - td(days=7)).count()
     total_subscribers = db.session.query(Subscription.user_id).filter_by(status="active").distinct().count()
-    trial_users = User.query.filter(User.free_trial_expires > datetime.utcnow()).count()
-    total_posts = Post.query.count()
-    
+    trial_users = User.query.filter(User.free_trial_expires > now).count()
     conversion_rate = round((total_subscribers / total_users * 100), 1) if total_users > 0 else 0
-    
+
+    # ── 매출 통계 ──
+    total_revenue = db.session.query(db.func.coalesce(db.func.sum(PaymentHistory.amount), 0)).filter_by(status="paid").scalar()
+    revenue_this_month = db.session.query(db.func.coalesce(db.func.sum(PaymentHistory.amount), 0)).filter(
+        PaymentHistory.status == "paid",
+        db.func.extract('year', PaymentHistory.paid_at) == today.year,
+        db.func.extract('month', PaymentHistory.paid_at) == today.month
+    ).scalar()
+    total_payments = PaymentHistory.query.filter_by(status="paid").count()
+
+    # 월별 매출 (최근 6개월)
+    monthly_revenue = []
+    max_monthly = 0
+    for i in range(5, -1, -1):
+        m_date = today.replace(day=1) - td(days=i * 30)
+        m_year, m_month = m_date.year, m_date.month
+        m_sum = db.session.query(db.func.coalesce(db.func.sum(PaymentHistory.amount), 0)).filter(
+            PaymentHistory.status == "paid",
+            db.func.extract('year', PaymentHistory.paid_at) == m_year,
+            db.func.extract('month', PaymentHistory.paid_at) == m_month
+        ).scalar()
+        monthly_revenue.append({"label": f"{m_month}월", "amount": m_sum})
+        if m_sum > max_monthly:
+            max_monthly = m_sum
+
+    # 일별 매출 (최근 14일)
+    daily_revenue = []
+    max_daily_rev = 0
+    for i in range(13, -1, -1):
+        d = today - td(days=i)
+        d_sum = db.session.query(db.func.coalesce(db.func.sum(PaymentHistory.amount), 0)).filter(
+            PaymentHistory.status == "paid",
+            db.func.date(PaymentHistory.paid_at) == d
+        ).scalar()
+        daily_revenue.append({"label": d.strftime("%m/%d"), "amount": d_sum})
+        if d_sum > max_daily_rev:
+            max_daily_rev = d_sum
+
+    # ── 가입 추이 (14일) ──
     daily_signups = []
     max_daily_signup = 0
-    for i in range(6, -1, -1):
+    for i in range(13, -1, -1):
         d = today - td(days=i)
         count = User.query.filter(db.func.date(User.created_at) == d).count()
         daily_signups.append({"label": d.strftime("%m/%d"), "count": count})
         if count > max_daily_signup:
             max_daily_signup = count
-    
-    popular_posts = Post.query.order_by(Post.view_count.desc()).limit(5).all()
-    recent_users = User.query.order_by(User.created_at.desc()).limit(5).all()
-    
+
+    # ── 구독 타입별 현황 ──
+    plan_stats = db.session.query(
+        Subscription.plan_type,
+        db.func.count(db.func.distinct(Subscription.user_id))
+    ).filter_by(status="active").group_by(Subscription.plan_type).all()
+    plan_stats = [{"name": p[0] or "기타", "count": p[1]} for p in plan_stats]
+
+    # ── 콘텐츠 현황 ──
+    total_posts = Post.query.filter(Post.is_deleted != True).count()
+    total_views = db.session.query(db.func.coalesce(db.func.sum(Post.view_count), 0)).filter(Post.is_deleted != True).scalar()
+    avg_views = round(total_views / total_posts, 1) if total_posts > 0 else 0
+
+    # 카테고리별 게시물
+    category_stats = db.session.query(
+        Post.category, db.func.count(Post.id)
+    ).filter(Post.is_deleted != True).group_by(Post.category).order_by(db.func.count(Post.id).desc()).all()
+    category_stats = [{"name": c[0] or "없음", "count": c[1]} for c in category_stats]
+
+    # ── 링크요청 현황 ──
+    total_links = LinkRequest.query.count()
+    completed_links = LinkRequest.query.filter(LinkRequest.coupang_url != None, LinkRequest.coupang_url != "").count()
+    pending_links = total_links - completed_links
+    link_completion_rate = round((completed_links / total_links * 100), 1) if total_links > 0 else 0
+
+    # ── 커뮤니티 현황 ──
+    community_posts = CommunityPost.query.count()
+    community_comments = CommunityComment.query.count()
+    community_likes = CommunityLike.query.count()
+
+    # ── 인기 영상 TOP 5 ──
+    popular_posts = Post.query.filter(Post.is_deleted != True).order_by(Post.view_count.desc()).limit(5).all()
+
     return render_template("admin_stats.html",
+        today=today,
         total_users=total_users,
         new_users_today=new_users_today,
+        new_users_7d=new_users_7d,
         total_subscribers=total_subscribers,
         conversion_rate=conversion_rate,
         trial_users=trial_users,
-        total_posts=total_posts,
+        total_revenue=total_revenue,
+        revenue_this_month=revenue_this_month,
+        total_payments=total_payments,
+        monthly_revenue=monthly_revenue,
+        max_monthly=max_monthly,
+        daily_revenue=daily_revenue,
+        max_daily_rev=max_daily_rev,
         daily_signups=daily_signups,
         max_daily_signup=max_daily_signup,
+        plan_stats=plan_stats,
+        total_posts=total_posts,
+        total_views=total_views,
+        avg_views=avg_views,
+        category_stats=category_stats,
+        total_links=total_links,
+        completed_links=completed_links,
+        pending_links=pending_links,
+        link_completion_rate=link_completion_rate,
+        community_posts=community_posts,
+        community_comments=community_comments,
+        community_likes=community_likes,
         popular_posts=popular_posts,
-        recent_users=recent_users,
-        gallery_count=Post.query.count(),
-        link_count=LinkRequest.query.count(),
-        user_count=User.query.count(),
-        store_count=StoreProduct.query.count(),
-        subscriber_count=total_subscribers
     )
+
+@app.route("/admin/stats/download-csv")
+def admin_stats_download_csv():
+    if not is_admin():
+        return redirect(url_for("admin_login"))
+    import io, csv
+    from flask import Response
+
+    start = request.args.get("start", "")
+    end = request.args.get("end", "")
+
+    query = PaymentHistory.query.filter_by(status="paid").order_by(PaymentHistory.paid_at.asc())
+    if start:
+        query = query.filter(db.func.date(PaymentHistory.paid_at) >= start)
+    if end:
+        query = query.filter(db.func.date(PaymentHistory.paid_at) <= end)
+    payments = query.all()
+
+    output = io.StringIO()
+    output.write('\ufeff')  # BOM for Excel 한글 깨짐 방지
+    writer = csv.writer(output)
+    writer.writerow(["결제일", "주문번호", "결제금액", "플랜타입", "결제자이메일", "결제상태"])
+
+    for p in payments:
+        user = User.query.get(p.user_id)
+        writer.writerow([
+            p.paid_at.strftime("%Y-%m-%d %H:%M:%S") if p.paid_at else "",
+            p.order_id or "",
+            p.amount or 0,
+            p.plan_type or "",
+            user.email if user else "",
+            p.status or "",
+        ])
+
+    filename = f"moneying_revenue_{start or 'all'}_{end or 'all'}.csv"
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
 
 @app.route("/api/gallery/<int:post_id>/view", methods=["POST"])
 def api_gallery_view(post_id):
@@ -3378,6 +3529,32 @@ def admin_link_requests():
     if not is_admin():
         return redirect(url_for("admin_login"))
     return render_template("admin_link_requests.html", items=LinkRequest.query.order_by(LinkRequest.id.desc()).all())
+
+
+@app.route("/api/link-request/<int:request_id>/update-url", methods=["POST"])
+def api_link_request_update_url(request_id):
+    if not is_admin():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    it = LinkRequest.query.get(request_id)
+    if not it:
+        return jsonify({"ok": False, "error": "not found"}), 404
+    data = request.get_json()
+    coupang_url = (data.get("coupang_url") or "").strip()
+    if not coupang_url:
+        return jsonify({"ok": False, "error": "URL을 입력하세요."})
+    it.coupang_url = coupang_url
+    db.session.commit()
+    user = User.query.filter_by(email=it.requester_email).first()
+    if user:
+        db.session.add(Notification(
+            user_id=user.id,
+            type="link_completed",
+            title="링크요청 완료",
+            message=f"'{it.title}' 요청의 쿠팡 링크가 등록되었습니다!",
+            link="/link-requests/new"
+        ))
+        db.session.commit()
+    return jsonify({"ok": True})
 
 
 # ----------------------------
@@ -3937,6 +4114,8 @@ def admin_revenue_approve(proof_id):
 
     db.session.commit()
 
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"ok": True})
     return redirect(url_for("admin_revenue_proofs"))
 
 
@@ -3973,6 +4152,8 @@ def admin_revenue_reject(proof_id):
 
     db.session.commit()
 
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"ok": True})
     return redirect(url_for("admin_revenue_proofs"))
 
 
@@ -4378,29 +4559,56 @@ def api_youtube_video_detail(video_id):
 @cache.cached(timeout=60, query_string=True)
 def api_gallery():
     page = request.args.get("page", 1, type=int)
-    per_page = 30
+    per_page = request.args.get("per_page", 30, type=int)
+    if per_page > 200:
+        per_page = 200
     category = request.args.get("category", "").strip()
-    
+    search = request.args.get("search", "").strip()
+    sort = request.args.get("sort", "").strip()
+
     query = Post.query.filter(
         (Post.status == "approved") | (Post.status == None) | (Post.status == "")
     )
-    
+
     if category and category not in ["all", ""]:
         query = query.filter_by(category=category)
-    
-    query = query.order_by(Post.is_free.desc(), Post.id.desc())
+
+    if search:
+        query = query.filter(Post.title.ilike(f"%{search}%"))
+
+    if sort == "popular":
+        query = query.order_by(Post.view_count.desc(), Post.id.desc())
+    else:
+        query = query.order_by(Post.is_free.desc(), Post.id.desc())
+
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-    
+
     posts = []
     for p in pagination.items:
         posts.append(p.to_dict())
-    
+
     return jsonify({
         "posts": posts,
         "has_next": pagination.has_next,
         "page": page,
         "total": pagination.total
     })
+
+
+@app.route("/api/gallery/by-ids", methods=["POST"])
+def api_gallery_by_ids():
+    data = request.get_json() or {}
+    ids = data.get("ids", [])
+    if not ids or not isinstance(ids, list):
+        return jsonify({"posts": []})
+    ids = [int(i) for i in ids[:200]]
+    posts = Post.query.filter(
+        Post.id.in_(ids),
+        (Post.status == "approved") | (Post.status == None) | (Post.status == "")
+    ).all()
+    id_to_post = {p.id: p.to_dict() for p in posts}
+    ordered = [id_to_post[i] for i in ids if i in id_to_post]
+    return jsonify({"posts": ordered})
 
 
 # ----------------------------

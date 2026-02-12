@@ -1,144 +1,250 @@
 {% extends "admin_base.html" %}
 {% block title %}통계 - MONEYING{% endblock %}
-{% block page_title %}통계 대시보드{% endblock %}
-{% block page_desc %}가입자, 구독, 콘텐츠 현황을 한눈에 확인하세요.{% endblock %}
+{% block page_title %}통계{% endblock %}
+{% block page_desc %}서비스 핵심 지표를 한눈에 확인하세요.{% endblock %}
+
+{# 구독 타입 뱃지 매크로 #}
+{% macro plan_badge(name) %}
+  {% if name == 'gallery' %}
+    <span class="px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-xs">갤러리</span>
+  {% elif name == 'profitguard_lite' %}
+    <span class="px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold text-xs">PG 라이트</span>
+  {% elif name == 'profitguard_pro' %}
+    <span class="px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold text-xs">PG 프로</span>
+  {% elif name == 'profitguard_lifetime' %}
+    <span class="px-2.5 py-1 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 font-bold text-xs">PG 평생</span>
+  {% elif name == 'allinone' %}
+    <span class="px-2.5 py-1 rounded-lg bg-[#a3e635]/10 border border-[#a3e635]/20 text-[#a3e635] font-bold text-xs">올인원</span>
+  {% else %}
+    <span class="px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-gray-300 font-bold text-xs">{{ name }}</span>
+  {% endif %}
+{% endmacro %}
+
+{% macro plan_bar_color(name) %}{% if name == 'gallery' %}bg-blue-400{% elif name == 'profitguard_lite' or name == 'profitguard_pro' %}bg-purple-400{% elif name == 'profitguard_lifetime' %}bg-yellow-400{% elif name == 'allinone' %}bg-[#a3e635]{% else %}bg-zinc-500{% endif %}{% endmacro %}
 
 {% block content_admin %}
 
-<!-- 핵심 지표 -->
-<div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-6 md:mb-8">
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6">
-    <div class="text-zinc-500 text-[11px] md:text-xs font-bold mb-1">총 가입자</div>
-    <div class="text-2xl md:text-3xl font-black">{{ total_users }}</div>
-    <div class="text-green-400 text-xs md:text-sm mt-1">+{{ new_users_today }} 오늘</div>
-  </div>
+<div class="space-y-4 md:space-y-6">
 
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6">
-    <div class="text-zinc-500 text-[11px] md:text-xs font-bold mb-1">구독자</div>
-    <div class="text-2xl md:text-3xl font-black text-[#a3e635]">{{ total_subscribers }}</div>
-    <div class="text-zinc-400 text-xs md:text-sm mt-1">전환율 {{ conversion_rate }}%</div>
-  </div>
-
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6">
-    <div class="text-zinc-500 text-[11px] md:text-xs font-bold mb-1">체험중</div>
-    <div class="text-2xl md:text-3xl font-black text-purple-400">{{ trial_users }}</div>
-    <div class="text-zinc-400 text-xs md:text-sm mt-1">무료체험 이용중</div>
-  </div>
-
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6">
-    <div class="text-zinc-500 text-[11px] md:text-xs font-bold mb-1">갤러리</div>
-    <div class="text-2xl md:text-3xl font-black">{{ total_posts }}</div>
-    <div class="text-zinc-400 text-xs md:text-sm mt-1">총 게시물</div>
-  </div>
-</div>
-
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
-
-  <!-- 최근 7일 가입자 -->
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6">
-    <h3 class="font-black text-sm md:text-base mb-4">📈 최근 7일 가입자</h3>
-    <div class="h-40 md:h-48 flex items-end justify-between gap-1 md:gap-2">
-      {% for day in daily_signups %}
-        <div class="flex-1 flex flex-col items-center">
-          <div class="w-full bg-[#a3e635]/20 rounded-t relative" style="height: {{ (day.count / max_daily_signup * 100) if max_daily_signup > 0 else 0 }}%">
-            <div class="absolute -top-5 left-1/2 -translate-x-1/2 text-[11px] md:text-xs font-bold text-[#a3e635]">{{ day.count }}</div>
-          </div>
-          <div class="text-zinc-500 text-[10px] md:text-xs mt-1.5 md:mt-2">{{ day.label }}</div>
-        </div>
-      {% endfor %}
+  <!-- ── 핵심 KPI ── -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-5">
+      <div class="text-zinc-500 text-[11px] md:text-xs font-bold mb-1">총 가입자</div>
+      <div class="text-2xl md:text-3xl font-black">{{ total_users }}</div>
+      <div class="text-[#c4ff00] text-xs mt-1">+{{ new_users_today }} 오늘 · +{{ new_users_7d }} 7일</div>
+    </div>
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-5">
+      <div class="text-zinc-500 text-[11px] md:text-xs font-bold mb-1">구독자</div>
+      <div class="text-2xl md:text-3xl font-black text-[#c4ff00]">{{ total_subscribers }}</div>
+      <div class="text-zinc-400 text-xs mt-1">전환율 {{ conversion_rate }}% · 체험 {{ trial_users }}명</div>
+    </div>
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-5">
+      <div class="text-zinc-500 text-[11px] md:text-xs font-bold mb-1">이번 달 매출</div>
+      <div class="text-2xl md:text-3xl font-black text-blue-400">{{ "{:,}".format(revenue_this_month) }}<span class="text-sm text-zinc-500 ml-0.5">원</span></div>
+      <div class="text-zinc-400 text-xs mt-1">{{ total_payments }}건 결제</div>
+    </div>
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-5">
+      <div class="text-zinc-500 text-[11px] md:text-xs font-bold mb-1">누적 매출</div>
+      <div class="text-2xl md:text-3xl font-black">{{ "{:,}".format(total_revenue) }}<span class="text-sm text-zinc-500 ml-0.5">원</span></div>
+      <div class="text-zinc-400 text-xs mt-1">갤러리 {{ total_posts }}개 · {{ "{:,}".format(total_views) }}회 조회</div>
     </div>
   </div>
 
-  <!-- 구독 현황 -->
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6">
-    <h3 class="font-black text-sm md:text-base mb-4">💳 구독 타입별 현황</h3>
-    <div class="space-y-3">
-      {% for plan in plan_stats %}
-        <div>
-          <div class="flex justify-between text-xs md:text-sm mb-1">
-            <span class="text-zinc-400">{{ plan.name }}</span>
-            <span class="font-bold">{{ plan.count }}명</span>
+  <!-- ── 차트 영역 ── -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5">
+
+    <!-- 14일 가입 추이 -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-5">
+      <h3 class="font-bold text-sm md:text-base mb-4">가입 추이 <span class="text-zinc-500 text-xs font-normal">최근 14일</span></h3>
+      <div class="h-36 md:h-44 flex items-end gap-[3px] md:gap-1">
+        {% for day in daily_signups %}
+          <div class="flex-1 flex flex-col items-center">
+            <div class="w-full rounded-t transition-all duration-300"
+                 style="height: {{ (day.count / max_daily_signup * 100) if max_daily_signup > 0 else 0 }}%; min-height: {{ '2px' if day.count > 0 else '0' }}; background: {{ '#c4ff00' if loop.last else 'rgba(163,230,53,0.3)' }};">
+            </div>
+            {% if day.count > 0 %}
+              <div class="text-[10px] font-bold mt-1 {{ 'text-[#c4ff00]' if loop.last else 'text-zinc-500' }}">{{ day.count }}</div>
+            {% endif %}
+            {% if loop.index % 2 == 0 or loop.last %}
+              <div class="text-zinc-600 text-[9px] md:text-[10px] mt-0.5">{{ day.label }}</div>
+            {% endif %}
           </div>
-          <div class="w-full bg-zinc-800 rounded-full h-2">
-            <div class="bg-[#a3e635] h-2 rounded-full" style="width: {{ (plan.count / total_subscribers * 100) if total_subscribers > 0 else 0 }}%"></div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- 매출 차트 (탭 전환) -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-5">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-4">
+        <div class="flex items-center gap-3">
+          <h3 class="font-bold text-sm md:text-base">매출</h3>
+          <div class="flex bg-zinc-800 rounded-lg p-0.5">
+            <button onclick="switchRevTab('monthly')" id="revTabMonthly"
+                    class="px-3 py-1 rounded-md text-xs font-bold transition bg-blue-500 text-white">월별</button>
+            <button onclick="switchRevTab('daily')" id="revTabDaily"
+                    class="px-3 py-1 rounded-md text-xs font-bold transition text-zinc-400 hover:text-white">일별</button>
           </div>
         </div>
-      {% endfor %}
-      {% if plan_stats|length == 0 %}
-        <div class="text-zinc-600 text-center py-8">구독 데이터가 없습니다.</div>
+        <div class="flex items-center gap-2">
+          <input type="date" id="csvStart" class="bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-white focus:border-blue-500 focus:outline-none">
+          <span class="text-zinc-600 text-xs">~</span>
+          <input type="date" id="csvEnd" class="bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-white focus:border-blue-500 focus:outline-none">
+          <button onclick="downloadCsv()" class="px-3 py-1 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold rounded-lg transition shrink-0">CSV</button>
+        </div>
+      </div>
+
+
+
+      <!-- 월별 차트 -->
+      <div id="revChartMonthly" class="h-36 md:h-44 flex items-end gap-2 md:gap-3">
+        {% for m in monthly_revenue %}
+          <div class="flex-1 flex flex-col items-center">
+            <div class="w-full rounded-t transition-all duration-300"
+                 style="height: {{ (m.amount / max_monthly * 100) if max_monthly > 0 else 0 }}%; min-height: {{ '2px' if m.amount > 0 else '0' }}; background: {{ '#60a5fa' if loop.last else 'rgba(96,165,250,0.3)' }};">
+            </div>
+            {% if m.amount > 0 %}
+              <div class="text-[10px] font-bold mt-1 {{ 'text-blue-400' if loop.last else 'text-zinc-500' }}">{{ "{:,}".format(m.amount // 10000) }}만</div>
+            {% endif %}
+            <div class="text-zinc-600 text-[10px] md:text-xs mt-0.5">{{ m.label }}</div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- 일별 차트 -->
+      <div id="revChartDaily" class="h-36 md:h-44 flex items-end gap-[3px] md:gap-1 hidden">
+        {% for d in daily_revenue %}
+          <div class="flex-1 flex flex-col items-center">
+            <div class="w-full rounded-t transition-all duration-300"
+                 style="height: {{ (d.amount / max_daily_rev * 100) if max_daily_rev > 0 else 0 }}%; min-height: {{ '2px' if d.amount > 0 else '0' }}; background: {{ '#60a5fa' if loop.last else 'rgba(96,165,250,0.3)' }};">
+            </div>
+            {% if d.amount > 0 %}
+              <div class="text-[10px] font-bold mt-1 {{ 'text-blue-400' if loop.last else 'text-zinc-500' }}">{{ "{:,}".format(d.amount // 10000) }}만</div>
+            {% endif %}
+            {% if loop.index % 2 == 0 or loop.last %}
+              <div class="text-zinc-600 text-[9px] md:text-[10px] mt-0.5">{{ d.label }}</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── 구독 & 링크요청 ── -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5">
+
+    <!-- 구독 타입별 현황 -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-5">
+      <h3 class="font-bold text-sm md:text-base mb-4">구독 타입별 현황</h3>
+      {% if plan_stats %}
+        <div class="space-y-4">
+          {% for plan in plan_stats %}
+            <div class="flex items-center gap-3">
+              <div class="shrink-0">{{ plan_badge(plan.name) }}</div>
+              <div class="flex-1 min-w-0">
+                <div class="w-full bg-zinc-800 rounded-full h-2.5">
+                  <div class="{{ plan_bar_color(plan.name) }} h-2.5 rounded-full transition-all" style="width: {{ (plan.count / total_subscribers * 100) if total_subscribers > 0 else 0 }}%"></div>
+                </div>
+              </div>
+              <div class="text-white font-black text-sm shrink-0 w-12 text-right">{{ plan.count }}명</div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-zinc-600 text-center py-8 text-sm">구독 데이터 없음</div>
       {% endif %}
     </div>
+
+    <!-- 링크요청 현황 -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-5">
+      <h3 class="font-bold text-sm md:text-base mb-4">링크요청 현황</h3>
+      <div class="grid grid-cols-3 gap-3 mb-5">
+        <div class="bg-zinc-800/50 rounded-xl p-3 md:p-4 text-center">
+          <div class="text-xl md:text-2xl font-black text-white">{{ total_links }}</div>
+          <div class="text-zinc-500 text-xs mt-1">총 요청</div>
+        </div>
+        <div class="bg-zinc-800/50 rounded-xl p-3 md:p-4 text-center">
+          <div class="text-xl md:text-2xl font-black text-green-400">{{ completed_links }}</div>
+          <div class="text-zinc-500 text-xs mt-1">완료</div>
+        </div>
+        <div class="bg-zinc-800/50 rounded-xl p-3 md:p-4 text-center">
+          <div class="text-xl md:text-2xl font-black text-yellow-400">{{ pending_links }}</div>
+          <div class="text-zinc-500 text-xs mt-1">대기</div>
+        </div>
+      </div>
+      <div class="w-full bg-zinc-800 rounded-full h-3">
+        <div class="bg-green-500 h-3 rounded-full transition-all" style="width: {{ link_completion_rate }}%"></div>
+      </div>
+      <div class="text-zinc-500 text-xs mt-2 text-right">완료율 {{ link_completion_rate }}%</div>
+    </div>
+
   </div>
 
-</div>
-
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-
-  <!-- 인기 영상 TOP 10 -->
+  <!-- ── 인기 영상 TOP 5 ── -->
   <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
-    <div class="px-4 md:px-6 py-3 md:py-4 border-b border-zinc-800">
-      <h3 class="font-black text-sm md:text-base">🔥 인기 영상 TOP 10</h3>
+    <div class="px-4 md:px-5 py-3 md:py-4 border-b border-zinc-800">
+      <h3 class="font-bold text-sm md:text-base">인기 영상 TOP 5</h3>
     </div>
-    {% if popular_posts|length == 0 %}
-      <div class="p-6 text-center text-zinc-600">게시물이 없습니다.</div>
-    {% else %}
+    {% if popular_posts %}
       <div class="divide-y divide-zinc-800/50">
         {% for p in popular_posts %}
-          <div class="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-2.5 md:py-3 hover:bg-zinc-800/30 transition">
-            <div class="text-base md:text-lg font-black text-zinc-600 w-5 md:w-6 shrink-0 text-center">{{ loop.index }}</div>
+          <div class="flex items-center gap-3 px-4 md:px-5 py-3">
+            <div class="text-lg font-black w-6 shrink-0 text-center
+              {% if loop.index == 1 %}text-[#c4ff00]{% elif loop.index == 2 %}text-zinc-300{% elif loop.index == 3 %}text-orange-400{% else %}text-zinc-600{% endif %}">
+              {{ loop.index }}
+            </div>
             {% set img_list = p.to_dict().images %}
             {% if img_list and img_list|length > 0 %}
-              <img src="{% if img_list[0].startswith('/r2/') or img_list[0].startswith('http') %}{{ img_list[0] }}{% else %}/static/uploads/{{ img_list[0] }}{% endif %}" class="w-9 h-9 md:w-10 md:h-10 rounded object-cover shrink-0">
+              <img src="{% if img_list[0].startswith('/r2/') or img_list[0].startswith('http') %}{{ img_list[0] }}{% else %}/static/uploads/{{ img_list[0] }}{% endif %}" class="w-9 h-9 md:w-10 md:h-10 rounded-lg object-cover shrink-0">
             {% else %}
-              <div class="w-9 h-9 md:w-10 md:h-10 rounded bg-zinc-800 shrink-0"></div>
+              <div class="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0 text-sm">🎬</div>
             {% endif %}
             <div class="flex-1 min-w-0">
               <div class="font-bold text-sm truncate">{{ p.title }}</div>
               <div class="text-zinc-500 text-xs">{{ p.category or 'all' }}</div>
             </div>
             <div class="text-right shrink-0">
-              <div class="font-bold text-[#a3e635] text-sm">{{ p.view_count }}</div>
-              <div class="text-zinc-500 text-[11px]">조회</div>
+              <span class="font-black text-[#c4ff00] text-sm">{{ "{:,}".format(p.view_count or 0) }}</span>
+              <span class="text-zinc-500 text-xs ml-0.5">회</span>
             </div>
           </div>
         {% endfor %}
       </div>
-    {% endif %}
-  </div>
-
-  <!-- 최근 가입자 -->
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
-    <div class="px-4 md:px-6 py-3 md:py-4 border-b border-zinc-800">
-      <h3 class="font-black text-sm md:text-base">👤 최근 가입자</h3>
-    </div>
-    {% if recent_users|length == 0 %}
-      <div class="p-6 text-center text-zinc-600">가입자가 없습니다.</div>
     {% else %}
-      <div class="divide-y divide-zinc-800/50">
-        {% for u in recent_users %}
-          <div class="flex items-center justify-between px-4 md:px-6 py-2.5 md:py-3 hover:bg-zinc-800/30 transition">
-            <div class="flex items-center gap-2.5 md:gap-3 min-w-0">
-              <div class="w-7 h-7 md:w-8 md:h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs md:text-sm shrink-0">
-                {% if u.free_trial_expires %}🎁{% else %}👤{% endif %}
-              </div>
-              <div class="min-w-0">
-                <div class="font-bold text-xs md:text-sm truncate">{{ u.email }}</div>
-                <div class="text-zinc-500 text-[11px] md:text-xs">{{ u.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
-              </div>
-            </div>
-            <div class="text-xs shrink-0 ml-2">
-              {% if u.free_trial_expires %}
-                <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 font-bold">체험중</span>
-              {% else %}
-                <span class="px-2 py-0.5 rounded bg-zinc-800 text-zinc-500 font-bold">일반</span>
-              {% endif %}
-            </div>
-          </div>
-        {% endfor %}
-      </div>
+      <div class="p-6 text-center text-zinc-600 text-sm">게시물이 없습니다</div>
     {% endif %}
   </div>
 
 </div>
+
+<script>
+function switchRevTab(tab) {
+  var monthly = document.getElementById('revChartMonthly');
+  var daily = document.getElementById('revChartDaily');
+  var btnM = document.getElementById('revTabMonthly');
+  var btnD = document.getElementById('revTabDaily');
+  var onCls = 'bg-blue-500 text-white';
+  var offCls = 'text-zinc-400 hover:text-white';
+
+  if (tab === 'monthly') {
+    monthly.classList.remove('hidden');
+    daily.classList.add('hidden');
+    btnM.className = btnM.className.replace(offCls, onCls);
+    btnD.className = btnD.className.replace(onCls, offCls);
+  } else {
+    monthly.classList.add('hidden');
+    daily.classList.remove('hidden');
+    btnD.className = btnD.className.replace(offCls, onCls);
+    btnM.className = btnM.className.replace(onCls, offCls);
+  }
+}
+
+function downloadCsv() {
+  var start = document.getElementById('csvStart').value;
+  var end = document.getElementById('csvEnd').value;
+  var url = '/admin/stats/download-csv?start=' + encodeURIComponent(start) + '&end=' + encodeURIComponent(end);
+  window.location.href = url;
+}
+</script>
 
 {% endblock %}

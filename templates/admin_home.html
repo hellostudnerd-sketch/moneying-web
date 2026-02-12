@@ -6,127 +6,200 @@
 
 {% block content_admin %}
 
-<div class="space-y-4 md:space-y-6">
+<div class="space-y-4 md:space-y-5">
 
-  <!-- 오늘의 현황 -->
+  <!-- 섹션 1: 요약바 -->
   <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-5">
-    <div class="flex items-center justify-between mb-3 md:mb-4">
-      <h2 class="font-bold text-white text-sm md:text-base">📊 오늘의 현황</h2>
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-bold text-white text-sm md:text-base">📊 현황</h2>
       <span class="text-zinc-500 text-xs">{{ today.strftime('%Y-%m-%d') }}</span>
     </div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
-      <a href="/admin/users" class="bg-zinc-800/50 rounded-xl p-3 md:p-4 text-center min-w-0 hover:bg-zinc-700/50 transition block">
-        <div class="text-xl md:text-2xl font-black text-[#c4ff00] truncate">+{{ today_users }}</div>
+    <div class="grid grid-cols-3 md:grid-cols-5 gap-2 md:gap-3">
+      <a href="/admin/users" class="bg-zinc-800/50 rounded-xl p-3 text-center hover:bg-zinc-700/50 transition block">
+        <div class="text-lg md:text-xl font-black text-[#c4ff00]">+{{ today_users }}</div>
         <div class="text-zinc-500 text-[11px] md:text-xs mt-1">신규 가입</div>
       </a>
-      <a href="/admin/link-requests" class="bg-zinc-800/50 rounded-xl p-3 md:p-4 text-center min-w-0 hover:bg-zinc-700/50 transition block">
-        <div class="text-xl md:text-2xl font-black text-blue-400 truncate">+{{ today_links }}</div>
-        <div class="text-zinc-500 text-[11px] md:text-xs mt-1">링크요청</div>
+      <a href="/admin/users" class="bg-zinc-800/50 rounded-xl p-3 text-center hover:bg-zinc-700/50 transition block">
+        <div class="text-lg md:text-xl font-black text-white">{{ user_count }}</div>
+        <div class="text-zinc-500 text-[11px] md:text-xs mt-1">가입자</div>
       </a>
-      <a href="/admin/sellers" class="bg-zinc-800/50 rounded-xl p-3 md:p-4 text-center min-w-0 hover:bg-zinc-700/50 transition block">
-        <div class="text-xl md:text-2xl font-black text-purple-400 truncate">{{ pending_sellers }}</div>
-        <div class="text-zinc-500 text-[11px] md:text-xs mt-1">판매자 대기</div>
+      <a href="/admin/subscriptions" class="bg-zinc-800/50 rounded-xl p-3 text-center hover:bg-zinc-700/50 transition block">
+        <div class="text-lg md:text-xl font-black text-[#c4ff00]">{{ subscriber_count }}</div>
+        <div class="text-zinc-500 text-[11px] md:text-xs mt-1">구독자</div>
       </a>
-      <a href="/admin/revenue-proofs" class="bg-zinc-800/50 rounded-xl p-3 md:p-4 text-center min-w-0 hover:bg-zinc-700/50 transition block">
-        <div class="text-xl md:text-2xl font-black text-green-400 truncate">{{ pending_rewards }}</div>
-        <div class="text-zinc-500 text-[11px] md:text-xs mt-1">수익인증 대기</div>
+      <a href="/admin/gallery" class="bg-zinc-800/50 rounded-xl p-3 text-center hover:bg-zinc-700/50 transition block">
+        <div class="text-lg md:text-xl font-black text-white">{{ gallery_count }}</div>
+        <div class="text-zinc-500 text-[11px] md:text-xs mt-1">갤러리</div>
       </a>
-    </div>
-  </div>
-
-  <!-- 처리 필요 -->
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
-    <div class="px-4 md:px-5 py-3 border-b border-zinc-800">
-      <h2 class="font-bold text-white text-sm md:text-base">🔔 처리 필요</h2>
-    </div>
-    
-    <a href="/admin/link-requests" class="flex items-center justify-between px-4 md:px-5 py-3.5 md:py-4 hover:bg-zinc-800/50 active:bg-zinc-800/70 transition border-b border-zinc-800/50">
-      <div class="flex items-center gap-3 min-w-0">
-        <span class="text-lg md:text-xl shrink-0">🔗</span>
-        <div class="min-w-0">
-          <div class="font-medium text-white text-sm">링크요청</div>
-          <div class="text-zinc-500 text-xs">{{ pending_links }}건 대기중</div>
-        </div>
-      </div>
-      {% if pending_links > 0 %}
-        <span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded-full shrink-0 ml-2">{{ pending_links }}</span>
-      {% else %}
-        <span class="text-zinc-600 text-xs shrink-0 ml-2">완료 ✓</span>
-      {% endif %}
-    </a>
-    
-    <a href="/admin/sellers" class="flex items-center justify-between px-4 md:px-5 py-3.5 md:py-4 hover:bg-zinc-800/50 active:bg-zinc-800/70 transition border-b border-zinc-800/50">
-      <div class="flex items-center gap-3 min-w-0">
-        <span class="text-lg md:text-xl shrink-0">🏪</span>
-        <div class="min-w-0">
-          <div class="font-medium text-white text-sm">판매자 신청</div>
-          <div class="text-zinc-500 text-xs">{{ pending_sellers }}건 대기중</div>
-        </div>
-      </div>
-      {% if pending_sellers > 0 %}
-        <span class="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs font-bold rounded-full shrink-0 ml-2">{{ pending_sellers }}</span>
-      {% else %}
-        <span class="text-zinc-600 text-xs shrink-0 ml-2">완료 ✓</span>
-      {% endif %}
-    </a>
-    
-    <a href="/admin/seller-posts" class="flex items-center justify-between px-4 md:px-5 py-3.5 md:py-4 hover:bg-zinc-800/50 active:bg-zinc-800/70 transition border-b border-zinc-800/50">
-      <div class="flex items-center gap-3 min-w-0">
-        <span class="text-lg md:text-xl shrink-0">📸</span>
-        <div class="min-w-0">
-          <div class="font-medium text-white text-sm">판매자 게시물</div>
-          <div class="text-zinc-500 text-xs">{{ pending_posts }}건 승인대기</div>
-        </div>
-      </div>
-      {% if pending_posts > 0 %}
-        <span class="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs font-bold rounded-full shrink-0 ml-2">{{ pending_posts }}</span>
-      {% else %}
-        <span class="text-zinc-600 text-xs shrink-0 ml-2">완료 ✓</span>
-      {% endif %}
-    </a>
-    
-    <a href="/admin/revenue-proofs" class="flex items-center justify-between px-4 md:px-5 py-3.5 md:py-4 hover:bg-zinc-800/50 active:bg-zinc-800/70 transition">
-      <div class="flex items-center gap-3 min-w-0">
-        <span class="text-lg md:text-xl shrink-0">💸</span>
-        <div class="min-w-0">
-          <div class="font-medium text-white text-sm">수익인증 승인</div>
-          <div class="text-zinc-500 text-xs">{{ pending_rewards }}건 대기중</div>
-        </div>
-      </div>
-      {% if pending_rewards > 0 %}
-        <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded-full shrink-0 ml-2">{{ pending_rewards }}</span>
-      {% else %}
-        <span class="text-zinc-600 text-xs shrink-0 ml-2">완료 ✓</span>
-      {% endif %}
-    </a>
-  </div>
-
-  <!-- 전체 통계 -->
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-5">
-    <h2 class="font-bold text-white text-sm md:text-base mb-3 md:mb-4">📈 전체 통계</h2>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-      <a href="/admin/users" class="text-center group cursor-pointer bg-zinc-800/30 rounded-xl p-3 md:p-4 hover:bg-zinc-800/60 active:bg-zinc-800/80 transition min-w-0">
-        <div class="text-2xl md:text-3xl font-black text-white group-hover:text-[#c4ff00] transition truncate">{{ user_count }}</div>
-        <div class="text-zinc-500 text-xs md:text-sm group-hover:text-zinc-300 transition mt-1">가입자</div>
-      </a>
-      <a href="/admin/subscriptions" class="text-center group cursor-pointer bg-zinc-800/30 rounded-xl p-3 md:p-4 hover:bg-zinc-800/60 active:bg-zinc-800/80 transition min-w-0">
-        <div class="text-2xl md:text-3xl font-black text-[#c4ff00] group-hover:text-white transition truncate">{{ subscriber_count }}</div>
-        <div class="text-zinc-500 text-xs md:text-sm group-hover:text-zinc-300 transition mt-1">구독자</div>
-      </a>
-      <a href="/admin/gallery" class="text-center group cursor-pointer bg-zinc-800/30 rounded-xl p-3 md:p-4 hover:bg-zinc-800/60 active:bg-zinc-800/80 transition min-w-0">
-        <div class="text-2xl md:text-3xl font-black text-white group-hover:text-[#c4ff00] transition truncate">{{ gallery_count }}</div>
-        <div class="text-zinc-500 text-xs md:text-sm group-hover:text-zinc-300 transition mt-1">갤러리</div>
-      </a>
-      <a href="/admin/store" class="text-center group cursor-pointer bg-zinc-800/30 rounded-xl p-3 md:p-4 hover:bg-zinc-800/60 active:bg-zinc-800/80 transition min-w-0">
-        <div class="text-2xl md:text-3xl font-black text-white group-hover:text-[#c4ff00] transition truncate">{{ store_count }}</div>
-        <div class="text-zinc-500 text-xs md:text-sm group-hover:text-zinc-300 transition mt-1">스토어</div>
+      <a href="/admin/store" class="bg-zinc-800/50 rounded-xl p-3 text-center hover:bg-zinc-700/50 transition block">
+        <div class="text-lg md:text-xl font-black text-white">{{ store_count }}</div>
+        <div class="text-zinc-500 text-[11px] md:text-xs mt-1">스토어</div>
       </a>
     </div>
   </div>
 
-  <!-- 최근 활동 -->
+  <!-- 섹션 2: 액션 센터 -->
+  <div class="space-y-3">
+
+    <!-- 2-1: 링크요청 -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-4 md:px-5 py-3 border-b border-zinc-800">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">🔗</span>
+          <h3 class="font-bold text-sm text-white">링크요청</h3>
+          {% if pending_links > 0 %}
+            <span id="link-badge" class="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs font-bold rounded-full">{{ pending_links }}</span>
+          {% endif %}
+        </div>
+        {% if pending_links > 0 %}
+          <a href="/admin/link-requests" class="text-[#c4ff00] text-xs hover:underline">전체 보기 &rarr;</a>
+        {% else %}
+          <span class="text-zinc-600 text-xs">완료 ✓</span>
+        {% endif %}
+      </div>
+      {% if pending_link_items %}
+        <div class="divide-y divide-zinc-800/50">
+          {% for lr in pending_link_items %}
+          <div class="px-4 md:px-5 py-3" id="lr-row-{{ lr.id }}">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-white text-sm font-medium truncate">{{ lr.requester_email }}</span>
+              <a href="{{ lr.original_url }}" target="_blank" class="text-zinc-500 text-xs hover:text-blue-400 truncate max-w-[200px] ml-2">{{ lr.original_url[:40] }}{% if lr.original_url|length > 40 %}...{% endif %}</a>
+            </div>
+            <div class="flex gap-2">
+              <input type="text" id="lr-input-{{ lr.id }}" placeholder="쿠팡 URL 입력"
+                     class="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:border-[#c4ff00] focus:outline-none min-w-0">
+              <button onclick="saveLinkUrl({{ lr.id }})"
+                      class="px-4 py-2 bg-[#c4ff00] text-black text-sm font-bold rounded-lg hover:bg-white transition shrink-0">
+                저장
+              </button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="px-4 py-3 text-center text-zinc-600 text-sm">처리할 항목이 없습니다</div>
+      {% endif %}
+    </div>
+
+    <!-- 2-2: 판매자 신청 -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-4 md:px-5 py-3 border-b border-zinc-800">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">🏪</span>
+          <h3 class="font-bold text-sm text-white">판매자 신청</h3>
+          {% if pending_sellers > 0 %}
+            <span id="seller-badge" class="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs font-bold rounded-full">{{ pending_sellers }}</span>
+          {% endif %}
+        </div>
+        {% if pending_sellers > 0 %}
+          <a href="/admin/sellers" class="text-[#c4ff00] text-xs hover:underline">전체 보기 &rarr;</a>
+        {% else %}
+          <span class="text-zinc-600 text-xs">완료 ✓</span>
+        {% endif %}
+      </div>
+      {% if pending_seller_items %}
+        <div class="divide-y divide-zinc-800/50">
+          {% for u in pending_seller_items %}
+          <div class="px-4 md:px-5 py-3 flex items-center justify-between gap-3" id="seller-row-{{ u.id }}">
+            <div class="min-w-0">
+              <div class="text-white text-sm font-medium truncate">{{ u.nickname or u.email }}</div>
+              <div class="text-zinc-500 text-xs truncate">{{ u.email }}</div>
+            </div>
+            <div class="flex gap-2 shrink-0">
+              <button onclick="sellerAction({{ u.id }}, 'approve')"
+                      class="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg transition">승인</button>
+              <button onclick="sellerAction({{ u.id }}, 'reject')"
+                      class="px-3 py-1.5 bg-zinc-700 hover:bg-red-600 text-zinc-300 hover:text-white text-xs font-bold rounded-lg transition">거절</button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="px-4 py-3 text-center text-zinc-600 text-sm">처리할 항목이 없습니다</div>
+      {% endif %}
+    </div>
+
+    <!-- 2-3: 판매자 게시물 -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-4 md:px-5 py-3 border-b border-zinc-800">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">📸</span>
+          <h3 class="font-bold text-sm text-white">게시물 신청</h3>
+          {% if pending_posts > 0 %}
+            <span id="post-badge" class="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs font-bold rounded-full">{{ pending_posts }}</span>
+          {% endif %}
+        </div>
+        {% if pending_posts > 0 %}
+          <a href="/admin/seller-posts" class="text-[#c4ff00] text-xs hover:underline">전체 보기 &rarr;</a>
+        {% else %}
+          <span class="text-zinc-600 text-xs">완료 ✓</span>
+        {% endif %}
+      </div>
+      {% if pending_post_items %}
+        <div class="divide-y divide-zinc-800/50">
+          {% for post in pending_post_items %}
+          <div class="px-4 md:px-5 py-3 flex items-center justify-between gap-3" id="post-row-{{ post.id }}">
+            <div class="min-w-0">
+              <div class="text-white text-sm font-medium truncate">{{ post.title }}</div>
+              <div class="text-zinc-500 text-xs truncate">{{ post.category or '-' }}</div>
+            </div>
+            <div class="flex gap-2 shrink-0">
+              <button onclick="postAction({{ post.id }}, 'approve')"
+                      class="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg transition">승인</button>
+              <button onclick="postAction({{ post.id }}, 'reject')"
+                      class="px-3 py-1.5 bg-zinc-700 hover:bg-red-600 text-zinc-300 hover:text-white text-xs font-bold rounded-lg transition">거절</button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="px-4 py-3 text-center text-zinc-600 text-sm">처리할 항목이 없습니다</div>
+      {% endif %}
+    </div>
+
+    <!-- 2-4: 수익인증 -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-4 md:px-5 py-3 border-b border-zinc-800">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">💸</span>
+          <h3 class="font-bold text-sm text-white">리워드 요청</h3>
+          {% if pending_rewards > 0 %}
+            <span id="reward-badge" class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">{{ pending_rewards }}</span>
+          {% endif %}
+        </div>
+        {% if pending_rewards > 0 %}
+          <a href="/admin/revenue-proofs" class="text-[#c4ff00] text-xs hover:underline">전체 보기 &rarr;</a>
+        {% else %}
+          <span class="text-zinc-600 text-xs">완료 ✓</span>
+        {% endif %}
+      </div>
+      {% if pending_reward_items %}
+        <div class="divide-y divide-zinc-800/50">
+          {% for proof in pending_reward_items %}
+          <div class="px-4 md:px-5 py-3 flex items-center justify-between gap-3" id="reward-row-{{ proof.id }}">
+            <div class="min-w-0">
+              <div class="text-white text-sm font-medium truncate">{{ proof._user.email if proof._user else '탈퇴유저' }}</div>
+              <div class="text-zinc-500 text-xs truncate">{{ proof._post.title[:20] if proof._post else '삭제된 글' }}{% if proof._post and proof._post.title|length > 20 %}...{% endif %}</div>
+            </div>
+            <div class="flex gap-2 shrink-0">
+              <button onclick="rewardAction({{ proof.id }}, 'approve')"
+                      class="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg transition">승인</button>
+              <button onclick="rewardAction({{ proof.id }}, 'reject')"
+                      class="px-3 py-1.5 bg-zinc-700 hover:bg-red-600 text-zinc-300 hover:text-white text-xs font-bold rounded-lg transition">거절</button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="px-4 py-3 text-center text-zinc-600 text-sm">처리할 항목이 없습니다</div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- 섹션 3: 최근 활동 -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    
+
     <!-- 최근 갤러리 -->
     <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
       <div class="flex items-center justify-between px-4 md:px-5 py-3 border-b border-zinc-800">
@@ -136,7 +209,7 @@
             <span id="homeSelectedCount">0</span>개 삭제
           </button>
         </div>
-        <a href="/admin/gallery" class="text-[#c4ff00] text-xs hover:underline shrink-0 ml-2">전체 보기 →</a>
+        <a href="/admin/gallery" class="text-[#c4ff00] text-xs hover:underline shrink-0 ml-2">전체 보기 &rarr;</a>
       </div>
       <div class="divide-y divide-zinc-800/50">
         {% for post in recent_posts %}
@@ -166,7 +239,7 @@
     <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
       <div class="flex items-center justify-between px-4 md:px-5 py-3 border-b border-zinc-800">
         <h3 class="font-bold text-sm">최근 링크요청</h3>
-        <a href="/admin/link-requests" class="text-[#c4ff00] text-xs hover:underline shrink-0">전체 보기 →</a>
+        <a href="/admin/link-requests" class="text-[#c4ff00] text-xs hover:underline shrink-0">전체 보기 &rarr;</a>
       </div>
       <div class="divide-y divide-zinc-800/50">
         {% for lr in recent_link_requests %}
@@ -209,19 +282,108 @@
 <div id="homeResultModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
   <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm w-full text-center">
     <div id="homeResultIcon" class="text-5xl mb-4">✅</div>
-    <h3 id="homeResultTitle" class="text-xl font-black text-white mb-2">삭제 완료</h3>
+    <h3 id="homeResultTitle" class="text-xl font-black text-white mb-2">완료</h3>
     <p id="homeResultMessage" class="text-zinc-400 mb-6"></p>
     <button onclick="closeHomeResultModal()" class="w-full py-3 rounded-xl font-bold bg-[#c4ff00] text-black hover:bg-white active:bg-zinc-200 transition">확인</button>
   </div>
 </div>
 
 <script>
+/* ====== 뱃지 카운트 업데이트 ====== */
+function updateBadgeCount(badgeId, delta) {
+  var badge = document.getElementById(badgeId);
+  if (!badge) return;
+  var count = parseInt(badge.textContent) + delta;
+  if (count <= 0) {
+    badge.remove();
+  } else {
+    badge.textContent = count;
+  }
+}
+
+/* ====== 링크요청 인라인 저장 ====== */
+async function saveLinkUrl(id) {
+  var input = document.getElementById('lr-input-' + id);
+  var url = input.value.trim();
+  if (!url) { input.focus(); return; }
+
+  try {
+    var res = await fetch('/api/link-request/' + id + '/update-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coupang_url: url })
+    });
+    var data = await res.json();
+
+    if (data.ok) {
+      var row = document.getElementById('lr-row-' + id);
+      row.innerHTML = '<div class="text-green-400 text-sm font-bold text-center py-2">완료 ✓</div>';
+      updateBadgeCount('link-badge', -1);
+    } else {
+      alert(data.error || '저장 실패');
+    }
+  } catch (err) {
+    alert('오류: ' + err.message);
+  }
+}
+
+/* ====== 판매자 승인/거절 ====== */
+async function sellerAction(userId, action) {
+  if (!confirm(action === 'approve' ? '승인하시겠습니까?' : '거절하시겠습니까?')) return;
+  try {
+    var res = await fetch('/admin/sellers/' + userId + '/' + action, { method: 'POST' });
+    var data = await res.json();
+    if (data.ok) {
+      var row = document.getElementById('seller-row-' + userId);
+      row.innerHTML = '<div class="text-' + (action === 'approve' ? 'green' : 'red') + '-400 text-sm font-bold text-center py-2 w-full">' + (action === 'approve' ? '승인됨 ✓' : '거절됨') + '</div>';
+      updateBadgeCount('seller-badge', -1);
+    }
+  } catch (err) {
+    alert('오류: ' + err.message);
+  }
+}
+
+/* ====== 판매자 게시물 승인/거절 ====== */
+async function postAction(postId, action) {
+  if (!confirm(action === 'approve' ? '승인하시겠습니까?' : '거절하시겠습니까?')) return;
+  try {
+    var res = await fetch('/admin/seller-posts/' + postId + '/' + action, { method: 'POST' });
+    var data = await res.json();
+    if (data.ok) {
+      var row = document.getElementById('post-row-' + postId);
+      row.innerHTML = '<div class="text-' + (action === 'approve' ? 'green' : 'red') + '-400 text-sm font-bold text-center py-2 w-full">' + (action === 'approve' ? '승인됨 ✓' : '거절됨') + '</div>';
+      updateBadgeCount('post-badge', -1);
+    }
+  } catch (err) {
+    alert('오류: ' + err.message);
+  }
+}
+
+/* ====== 수익인증 승인/거절 ====== */
+async function rewardAction(proofId, action) {
+  if (!confirm(action === 'approve' ? '승인하시겠습니까?' : '거절하시겠습니까?')) return;
+  try {
+    var res = await fetch('/admin/revenue-proofs/' + proofId + '/' + action, {
+      method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+    var data = await res.json();
+    if (data.ok) {
+      var row = document.getElementById('reward-row-' + proofId);
+      row.innerHTML = '<div class="text-' + (action === 'approve' ? 'green' : 'red') + '-400 text-sm font-bold text-center py-2 w-full">' + (action === 'approve' ? '승인됨 ✓' : '거절됨') + '</div>';
+      updateBadgeCount('reward-badge', -1);
+    }
+  } catch (err) {
+    alert('오류: ' + err.message);
+  }
+}
+
+/* ====== 갤러리 벌크 삭제 (기존 유지) ====== */
 function updateHomeSelectedCount() {
   var checkboxes = document.querySelectorAll('.home-post-checkbox:checked');
   var count = checkboxes.length;
   var btn = document.getElementById('homeBulkDeleteBtn');
   var countSpan = document.getElementById('homeSelectedCount');
-  
   if (count > 0) {
     btn.classList.remove('hidden');
     countSpan.textContent = count;
@@ -245,9 +407,7 @@ function closeHomeBulkDeleteModal() {
 async function confirmHomeBulkDelete() {
   var checkboxes = document.querySelectorAll('.home-post-checkbox:checked');
   var ids = Array.from(checkboxes).map(function(cb) { return parseInt(cb.value); });
-  
   closeHomeBulkDeleteModal();
-  
   try {
     var res = await fetch('/admin/gallery/bulk-delete', {
       method: 'POST',
@@ -255,7 +415,6 @@ async function confirmHomeBulkDelete() {
       body: JSON.stringify({ ids: ids })
     });
     var data = await res.json();
-    
     if (data.ok) {
       showHomeResult('success', '삭제 완료', data.count + '개의 게시물이 삭제되었습니다.');
       ids.forEach(function(id) {
@@ -284,5 +443,10 @@ function closeHomeResultModal() {
   document.getElementById('homeResultModal').classList.remove('flex');
 }
 </script>
+
+<style>
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
 
 {% endblock %}
