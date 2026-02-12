@@ -3118,6 +3118,46 @@ def admin_gallery_restore(post_id):
 
 
 
+@app.route("/admin/gallery/restore-all", methods=["POST"])
+
+def admin_gallery_restore_all():
+
+    if not is_admin():
+
+        return redirect(url_for("admin_login"))
+
+    Post.query.filter_by(is_deleted=True).update({"is_deleted": False})
+
+    db.session.commit()
+
+    flash("\uc804\uccb4 \ubcf5\uc6d0\ub418\uc5c8\uc2b5\ub2c8\ub2e4.", "success")
+
+    return redirect(url_for("admin_gallery"))
+
+
+
+@app.route("/admin/gallery/restore-selected", methods=["POST"])
+
+def admin_gallery_restore_selected():
+
+    if not is_admin():
+
+        return jsonify({"error": "unauthorized"}), 403
+
+    data = request.get_json() or {}
+
+    ids = data.get("ids", [])
+
+    if ids:
+
+        Post.query.filter(Post.id.in_([int(i) for i in ids])).update({"is_deleted": False}, synchronize_session=False)
+
+        db.session.commit()
+
+    return jsonify({"ok": True})
+
+
+
 @app.route("/admin/gallery/toggle-featured/<int:post_id>", methods=["POST"])
 
 def admin_toggle_featured(post_id):
@@ -3324,7 +3364,7 @@ def admin_delete(post_id):
 
     flash("게시물이 삭제되었습니다. (복원 가능)", "success")
 
-    return redirect(request.args.get("next") or url_for("admin_gallery")))
+    return redirect(request.args.get("next") or url_for("admin_gallery"))
     db.session.delete(Post.query.get_or_404(post_id))
     db.session.commit()
     return redirect(url_for("admin_posts"))
