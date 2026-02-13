@@ -4672,6 +4672,14 @@ with app.app_context():
     try:
         db.create_all()
         print("=== DB TABLES CREATED SUCCESSFULLY ===")
+        # pg_api_token 컬럼 자동 마이그레이션
+        from sqlalchemy import text, inspect
+        insp = inspect(db.engine)
+        cols = [c["name"] for c in insp.get_columns("user")]
+        if "pg_api_token" not in cols:
+            db.session.execute(text('ALTER TABLE "user" ADD COLUMN pg_api_token VARCHAR(64)'))
+            db.session.commit()
+            print("=== MIGRATION: pg_api_token 컬럼 추가 완료 ===")
     except Exception as e:
         print(f"=== DB ERROR: {e} ===")
     init_default_categories()
