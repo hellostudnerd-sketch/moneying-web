@@ -1,8 +1,26 @@
 {% extends "admin_base.html" %}
 {% block title %}링크요청 관리 - MONEYING Admin{% endblock %}
 {% block page_title %}링크요청 관리{% endblock %}
-{% block page_desc %}총 {{ items|length }}건{% endblock %}
+{% block page_desc %}총 {{ pagination.total if pagination else items|length }}건{% endblock %}
 {% block content_admin %}
+
+<!-- 검색/필터 -->
+<div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 mb-4">
+  <form method="GET" class="flex flex-col md:flex-row gap-3">
+    <div class="flex gap-2">
+      <a href="?status=all&q={{ search }}" class="px-3 py-1.5 rounded-lg text-sm font-bold {% if status_filter == 'all' %}bg-[#c4ff00] text-black{% else %}bg-zinc-800 text-zinc-400 hover:text-white{% endif %} transition">전체</a>
+      <a href="?status=pending&q={{ search }}" class="px-3 py-1.5 rounded-lg text-sm font-bold {% if status_filter == 'pending' %}bg-yellow-500 text-black{% else %}bg-zinc-800 text-zinc-400 hover:text-white{% endif %} transition">대기중</a>
+      <a href="?status=done&q={{ search }}" class="px-3 py-1.5 rounded-lg text-sm font-bold {% if status_filter == 'done' %}bg-green-500 text-black{% else %}bg-zinc-800 text-zinc-400 hover:text-white{% endif %} transition">완료</a>
+    </div>
+    <div class="flex-1 flex gap-2">
+      <input type="hidden" name="status" value="{{ status_filter }}">
+      <input type="text" name="q" value="{{ search }}" placeholder="이메일, URL, 제목 검색..."
+             class="flex-1 px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:border-[#c4ff00] focus:outline-none">
+      <button type="submit" class="px-4 py-2 bg-zinc-700 text-white rounded-lg text-sm font-bold hover:bg-zinc-600 transition">검색</button>
+    </div>
+  </form>
+</div>
+
 <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
   <div class="flex items-center justify-between px-4 md:px-5 py-3 md:py-4 border-b border-zinc-800">
     <div class="font-black text-sm md:text-base">링크요청 목록</div>
@@ -76,4 +94,16 @@
 
   {% endif %}
 </div>
+
+{% if pagination and pagination.pages > 1 %}
+<div class="flex justify-center gap-2 mt-4">
+  {% if pagination.has_prev %}
+  <a href="?page={{ pagination.prev_num }}&status={{ status_filter }}&q={{ search }}" class="px-4 py-2 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 transition text-sm">← 이전</a>
+  {% endif %}
+  <span class="px-4 py-2 text-zinc-500 text-sm">{{ pagination.page }} / {{ pagination.pages }}</span>
+  {% if pagination.has_next %}
+  <a href="?page={{ pagination.next_num }}&status={{ status_filter }}&q={{ search }}" class="px-4 py-2 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 transition text-sm">다음 →</a>
+  {% endif %}
+</div>
+{% endif %}
 {% endblock %}

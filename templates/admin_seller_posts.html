@@ -10,14 +10,6 @@
 {% block content_admin %}
 
 
-  
-
-
-
-
-  </div>
-
-
 
   <!-- 필터 탭 -->
 
@@ -67,119 +59,80 @@
 
     {% else %}
 
-      <table class="w-full">
-
-        <thead class="bg-zinc-800/50">
-
-          <tr>
-
-            <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">제목</th>
-
-            <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">판매자</th>
-
-            <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">영상 링크</th>
-
-            <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">등록일</th>
-
-            <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">상태</th>
-
-            <th class="px-6 py-4 text-right text-xs font-bold text-zinc-500 uppercase">액션</th>
-
-          </tr>
-
-        </thead>
-
-        <tbody class="divide-y divide-zinc-800/70">
-
-          {% for post in posts %}
-
-            <tr class="hover:bg-zinc-800/30 transition" id="post-row-{{ post.id }}">
-
-              <td class="px-6 py-4">
-
-                <div class="font-bold text-white">{{ post.title }}</div>
-
-              </td>
-
-              <td class="px-6 py-4 text-zinc-300 text-sm">
-
-                {% if post.seller_id %}
-
-                  {{ post.seller.nickname or post.seller.email if post.seller else '-' }}
-
-                {% else %}-{% endif %}
-
-              </td>
-
-              <td class="px-6 py-4">
-
-                {% if post.video_url %}
-
-                  <a href="{{ post.video_url }}" target="_blank" class="text-blue-400 hover:underline text-sm">링크1</a>
-
-                {% endif %}
-
-                {% if post.video_url2 %}
-
-                  <a href="{{ post.video_url2 }}" target="_blank" class="text-blue-400 hover:underline text-sm ml-2">링크2</a>
-
-                {% endif %}
-
-                {% if post.video_url3 %}
-
-                  <a href="{{ post.video_url3 }}" target="_blank" class="text-blue-400 hover:underline text-sm ml-2">링크3</a>
-
-                {% endif %}
-
-              </td>
-
-              <td class="px-6 py-4 text-zinc-500 text-sm">{{ post.created_at.strftime('%Y-%m-%d') }}</td>
-
-              <td class="px-6 py-4">
-
-                {% if post.status == 'approved' %}
-
-                  <span class="px-3 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 text-xs font-bold">승인됨</span>
-
-                {% elif post.status == 'pending' %}
-
-                  <span class="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 text-xs font-bold">대기중</span>
-
-                {% else %}
-
-                  <span class="px-3 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-bold">거절됨</span>
-
-                {% endif %}
-
-              </td>
-
-              <td class="px-6 py-4 text-right">
-
-                {% if post.status == 'pending' %}
-
-                  <button onclick="showActionModal({{ post.id }}, 'approve')" class="px-3 py-1 bg-green-600 hover:bg-green-500 text-white rounded text-sm font-bold mr-2">승인</button>
-
-                  <button onclick="showActionModal({{ post.id }}, 'reject')" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-sm font-bold">거절</button>
-
-                {% elif post.status == 'approved' %}
-
-                  <a href="/admin/posts/{{ post.id }}/edit?next=/admin/seller-posts?status=approved" class="text-[#a3e635] text-sm font-bold hover:underline">수정</a>
-
-                {% else %}
-
-                  <button onclick="showActionModal({{ post.id }}, 'approve')" class="px-3 py-1 bg-zinc-700 hover:bg-zinc-600 text-white rounded text-sm font-bold">재승인</button>
-
-                {% endif %}
-
-              </td>
-
+      <!-- 데스크톱: 테이블 -->
+      <div class="hidden md:block overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-zinc-800/50">
+            <tr>
+              <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">제목</th>
+              <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">판매자</th>
+              <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">영상 링크</th>
+              <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">등록일</th>
+              <th class="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase">상태</th>
+              <th class="px-6 py-4 text-right text-xs font-bold text-zinc-500 uppercase">액션</th>
             </tr>
+          </thead>
+          <tbody class="divide-y divide-zinc-800/70">
+            {% for post in posts %}
+            <tr class="hover:bg-zinc-800/30 transition" id="post-row-{{ post.id }}">
+              <td class="px-6 py-4"><div class="font-bold text-white">{{ post.title }}</div></td>
+              <td class="px-6 py-4 text-zinc-300 text-sm">{% if post.seller_id %}{{ post.seller.nickname or post.seller.email if post.seller else '-' }}{% else %}-{% endif %}</td>
+              <td class="px-6 py-4">
+                {% if post.video_url %}<a href="{{ post.video_url }}" target="_blank" class="text-blue-400 hover:underline text-sm">링크1</a>{% endif %}
+                {% if post.video_url2 %}<a href="{{ post.video_url2 }}" target="_blank" class="text-blue-400 hover:underline text-sm ml-2">링크2</a>{% endif %}
+                {% if post.video_url3 %}<a href="{{ post.video_url3 }}" target="_blank" class="text-blue-400 hover:underline text-sm ml-2">링크3</a>{% endif %}
+              </td>
+              <td class="px-6 py-4 text-zinc-500 text-sm">{{ post.created_at.strftime('%Y-%m-%d') }}</td>
+              <td class="px-6 py-4">
+                {% if post.status == 'approved' %}<span class="px-3 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 text-xs font-bold">승인됨</span>
+                {% elif post.status == 'pending' %}<span class="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 text-xs font-bold">대기중</span>
+                {% else %}<span class="px-3 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-bold">거절됨</span>{% endif %}
+              </td>
+              <td class="px-6 py-4 text-right">
+                {% if post.status == 'pending' %}
+                  <button onclick="showActionModal({{ post.id }}, 'approve')" class="px-3 py-1 bg-green-600 hover:bg-green-500 text-white rounded text-sm font-bold mr-2">승인</button>
+                  <button onclick="showActionModal({{ post.id }}, 'reject')" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-sm font-bold">거절</button>
+                {% elif post.status == 'approved' %}
+                  <a href="/admin/posts/{{ post.id }}/edit?next=/admin/seller-posts?status=approved" class="text-[#a3e635] text-sm font-bold hover:underline">수정</a>
+                {% else %}
+                  <button onclick="showActionModal({{ post.id }}, 'approve')" class="px-3 py-1 bg-zinc-700 hover:bg-zinc-600 text-white rounded text-sm font-bold">재승인</button>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
 
-          {% endfor %}
-
-        </tbody>
-
-      </table>
+      <!-- 모바일: 카드 뷰 -->
+      <div class="md:hidden divide-y divide-zinc-800/50">
+        {% for post in posts %}
+        <div class="px-4 py-3" id="post-row-m-{{ post.id }}">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <div class="font-bold text-white text-sm truncate flex-1">{{ post.title }}</div>
+            {% if post.status == 'approved' %}<span class="px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 text-[10px] font-bold shrink-0">승인</span>
+            {% elif post.status == 'pending' %}<span class="px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 text-[10px] font-bold shrink-0">대기</span>
+            {% else %}<span class="px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-[10px] font-bold shrink-0">거절</span>{% endif %}
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="text-zinc-500 text-xs">
+              {% if post.seller_id %}{{ post.seller.nickname or post.seller.email if post.seller else '-' }}{% else %}-{% endif %}
+              · {{ post.created_at.strftime('%m/%d') }}
+            </div>
+            <div class="flex gap-2">
+              {% if post.status == 'pending' %}
+                <button onclick="showActionModal({{ post.id }}, 'approve')" class="px-2.5 py-1 bg-green-600 text-white rounded text-xs font-bold">승인</button>
+                <button onclick="showActionModal({{ post.id }}, 'reject')" class="px-2.5 py-1 bg-red-600 text-white rounded text-xs font-bold">거절</button>
+              {% elif post.status == 'approved' %}
+                <a href="/admin/posts/{{ post.id }}/edit?next=/admin/seller-posts?status=approved" class="text-[#a3e635] text-xs font-bold">수정</a>
+              {% else %}
+                <button onclick="showActionModal({{ post.id }}, 'approve')" class="px-2.5 py-1 bg-zinc-700 text-white rounded text-xs font-bold">재승인</button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
 
     {% endif %}
 

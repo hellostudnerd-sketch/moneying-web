@@ -216,8 +216,9 @@
         <div class="px-4 md:px-5 py-3 flex items-center justify-between gap-2 home-post-row" data-id="{{ post.id }}">
           <div class="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
             <input type="checkbox" class="home-post-checkbox w-4 h-4 rounded accent-[#c4ff00] shrink-0" value="{{ post.id }}" onchange="updateHomeSelectedCount()">
-            {% if post.thumbnail_url %}
-            <img src="{{ post.thumbnail_url }}" class="w-9 h-9 md:w-10 md:h-10 rounded-lg object-cover shrink-0">
+            {% set img_list = post.to_dict().images %}
+            {% if img_list and img_list|length > 0 %}
+            <img src="{% if img_list[0].startswith('/r2/') or img_list[0].startswith('http') %}{{ img_list[0] }}{% else %}/static/uploads/{{ img_list[0] }}{% endif %}" class="w-9 h-9 md:w-10 md:h-10 rounded-lg object-cover shrink-0">
             {% else %}
             <div class="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0 text-sm">🎬</div>
             {% endif %}

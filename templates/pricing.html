@@ -121,10 +121,12 @@
 <!-- Hero -->
 <section class="pt-24 md:pt-32 pb-12 md:pb-20">
   <div class="max-w-4xl mx-auto px-4 text-center">
+    {% if not session.get('user_id') or can_use_trial %}
     <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-800/50 backdrop-blur-sm border border-zinc-700/50 mb-6 badge-pulse">
       <span class="w-2 h-2 bg-[#c4ff00] rounded-full animate-pulse"></span>
       <span class="text-sm text-zinc-400">지금 가입하면 5일 무료 체험</span>
     </div>
+    {% endif %}
     <h1 class="text-3xl md:text-5xl font-black mb-4 leading-tight">
       요금제
     </h1>
@@ -135,13 +137,13 @@
 </section>
 
 
-<!-- 메인 요금제 -->
+<!-- 메인 요금제 3컬럼 -->
 <section class="pb-20 pt-6">
-  <div class="max-w-5xl mx-auto px-4">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
+
       <!-- 영상 갤러리 -->
-<div class="pricing-card rounded-3xl p-6 md:p-8 flex flex-col h-full">
+      <div class="pricing-card rounded-3xl p-6 md:p-8 flex flex-col">
         <div class="flex items-center gap-3 mb-6">
           <div class="w-12 h-12 rounded-2xl bg-zinc-800 flex items-center justify-center text-2xl">🎬</div>
           <div>
@@ -149,173 +151,201 @@
             <p class="text-zinc-500 text-sm">소스 영상 무제한</p>
           </div>
         </div>
-        
         <div class="mb-6">
           <div class="flex items-baseline gap-1">
-            <span class="text-4xl md:text-5xl font-black text-white">39,000</span>
+            <span class="text-4xl font-black text-white">39,000</span>
             <span class="text-zinc-500">원/월</span>
           </div>
         </div>
-        
-        <div class="space-y-1 mb-8">
-          <div class="check-item">
-            <div class="check-icon bg-[#a3e635]/20"><i class="fas fa-check text-[#a3e635] text-xs"></i></div>
-            <span class="text-zinc-300 text-sm">해외/국내 소스 영상 무제한</span>
-          </div>
-          <div class="check-item">
-            <div class="check-icon bg-[#a3e635]/20"><i class="fas fa-check text-[#a3e635] text-xs"></i></div>
-            <span class="text-zinc-300 text-sm">쿠팡 파트너스 링크 매칭</span>
-          </div>
-          <div class="check-item">
-            <div class="check-icon bg-[#a3e635]/20"><i class="fas fa-check text-[#a3e635] text-xs"></i></div>
-            <span class="text-zinc-300 text-sm">매일 신규 소스 업데이트</span>
-          </div>
-          <div class="check-item">
-            <div class="check-icon bg-[#a3e635]/20"><i class="fas fa-check text-[#a3e635] text-xs"></i></div>
-            <span class="text-zinc-300 text-sm">링크요청 월 10회</span>
+        <div class="space-y-1 mb-8 flex-1">
+          <div class="check-item"><div class="check-icon bg-[#a3e635]/20"><i class="fas fa-check text-[#a3e635] text-xs"></i></div><span class="text-zinc-300 text-sm">해외/국내 소스 영상 무제한</span></div>
+          <div class="check-item"><div class="check-icon bg-[#a3e635]/20"><i class="fas fa-check text-[#a3e635] text-xs"></i></div><span class="text-zinc-300 text-sm">쿠팡 파트너스 링크 매칭</span></div>
+          <div class="check-item"><div class="check-icon bg-[#a3e635]/20"><i class="fas fa-check text-[#a3e635] text-xs"></i></div><span class="text-zinc-300 text-sm">매일 신규 소스 업데이트</span></div>
+          <div class="check-item"><div class="check-icon bg-[#a3e635]/20"><i class="fas fa-check text-[#a3e635] text-xs"></i></div><span class="text-zinc-300 text-sm">링크요청 월 10회</span></div>
+        </div>
+        <div class="mt-auto">
+          {% if session.get('user_id') %}
+            {% if 'allinone' in active_plans %}
+            <div class="w-full py-4 rounded-xl font-bold bg-zinc-800 text-zinc-400 text-center text-sm">올인원으로 이용 중</div>
+            {% elif 'gallery' in active_plans %}
+            <div class="w-full py-4 rounded-xl font-bold bg-zinc-800 text-[#a3e635] text-center text-sm">✅ 구독 중</div>
+            {% else %}
+            <button onclick="subscribe('gallery')" class="w-full py-4 rounded-xl font-bold border border-zinc-600 text-white hover:bg-zinc-800 transition">구독하기</button>
+            {% endif %}
+          {% else %}
+            <a href="/login?next=/pricing" class="block w-full py-4 rounded-xl font-bold border border-zinc-600 text-white hover:bg-zinc-800 transition text-center">로그인 후 구독</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 올인원 패키지 (가운데, featured) -->
+      <div class="pricing-card featured rounded-3xl p-6 md:p-8 relative flex flex-col">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-12 h-12 rounded-2xl bg-[#c4ff00]/20 flex items-center justify-center text-2xl">⚡</div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-black text-lg text-white">올인원 패키지</h3>
+              <span class="bg-[#c4ff00] text-black text-[10px] font-black px-2 py-0.5 rounded-full">추천</span>
+            </div>
+            <p class="text-[#c4ff00] text-sm font-bold">갤러리 + 프로핏가드</p>
           </div>
         </div>
-        
+        <div class="mb-6">
+          <div class="flex items-baseline gap-1">
+            <span class="text-4xl font-black text-white price-glow">59,000</span>
+            <span class="text-zinc-500">원/월</span>
+          </div>
+          <p class="text-zinc-500 text-sm mt-1"><span class="line-through">78,000원</span> <span class="text-[#c4ff00] font-bold">매월 19,000원 절약</span></p>
+        </div>
+        <div class="space-y-1 mb-8 flex-1">
+          <div class="check-item"><div class="check-icon bg-[#c4ff00]/20"><i class="fas fa-check text-[#c4ff00] text-xs"></i></div><span class="text-zinc-300 text-sm">영상 갤러리 전체</span></div>
+          <div class="check-item"><div class="check-icon bg-[#c4ff00]/20"><i class="fas fa-check text-[#c4ff00] text-xs"></i></div><span class="text-zinc-300 text-sm">프로핏가드 PRO</span></div>
+          <div class="check-item"><div class="check-icon bg-[#c4ff00]/20"><i class="fas fa-check text-[#c4ff00] text-xs"></i></div><span class="text-zinc-300 text-sm">24시간 품절 감시 + 텔레그램 알림</span></div>
+          <div class="check-item"><div class="check-icon bg-[#c4ff00]/20"><i class="fas fa-check text-[#c4ff00] text-xs"></i></div><span class="text-zinc-300 text-sm">링크요청 월 20회</span></div>
+        </div>
         <div class="mt-auto">
-  {% if session.get('user_id') %}
-    <button onclick="subscribe('gallery')" class="w-full py-4 rounded-xl font-bold border border-zinc-600 text-white hover:bg-zinc-800 transition">
-      구독하기
-    </button>
-  {% else %}
-    <a href="/login?next=/pricing" class="block w-full py-4 rounded-xl font-bold border border-zinc-600 text-white hover:bg-zinc-800 transition text-center">
-      로그인 후 구독
-    </a>
-  {% endif %}
-</div>
-</div>     
-      <!-- 올인원 패키지 -->
-<div class="pricing-card featured rounded-3xl p-6 md:p-8 relative flex flex-col h-full">
-  
-  
-  <div class="flex items-center gap-3 mb-6">
-    <div class="w-12 h-12 rounded-2xl bg-[#c4ff00]/20 flex items-center justify-center text-2xl">⚡</div>
-    <div>
-      <h3 class="font-black text-lg text-white">올인원 패키지</h3>
-      <p class="text-[#c4ff00] text-sm font-bold">영상 갤러리 + 프로핏가드</p>
+          {% if session.get('user_id') %}
+            {% if 'allinone' in active_plans %}
+            <div class="w-full py-4 rounded-xl font-black bg-[#c4ff00]/20 text-[#c4ff00] text-center">✅ 구독 중</div>
+            {% elif 'gallery' in active_plans or 'profitguard_pro' in active_plans or 'profitguard_lite' in active_plans %}
+            <button onclick="subscribe('allinone')" class="w-full py-4 rounded-xl font-black bg-[#c4ff00] text-black hover:bg-white transition cta-glow">올인원으로 업그레이드</button>
+            {% else %}
+            <button onclick="subscribe('allinone')" class="w-full py-4 rounded-xl font-black bg-[#c4ff00] text-black hover:bg-white transition cta-glow">구독하기</button>
+            {% endif %}
+          {% else %}
+            <a href="/login?next=/pricing" class="block w-full py-4 rounded-xl font-black bg-[#c4ff00] text-black hover:bg-white transition cta-glow text-center">로그인 후 구독</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 프로핏가드 PRO -->
+      <div class="pricing-card rounded-3xl p-6 md:p-8 flex flex-col">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-12 h-12 rounded-2xl bg-zinc-800 flex items-center justify-center text-2xl">🛡️</div>
+          <div>
+            <h3 class="font-black text-lg text-white">프로핏가드 PRO</h3>
+            <p class="text-zinc-500 text-sm">24시간 품절 감시</p>
+          </div>
+        </div>
+        <div class="mb-6">
+          <div class="flex items-baseline gap-1">
+            <span class="text-4xl font-black text-white">39,000</span>
+            <span class="text-zinc-500">원/월</span>
+          </div>
+        </div>
+        <div class="space-y-1 mb-8 flex-1">
+          <div class="check-item"><div class="check-icon bg-[#a3e635]/20"><i class="fas fa-check text-[#a3e635] text-xs"></i></div><span class="text-white text-sm font-bold">24시간 자동 품절 감시</span></div>
+          <div class="check-item"><div class="check-icon bg-[#a3e635]/20"><i class="fas fa-check text-[#a3e635] text-xs"></i></div><span class="text-white text-sm font-bold">텔레그램 실시간 알림</span></div>
+          <div class="check-item"><div class="check-icon bg-[#a3e635]/20"><i class="fas fa-check text-[#a3e635] text-xs"></i></div><span class="text-zinc-300 text-sm">상품 등록 무제한</span></div>
+          <div class="check-item"><div class="check-icon bg-[#a3e635]/20"><i class="fas fa-check text-[#a3e635] text-xs"></i></div><span class="text-zinc-300 text-sm">링크 자동 수집</span></div>
+        </div>
+        <div class="mt-auto">
+          {% if session.get('user_id') %}
+            {% if 'profitguard_pro' in active_plans or 'allinone' in active_plans %}
+            <div class="w-full py-4 rounded-xl font-bold bg-zinc-800 text-[#a3e635] text-center text-sm">✅ {% if 'allinone' in active_plans %}올인원으로 이용 중{% else %}구독 중{% endif %}</div>
+            {% elif 'profitguard_lifetime' in active_plans %}
+            <div class="w-full py-4 rounded-xl font-bold bg-zinc-800 text-zinc-400 text-center text-sm">평생 이용권 사용 중</div>
+            {% elif 'profitguard_lite' in active_plans %}
+            <button onclick="subscribe('profitguard_pro')" class="w-full py-4 rounded-xl font-bold bg-[#a3e635] text-black hover:bg-white transition">PRO로 업그레이드</button>
+            {% else %}
+            <button onclick="subscribe('profitguard_pro')" class="w-full py-4 rounded-xl font-bold border border-zinc-600 text-white hover:bg-zinc-800 transition">구독하기</button>
+            {% endif %}
+          {% else %}
+            <a href="/login?next=/pricing" class="block w-full py-4 rounded-xl font-bold border border-zinc-600 text-white hover:bg-zinc-800 transition text-center">로그인 후 구독</a>
+          {% endif %}
+        </div>
+      </div>
+
     </div>
-  </div>
-  
-  <div class="mb-6">
-    <div class="flex items-baseline gap-1">
-      <span class="text-4xl md:text-5xl font-black text-white">59,000</span>
-      <span class="text-zinc-500">원/월</span>
-    </div>
-    <p class="text-zinc-500 text-sm mt-1"><span class="line-through">78,000원</span> <span class="text-[#c4ff00] font-bold">24% 할인</span></p>
-  </div>
-  
-  <div class="space-y-1 mb-8">
-    <div class="check-item">
-      <div class="check-icon bg-[#c4ff00]/20"><i class="fas fa-check text-[#c4ff00] text-xs"></i></div>
-      <span class="text-zinc-300 text-sm">영상 갤러리 전체</span>
-    </div>
-    <div class="check-item">
-      <div class="check-icon bg-[#c4ff00]/20"><i class="fas fa-check text-[#c4ff00] text-xs"></i></div>
-      <span class="text-zinc-300 text-sm">프로핏가드 PRO</span>
-    </div>
-    <div class="check-item">
-      <div class="check-icon bg-[#c4ff00]/20"><i class="fas fa-check text-[#c4ff00] text-xs"></i></div>
-      <span class="text-zinc-300 text-sm">24시간 품절 감시 + 알림</span>
-    </div>
-    <div class="check-item">
-      <div class="check-icon bg-[#c4ff00]/20"><i class="fas fa-check text-[#c4ff00] text-xs"></i></div>
-      <span class="text-zinc-300 text-sm">링크요청 월 20회</span>
-    </div>
-  </div>
-  
-  <div class="mt-auto">
-  {% if session.get('user_id') %}
-    <button onclick="subscribe('allinone')" class="w-full py-4 rounded-xl font-black bg-[#c4ff00] text-black hover:bg-white transition">
-      구독하기
-    </button>
-  {% else %}
-    <a href="/login?next=/pricing" class="block w-full py-4 rounded-xl font-black bg-[#c4ff00] text-black hover:bg-white transition text-center">
-      로그인 후 구독
-    </a>
-  {% endif %}
-</div>
-      
+
+    <!-- 서브 옵션: PG Lite + PG 평생 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
+      <div class="pricing-card rounded-3xl p-6 md:p-8 flex items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-xs font-bold text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded">LITE</span>
+            <span class="text-white font-bold">프로핏가드 라이트</span>
+          </div>
+          <p class="text-zinc-500 text-sm">수동 1회 검사만 · 실시간 감시 없음</p>
+        </div>
+        <div class="text-right shrink-0">
+          <p class="text-white font-black text-2xl">19,000<span class="text-zinc-500 text-sm font-medium">원/월</span></p>
+          {% if session.get('user_id') %}
+            {% if 'profitguard_lite' in active_plans %}
+            <span class="text-blue-400 text-xs font-bold">✅ 구독 중</span>
+            {% elif 'profitguard_pro' in active_plans or 'profitguard_lifetime' in active_plans or 'allinone' in active_plans %}
+            <span class="text-zinc-500 text-xs">상위 플랜 이용 중</span>
+            {% else %}
+            <button onclick="subscribe('profitguard_lite')" class="text-xs font-bold text-blue-400 hover:text-white transition mt-1">선택하기 →</button>
+            {% endif %}
+          {% else %}
+            <a href="/login?next=/pricing" class="text-xs font-bold text-blue-400 hover:text-white transition">로그인 후 선택</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="pricing-card rounded-3xl p-6 md:p-8 flex items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-xs font-bold text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded">LIFETIME</span>
+            <span class="text-white font-bold">프로핏가드 평생</span>
+          </div>
+          <p class="text-zinc-500 text-sm">PRO 전 기능 · 1회 결제로 평생 이용 · 5개월이면 이득</p>
+        </div>
+        <div class="text-right shrink-0">
+          <p class="text-white font-black text-2xl">200,000<span class="text-zinc-500 text-sm font-medium">원</span></p>
+          {% if session.get('user_id') %}
+            {% if 'profitguard_lifetime' in active_plans %}
+            <span class="text-purple-400 text-xs font-bold">✅ 평생 이용 중</span>
+            {% elif 'profitguard_pro' in active_plans or 'profitguard_lite' in active_plans %}
+            <button onclick="subscribe('profitguard_lifetime')" class="text-xs font-bold text-purple-400 hover:text-white transition mt-1">업그레이드 →</button>
+            {% else %}
+            <button onclick="subscribe('profitguard_lifetime')" class="text-xs font-bold text-purple-400 hover:text-white transition mt-1">선택하기 →</button>
+            {% endif %}
+          {% else %}
+            <a href="/login?next=/pricing" class="text-xs font-bold text-purple-400 hover:text-white transition">로그인 후 선택</a>
+          {% endif %}
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- 프로핏가드 단독 -->
-<section class="py-16 md:py-20 border-t border-zinc-800/50">
-  <div class="max-w-5xl mx-auto px-4">
-    <div class="text-center mb-10">
-      <h2 class="text-2xl md:text-3xl font-black mb-2">🛡️ 프로핏가드만 필요하다면</h2>
-      <p class="text-zinc-500">품절 감시 기능만 따로 이용하세요</p>
-    </div>
-    
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-      <!-- 라이트 -->
-      <div class="pricing-card rounded-2xl p-6">
-        <div class="mb-4">
-          <span class="text-xs font-bold text-blue-400">LITE</span>
-          <h4 class="font-bold text-white mt-1">라이트</h4>
+<!-- 어떤 플랜을 선택해야 할까? -->
+<section class="py-16 border-t border-zinc-800/50">
+  <div class="max-w-6xl mx-auto px-4">
+    <h2 class="text-2xl md:text-3xl font-black text-center mb-10">어떤 플랜이 나에게 맞을까?</h2>
+    <div class="space-y-4">
+      <div class="flex items-start gap-4 bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700 transition">
+        <span class="text-2xl shrink-0">🎬</span>
+        <div>
+          <p class="text-white font-bold">2차가공 영상 소스만 필요하다면</p>
+          <p class="text-zinc-400 text-sm">매일 업데이트되는 소스 영상 + 쿠팡 링크 매칭이 필요한 크리에이터</p>
+          <p class="text-[#a3e635] text-sm font-bold mt-1">→ 영상 갤러리 39,000원/월</p>
         </div>
-        <div class="flex items-baseline gap-1 mb-4">
-          <span class="text-3xl font-black text-white">19,000</span>
-          <span class="text-zinc-500 text-sm">원/월</span>
-        </div>
-        <div class="text-zinc-400 text-sm mb-6 space-y-2">
-          <p>✓ 1회 즉시 검사</p>
-          <p>✓ 상품 등록 무제한</p>
-          <p class="text-zinc-600">✕ 실시간 감시 없음</p>
-        </div>
-        {% if session.get('user_id') %}
-          <button onclick="subscribe('profitguard_lite')" class="w-full py-3 rounded-xl text-sm font-bold border border-zinc-700 text-white hover:bg-zinc-800 transition">선택</button>
-        {% else %}
-          <a href="/login?next=/pricing" class="block w-full py-3 rounded-xl text-sm font-bold border border-zinc-700 text-white hover:bg-zinc-800 transition text-center">선택</a>
-        {% endif %}
       </div>
-      
-      <!-- PRO -->
-      <div class="pricing-card rounded-2xl p-6 border-[#a3e635]/30">
-        <div class="mb-4">
-          <span class="text-xs font-bold text-[#a3e635]">PRO · 추천</span>
-          <h4 class="font-bold text-white mt-1">프로</h4>
+      <div class="flex items-start gap-4 bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700 transition">
+        <span class="text-2xl shrink-0">🛡️</span>
+        <div>
+          <p class="text-white font-bold">품절 감시 기능만 필요하다면</p>
+          <p class="text-zinc-400 text-sm">이미 영상은 직접 만들고, 링크 품절 관리만 자동화하고 싶은 분</p>
+          <p class="text-[#a3e635] text-sm font-bold mt-1">→ 프로핏가드 PRO 39,000원/월</p>
         </div>
-        <div class="flex items-baseline gap-1 mb-4">
-          <span class="text-3xl font-black text-white">39,000</span>
-          <span class="text-zinc-500 text-sm">원/월</span>
-        </div>
-        <div class="text-zinc-400 text-sm mb-6 space-y-2">
-          <p class="text-white font-bold">✓ 24시간 실시간 감시</p>
-          <p class="text-white font-bold">✓ 텔레그램 알림</p>
-          <p>✓ 상품 등록 무제한</p>
-        </div>
-        {% if session.get('user_id') %}
-          <button onclick="subscribe('profitguard_pro')" class="w-full py-3 rounded-xl text-sm font-bold bg-[#a3e635] text-black hover:bg-white transition">선택</button>
-        {% else %}
-          <a href="/login?next=/pricing" class="block w-full py-3 rounded-xl text-sm font-bold bg-[#a3e635] text-black hover:bg-white transition text-center">선택</a>
-        {% endif %}
       </div>
-      
-      <!-- 평생 -->
-      <div class="pricing-card rounded-2xl p-6">
-        <div class="mb-4">
-          <span class="text-xs font-bold text-purple-400">LIFETIME</span>
-          <h4 class="font-bold text-white mt-1">평생 이용권</h4>
+      <div class="flex items-start gap-4 bg-[#c4ff00]/5 border border-[#c4ff00]/20 rounded-xl p-5">
+        <span class="text-2xl shrink-0">⚡</span>
+        <div>
+          <p class="text-white font-bold">영상 소스 + 품절 감시 둘 다 쓴다면</p>
+          <p class="text-zinc-400 text-sm">따로 구독하면 78,000원인데, 올인원이면 <span class="text-[#c4ff00] font-bold">매월 19,000원 절약</span></p>
+          <p class="text-[#c4ff00] text-sm font-bold mt-1">→ 올인원 패키지 59,000원/월 (추천)</p>
         </div>
-        <div class="flex items-baseline gap-1 mb-4">
-          <span class="text-3xl font-black text-white">200,000</span>
-          <span class="text-zinc-500 text-sm">원</span>
+      </div>
+      <div class="flex items-start gap-4 bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700 transition">
+        <span class="text-2xl shrink-0">💜</span>
+        <div>
+          <p class="text-white font-bold">프로핏가드를 오래 쓸 계획이라면</p>
+          <p class="text-zinc-400 text-sm">5개월 이상 사용할 거라면 평생 이용권이 훨씬 이득입니다</p>
+          <p class="text-purple-400 text-sm font-bold mt-1">→ 프로핏가드 평생 200,000원 (1회)</p>
         </div>
-        <div class="text-zinc-400 text-sm mb-6 space-y-2">
-          <p class="text-purple-300">✓ PRO 모든 기능</p>
-          <p>✓ 1회 결제, 평생 이용</p>
-          <p>✓ 5개월만 써도 이득</p>
-        </div>
-        {% if session.get('user_id') %}
-          <button onclick="subscribe('profitguard_lifetime')" class="w-full py-3 rounded-xl text-sm font-bold border border-purple-500/50 text-purple-400 hover:bg-purple-500/10 transition">선택</button>
-        {% else %}
-          <a href="/login?next=/pricing" class="block w-full py-3 rounded-xl text-sm font-bold border border-purple-500/50 text-purple-400 hover:bg-purple-500/10 transition text-center">선택</a>
-        {% endif %}
       </div>
     </div>
   </div>
@@ -340,33 +370,33 @@
 
 <!-- FAQ -->
 <section class="py-16 border-t border-zinc-800/50">
-  <div class="max-w-2xl mx-auto px-4">
-    <h2 class="text-xl font-black text-center mb-8">자주 묻는 질문</h2>
-    <div class="space-y-3">
+  <div class="max-w-6xl mx-auto px-4">
+    <h2 class="text-2xl md:text-3xl font-black text-center mb-10">자주 묻는 질문</h2>
+    <div class="space-y-4">
       <details class="group bg-zinc-900/50 rounded-xl border border-zinc-800">
-        <summary class="flex items-center justify-between p-4 cursor-pointer">
-          <span class="font-bold text-sm">올인원이 제일 이득인가요?</span>
+        <summary class="flex items-center justify-between p-5 cursor-pointer">
+          <span class="font-bold">올인원이 제일 이득인가요?</span>
           <i class="fas fa-chevron-down text-zinc-500 group-open:rotate-180 transition-transform"></i>
         </summary>
-        <div class="px-4 pb-4 text-zinc-400 text-sm">
+        <div class="px-5 pb-5 text-zinc-400">
           영상 갤러리(3.9만) + 프로핏가드 PRO(3.9만) = 7.8만원인데, 올인원은 5.9만원이에요. 둘 다 쓰신다면 매월 1.9만원 절약!
         </div>
       </details>
       <details class="group bg-zinc-900/50 rounded-xl border border-zinc-800">
-        <summary class="flex items-center justify-between p-4 cursor-pointer">
-          <span class="font-bold text-sm">언제든 해지할 수 있나요?</span>
+        <summary class="flex items-center justify-between p-5 cursor-pointer">
+          <span class="font-bold">언제든 해지할 수 있나요?</span>
           <i class="fas fa-chevron-down text-zinc-500 group-open:rotate-180 transition-transform"></i>
         </summary>
-        <div class="px-4 pb-4 text-zinc-400 text-sm">
+        <div class="px-5 pb-5 text-zinc-400">
           네, 언제든 해지 가능합니다. 해지 후에도 결제 기간까지는 이용 가능해요.
         </div>
       </details>
       <details class="group bg-zinc-900/50 rounded-xl border border-zinc-800">
-        <summary class="flex items-center justify-between p-4 cursor-pointer">
-          <span class="font-bold text-sm">환불 정책은 어떻게 되나요?</span>
+        <summary class="flex items-center justify-between p-5 cursor-pointer">
+          <span class="font-bold">환불 정책은 어떻게 되나요?</span>
           <i class="fas fa-chevron-down text-zinc-500 group-open:rotate-180 transition-transform"></i>
         </summary>
-        <div class="px-4 pb-4 text-zinc-400 text-sm">
+        <div class="px-5 pb-5 text-zinc-400">
           디지털 콘텐츠 특성상 이용 후 환불이 어려워요. 자세한 내용은 <a href="/refund" class="text-[#a3e635] hover:underline">환불정책</a>을 확인해주세요.
         </div>
       </details>
@@ -377,12 +407,17 @@
 <script>
 var activePlans = {{ active_plans | tojson }};
 function subscribe(planType) {
-  var msg = '';
-  if (activePlans.indexOf(planType) >= 0) { msg = '\uc774\ubbf8 \uad6c\ub3c5 \uc911\uc778 \ud50c\ub79c\uc785\ub2c8\ub2e4.'; }
-  else if (planType.indexOf('profitguard') >= 0 && planType !== 'profitguard_lifetime' && activePlans.indexOf('allinone') >= 0) { msg = '\uc62c\uc778\uc6d0 \ud328\ud0a4\uc9c0\ub85c \uc774\ubbf8 \ud504\ub85c\ud54f\uac00\ub4dc PRO\ub97c \uc774\uc6a9 \uc911\uc785\ub2c8\ub2e4.'; }
-  else if (planType === 'gallery' && activePlans.indexOf('allinone') >= 0) { msg = '\uc62c\uc778\uc6d0 \ud328\ud0a4\uc9c0\ub85c \uc774\ubbf8 \uac24\ub7ec\ub9ac\ub97c \uc774\uc6a9 \uc911\uc785\ub2c8\ub2e4.'; }
-  if (planType === 'profitguard_lite' && (activePlans.indexOf('profitguard_pro') >= 0 || activePlans.indexOf('profitguard_lifetime') >= 0 || activePlans.indexOf('allinone') >= 0)) { msg = '\ud604\uc7ac PRO \uc774\uc0c1\uc744 \uc774\uc6a9 \uc911\uc785\ub2c8\ub2e4.\n\ub77c\uc774\ud2b8\ub85c \ubcc0\uacbd\ud558\uc2dc\ub824\uba74 PRO\ub97c \ud574\uc9c0 \ud6c4 \uc2e0\uccad\ud574\uc8fc\uc138\uc694.'; }
-  if (msg) { document.getElementById('sub-modal-msg').textContent = msg; document.getElementById('sub-modal').style.display = 'flex'; return; }
+  // 이미 동일 플랜 구독 중
+  if (activePlans.indexOf(planType) >= 0) {
+    document.getElementById('sub-modal-msg').textContent = '이미 구독 중인 플랜입니다.';
+    document.getElementById('sub-modal').style.display = 'flex';
+    return;
+  }
+  // 로딩 상태
+  var btns = document.querySelectorAll('button[onclick*="subscribe"]');
+  btns.forEach(function(b) { b.disabled = true; b.style.opacity = '0.6'; b.style.pointerEvents = 'none'; });
+  var clicked = event.target.closest('button');
+  if (clicked) { clicked.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>이동 중...'; }
   window.location.href = '/checkout/' + planType;
 }
 </script>

@@ -6,9 +6,9 @@
 <div class="max-w-4xl mx-auto">
 
   <div class="mb-6">
-    <a href="javascript:history.back()" class="text-zinc-500 hover:text-white transition text-sm">← 뒤로가기</a>
-    <h1 class="text-2xl font-black mt-2">💳 결제 내역</h1>
-    <p class="text-zinc-400 mt-1 text-sm">구매 및 환불 내역을 확인하세요</p>
+    <a href="/my" class="text-zinc-500 hover:text-white transition text-sm">&larr; 내정보</a>
+    <h1 class="text-2xl font-black mt-2">결제 내역</h1>
+    <p class="text-zinc-400 mt-1 text-sm">구매 및 결제 내역을 확인하세요</p>
   </div>
 
   {% if payments|length == 0 %}
@@ -21,32 +21,76 @@
     </a>
   </div>
   {% else %}
-  
+
+  {% set plan_names = {
+    'gallery': '영상 갤러리',
+    'allinone': '올인원 패키지',
+    'profitguard_lite': '프로핏가드 라이트',
+    'profitguard_pro': '프로핏가드 PRO',
+    'profitguard_lifetime': '프로핏가드 평생'
+  } %}
+
   <div class="space-y-3">
     {% for payment in payments %}
+    {% set is_store = payment.plan_type.startswith('store_') %}
+    {% set store_pid = payment.plan_type.replace('store_', '') if is_store else '' %}
+    {% set product = store_products.get(store_pid|int) if is_store and store_pid.isdigit() else None %}
+
     <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4">
       <div class="flex items-center justify-between mb-2">
-        <span class="font-bold text-white">{{ payment.product_name }}</span>
+        <span class="font-bold text-white">
+          {% if product %}
+            {{ product.title }}
+          {% elif is_store %}
+            지식스토어 상품
+          {% else %}
+            {{ plan_names.get(payment.plan_type, payment.plan_type) }}
+          {% endif %}
+        </span>
         <span class="{% if payment.status == 'paid' %}text-green-400{% elif payment.status == 'refunded' %}text-red-400{% else %}text-zinc-400{% endif %} text-sm font-bold">
-          {% if payment.status == 'paid' %}결제완료{% elif payment.status == 'refunded' %}환불{% else %}{{ payment.status }}{% endif %}
+          {% if payment.status == 'paid' %}결제완료{% elif payment.status == 'refunded' %}환불{% elif payment.status == 'cancelled' %}취소{% else %}{{ payment.status }}{% endif %}
         </span>
       </div>
       <div class="flex items-center justify-between text-sm">
-        <span class="text-zinc-500">{{ payment.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+        <span class="text-zinc-500">{% if payment.paid_at %}{{ payment.paid_at.strftime('%Y-%m-%d %H:%M') }}{% else %}{{ payment.created_at.strftime('%Y-%m-%d %H:%M') }}{% endif %}</span>
         <span class="text-white font-bold">{{ "{:,}".format(payment.amount) }}원</span>
       </div>
+
+      {% if product and payment.status == 'paid' %}
+      <div class="flex gap-2 mt-3 pt-3 border-t border-zinc-800">
+        {% if product.file_url or product.file_url2 %}
+          {% if product.file_url %}
+          <a href="{{ product.file_url }}" target="_blank"
+             class="flex-1 bg-[#c4ff00] text-black font-bold py-2 rounded-lg text-center text-sm hover:bg-white transition">
+            <i class="fas fa-{% if 'notion' in (product.file_url|lower) %}link{% else %}download{% endif %} mr-1"></i>{% if product.file_url2 %}{% if 'notion' in (product.file_url|lower) %}노션 열기{% else %}링크 열기{% endif %}{% else %}콘텐츠 열기{% endif %}
+          </a>
+          {% endif %}
+          {% if product.file_url2 %}
+          <a href="{{ product.file_url2 }}" target="_blank"
+             class="flex-1 bg-white text-black font-bold py-2 rounded-lg text-center text-sm hover:bg-zinc-200 transition">
+            <i class="fas fa-{% if 'pdf' in (product.file_url2|lower) %}file-pdf{% else %}download{% endif %} mr-1"></i>{% if 'pdf' in (product.file_url2|lower) %}PDF 다운로드{% else %}파일 다운로드{% endif %}
+          </a>
+          {% endif %}
+        {% else %}
+          <a href="/store/{{ product.id }}"
+             class="flex-1 bg-zinc-700 text-white font-bold py-2 rounded-lg text-center text-sm hover:bg-zinc-600 transition">
+            상품 보기
+          </a>
+        {% endif %}
+      </div>
+      {% endif %}
     </div>
     {% endfor %}
   </div>
-  
+
   {% endif %}
 
-  <!-- 환불 정책 안내 -->
+  <!-- 안내 -->
   <div class="mt-6 bg-zinc-900/40 border border-zinc-800 rounded-xl p-4">
     <div class="text-zinc-500 text-xs">
-      <p class="font-bold text-zinc-400 mb-2">환불 정책</p>
-      <p>• 결제 후 7일 이내, 미사용 시 전액 환불</p>
-      <p>• 사용 내역이 있을 경우 일할 계산 후 환불</p>
+      <p class="font-bold text-zinc-400 mb-2">안내</p>
+      <p>• 구독 서비스는 매월 자동 결제됩니다</p>
+      <p>• 디지털 상품은 구매 후 환불이 불가합니다</p>
       <p>• 문의: <a href="/support" class="text-[#c4ff00] hover:underline">고객센터</a></p>
     </div>
   </div>

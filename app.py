@@ -128,6 +128,7 @@ LINK_REQUEST_LIMIT_FREE = 1
 LINK_REQUEST_LIMIT_TRIAL = 3
 LINK_REQUEST_LIMIT_SUBSCRIBER = 10
 LINK_REQUEST_LIMIT_ALLINONE = 20
+OPENROOM_PASSWORD = os.environ.get("OPENROOM_PASSWORD", "머닝화이팅")
 
 
 
@@ -291,6 +292,7 @@ class User(db.Model):
     pg_password_set = db.Column(db.Boolean, default=False)  # 프로핏가드용 비밀번호 설정 여부
     is_staff = db.Column(db.Boolean, default=False)  # 관리자 권한
     phone = db.Column(db.String(20), nullable=True)
+    pg_api_token = db.Column(db.String(64), nullable=True)
 
     onboarding_done = db.Column(db.Boolean, default=False)
 
@@ -418,7 +420,7 @@ class LinkRequest(db.Model):
 
     @property
     def status(self):
-        return "완료" if (self.coupang_url or "").strip() else "접수"
+        return "완료" if (self.coupang_url or "").strip() else "대기중"
 
 
 class StoreProduct(db.Model):
@@ -430,6 +432,7 @@ class StoreProduct(db.Model):
     description = db.Column(db.Text, nullable=True, default="")
     image = db.Column(db.String(500), nullable=True, default="")
     file_url = db.Column(db.String(500), nullable=True, default="")
+    file_url2 = db.Column(db.String(500), nullable=True, default="")
     badge = db.Column(db.String(20), nullable=True, default="")
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -631,14 +634,20 @@ class EventTrialApply(db.Model):
     user_id = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
 
 
 # ----------------------------
 
 # Template Helpers
 # ----------------------------
+def ensure_referral_code(user):
+    """유저에게 추천 코드가 없으면 생성"""
+    if user and not user.referral_code:
+        import random
+        import string
+        user.referral_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        db.session.commit()
+
 def get_nickname(email):
     """이메일로 닉네임 조회"""
     try:
@@ -691,26 +700,26 @@ def save_upload(file_storage):
     if img.mode in ('RGBA', 'P'):
         img = img.convert('RGB')
     
-    # 원본용 (1200px)
+    # 원본용 (1600px)
     img_original = img.copy()
-    img_original.thumbnail((1200, 1200), Image.LANCZOS)
-    
-    # 썸네일용 (400px)
+    img_original.thumbnail((1600, 1600), Image.LANCZOS)
+
+    # 썸네일용 (800px)
     img_thumb = img.copy()
-    img_thumb.thumbnail((400, 400), Image.LANCZOS)
+    img_thumb.thumbnail((800, 800), Image.LANCZOS)
     
     s3 = get_s3_client()
     file_id = uuid.uuid4().hex
     
     # 원본 업로드
     buffer_original = BytesIO()
-    img_original.save(buffer_original, 'WEBP', quality=80)
+    img_original.save(buffer_original, 'WEBP', quality=85)
     buffer_original.seek(0)
     s3.upload_fileobj(buffer_original, R2_BUCKET, f"{file_id}.webp", ExtraArgs={'ContentType': 'image/webp'})
     
     # 썸네일 업로드
     buffer_thumb = BytesIO()
-    img_thumb.save(buffer_thumb, 'WEBP', quality=70)
+    img_thumb.save(buffer_thumb, 'WEBP', quality=80)
     buffer_thumb.seek(0)
     s3.upload_fileobj(buffer_thumb, R2_BUCKET, f"{file_id}_thumb.webp", ExtraArgs={'ContentType': 'image/webp'})
     
@@ -876,7 +885,11 @@ def serve_r2_file(filename):
 # ----------------------------
 @app.route("/")
 def index():
-    return render_template("index.html", featured_posts=Post.query.filter_by(is_featured=True).filter(Post.is_deleted != True).limit(4).all())
+    try:
+        featured_posts = Post.query.filter_by(is_featured=True).filter(Post.is_deleted != True).limit(4).all()
+    except Exception:
+        featured_posts = []
+    return render_template("index.html", featured_posts=featured_posts)
 
 # [FIX #10] store 페이지는 로그인 무관 → 캐시 유지 OK
 @app.route("/store")
@@ -911,13 +924,18 @@ def store_detail(product_id):
     can_download_pg = False
     is_kakao = False
     pg_pw_set = False
+    has_purchased = False
     if session.get('user_id'):
         can_download_pg = can_access_profitguard(session['user_id'])
         u = db.session.get(User, session['user_id'])
         if u and u.kakao_id:
             is_kakao = True
             pg_pw_set = bool(u.pg_password_set)
-    return render_template('store_detail.html', product=product, can_download_pg=can_download_pg, is_kakao=is_kakao, pg_pw_set=pg_pw_set)
+        # 구매 여부 확인
+        has_purchased = PaymentHistory.query.filter_by(
+            user_id=session['user_id'], plan_type=f"store_{product.id}", status="paid"
+        ).first() is not None
+    return render_template('store_detail.html', product=product, can_download_pg=can_download_pg, is_kakao=is_kakao, pg_pw_set=pg_pw_set, has_purchased=has_purchased)
 @app.route("/pricing")
 def pricing():
     can_use_trial = False
@@ -989,6 +1007,15 @@ def send_alimtalk(receiver, subject, message, tpl_code, button=None):
 def send_welcome_alimtalk(phone):
 
     msg = "회원가입이 완료되었습니다.\n\n머닝 서비스 이용을 위해\n로그인 후 마이페이지에서\n이용 내역을 확인하실 수 있습니다."
+
+    button = {"button": [{"name": "채널추가", "linkType": "AC"}, {"name": "마이페이지 바로가기", "linkType": "WL", "linkTypeName": "웹링크", "linkMo": "https://moneying.biz/my", "linkPc": "https://moneying.biz/my"}]}
+
+    return send_alimtalk(phone, "회원가입 완료 안내", msg, ALIGO_TPL_WELCOME, button)
+
+
+def send_welcome_alimtalk_with_pw(phone, email, temp_pw):
+
+    msg = f"회원가입이 완료되었습니다.\n\n이메일: {email}\n임시 비밀번호: {temp_pw}\n\n프로핏가드 로그인 시\n위 이메일과 비밀번호를 사용하세요.\n\n마이페이지에서 비밀번호를 변경할 수 있습니다."
 
     button = {"button": [{"name": "채널추가", "linkType": "AC"}, {"name": "마이페이지 바로가기", "linkType": "WL", "linkTypeName": "웹링크", "linkMo": "https://moneying.biz/my", "linkPc": "https://moneying.biz/my"}]}
 
@@ -1258,30 +1285,72 @@ def payment_success():
 
     db.session.commit()
 
+    # 업그레이드 시 기존 하위 구독 자동 해지
+    cancel_targets = []
+    if plan_type == "allinone":
+        # 올인원 → 기존 gallery, profitguard 단독 구독 해지
+        cancel_targets = ["gallery", "profitguard_lite", "profitguard_pro"]
+    elif plan_type == "profitguard_lifetime":
+        # 평생 이용권 → 기존 profitguard 월구독 해지
+        cancel_targets = ["profitguard_lite", "profitguard_pro"]
+    elif plan_type == "profitguard_pro":
+        # Pro → 기존 Lite 해지
+        cancel_targets = ["profitguard_lite"]
 
+    if cancel_targets:
+        old_subs = Subscription.query.filter(
+            Subscription.user_id == user_id,
+            Subscription.plan_type.in_(cancel_targets),
+            Subscription.status == "active",
+            Subscription.id != sub.id
+        ).all()
+        for old_sub in old_subs:
+            old_sub.status = "cancelled"
+            print(f"[업그레이드] user={user_id} 기존 {old_sub.plan_type}(#{old_sub.id}) 자동 해지 → {plan_type}")
+        if old_subs:
+            db.session.commit()
 
     update_session_status(user_id)
 
+    # 추천인 리워드: 첫 구독 결제 시 추천자 +7일, 본인 +7일
+    try:
+        user = db.session.get(User, user_id)
+        if user and user.referred_by:
+            # 본인의 첫 결제인지 확인 (이전 paid 결제가 이번 1건뿐)
+            paid_count = PaymentHistory.query.filter_by(user_id=user_id, status="paid").count()
+            if paid_count == 1:
+                # 추천자 구독 7일 연장
+                referrer_sub = Subscription.query.filter(
+                    Subscription.user_id == user.referred_by,
+                    Subscription.status == "active",
+                    Subscription.expires_at > datetime.utcnow()
+                ).order_by(Subscription.expires_at.desc()).first()
+                if referrer_sub:
+                    referrer_sub.expires_at = referrer_sub.expires_at + timedelta(days=7)
+                    print(f"[리워드] 추천자 user_id={user.referred_by} 구독 +7일")
 
+                # 본인 구독 7일 연장
+                if sub.expires_at:
+                    sub.expires_at = sub.expires_at + timedelta(days=7)
+                    print(f"[리워드] 신규유저 user_id={user_id} 구독 +7일")
+
+                db.session.commit()
+    except Exception as e:
+        print(f"[리워드] 추천 보상 처리 오류: {e}")
 
     # 알림톡 발송 (결제 완료)
 
     try:
 
-        user = db.session.get(User, user_id)
+        user = db.session.get(User, user_id) if not user else user
 
         if user and user.phone:
 
-            send_payment_alimtalk(
-
+            send_product_payment_alimtalk(
                 phone=user.phone,
-
-                name=user.nickname or user.email,
-
                 product_name=plan['name'],
-
-                amount=plan['price']
-
+                amount=plan['price'],
+                paid_at=datetime.utcnow().strftime('%Y-%m-%d %H:%M')
             )
 
     except Exception as e:
@@ -1407,13 +1476,15 @@ def api_profitguard_set_password():
 
     password = (request.get_json() or {}).get("password", "").strip()
 
-    if len(password) < 4:
+    if len(password) < 8:
 
-        return jsonify({"result": "FAIL", "msg": "비밀번호는 4자 이상이어야 합니다."})
+        return jsonify({"result": "FAIL", "msg": "비밀번호는 8자 이상이어야 합니다."})
 
     user.pw_hash = generate_password_hash(password)
 
     user.pg_password_set = True
+
+    user.pg_api_token = None
 
     db.session.commit()
 
@@ -1517,8 +1588,24 @@ def api_profitguard():
 
         user = User.query.filter_by(email=email).first()
 
-        if not user or not check_password_hash(user.pw_hash, password):
+        # brute-force 방어: 잠금 상태 확인
+        if user and user.locked_until:
+            if datetime.utcnow() < user.locked_until:
+                remaining = (user.locked_until - datetime.utcnow()).seconds // 60 + 1
+                return jsonify({"result": "LOCKED", "msg": f"로그인 시도 5회 실패로 계정이 잠겼습니다. {remaining}분 후 다시 시도해주세요."})
+            else:
+                user.locked_until = None
+                user.login_fail_count = 0
+                db.session.commit()
 
+        if not user or not check_password_hash(user.pw_hash, password):
+            if user:
+                user.login_fail_count = (user.login_fail_count or 0) + 1
+                if user.login_fail_count >= 5:
+                    user.locked_until = datetime.utcnow() + timedelta(minutes=30)
+                    db.session.commit()
+                    return jsonify({"result": "LOCKED", "msg": "로그인 5회 실패로 계정이 30분간 잠겼습니다."})
+                db.session.commit()
             return jsonify({"result": "FAIL", "msg": "이메일 또는 비밀번호가 틀렸습니다."})
 
 
@@ -1591,13 +1678,73 @@ def api_profitguard():
 
 
 
+        # 로그인 성공: 실패 카운터 리셋 + 토큰 발급
+        user.login_fail_count = 0
+        user.locked_until = None
+        token = secrets.token_hex(32)
+        user.pg_api_token = token
+        db.session.commit()
+
         user_name = user.nickname or user.email.split("@")[0]
 
-        return jsonify({"result": "SUCCESS", "tier": tier, "is_trial": is_trial, "user_name": user_name})
+        return jsonify({"result": "SUCCESS", "tier": tier, "is_trial": is_trial, "user_name": user_name, "token": token})
 
+    elif action == "token_login":
+        email = (data.get("email") or "").strip().lower()
+        token = (data.get("token") or "").strip()
+        hwid = data.get("hwid", "")
 
+        if not email or not token:
+            return jsonify({"result": "FAIL", "msg": "이메일과 토큰을 입력해주세요."})
+
+        user = User.query.filter_by(email=email).first()
+        if not user or not user.pg_api_token or user.pg_api_token != token:
+            return jsonify({"result": "TOKEN_EXPIRED", "msg": "토큰이 만료되었습니다. 비밀번호로 다시 로그인해주세요."})
+
+        # 구독 상태 확인
+        now = datetime.utcnow()
+        tier = "FREE"
+        is_trial = False
+
+        pg_sub = Subscription.query.filter(
+            Subscription.user_id == user.id,
+            Subscription.status == "active",
+            Subscription.plan_type.in_(["profitguard_pro", "profitguard_lite", "profitguard_lifetime", "allinone"])
+        ).first()
+
+        if pg_sub and pg_sub.is_active():
+            if pg_sub.plan_type in ["profitguard_pro", "allinone", "profitguard_lifetime"]:
+                tier = "PRO"
+            elif pg_sub.plan_type == "profitguard_lite":
+                tier = "BASIC"
+
+        if tier == "FREE" and user.free_trial_expires and user.free_trial_expires > now:
+            tier = "PRO"
+            is_trial = True
+
+        if tier == "FREE":
+            return jsonify({"result": "FAIL", "msg": "구독 중인 프로핏가드 플랜이 없습니다.\nmoneying.biz에서 구독 후 이용해주세요."})
+
+        # HWID 기기 인증
+        if hwid:
+            if not user.profitguard_hwid:
+                user.profitguard_hwid = hwid
+                db.session.commit()
+            elif user.profitguard_hwid != hwid:
+                return jsonify({"result": "DEVICE_ERROR", "msg": "이미 다른 기기에 등록되어 있습니다.\n기기 초기화 후 다시 시도해주세요.\n(기기 변경은 월 1회 가능)"})
+
+        user_name = user.nickname or user.email.split("@")[0]
+        return jsonify({"result": "SUCCESS", "tier": tier, "is_trial": is_trial, "user_name": user_name, "token": token})
 
     elif action == "register":
+        # IP 기반 rate limit: 1시간에 3회
+        client_ip = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown")
+        if client_ip and "," in client_ip:
+            client_ip = client_ip.split(",")[0].strip()
+        reg_key = f"pg_register:{client_ip}"
+        reg_count = cache.get(reg_key) or 0
+        if reg_count >= 3:
+            return jsonify({"result": "FAIL", "msg": "잠시 후 다시 시도해주세요. (가입 횟수 제한)"})
 
         email = (data.get("email") or "").strip().lower()
 
@@ -1629,6 +1776,8 @@ def api_profitguard():
 
             nickname=name,
 
+            phone=phone,
+
             free_trial_used=True,
 
             free_trial_expires=datetime.utcnow() + timedelta(days=5)
@@ -1638,6 +1787,8 @@ def api_profitguard():
         db.session.add(u)
 
         db.session.commit()
+
+        cache.set(reg_key, reg_count + 1, timeout=3600)
 
         return jsonify({"result": "SUCCESS", "msg": "체험판 계정이 생성되었습니다."})
 
@@ -1699,7 +1850,7 @@ def store_checkout(product_id):
 
     product = db.session.get(StoreProduct, product_id)
 
-    if not product or product.price == 0:
+    if not product or product.price == 0 or not product.is_active:
 
         flash("잘못된 상품입니다.", "error")
 
@@ -1741,14 +1892,17 @@ def store_payment_success():
 
     product = db.session.get(StoreProduct, int(product_id)) if product_id else None
 
-    if not product:
+    if not product or not product.is_active:
 
         flash("잘못된 상품입니다.", "error")
 
         return redirect(url_for("store"))
 
-    if int(amount) != product.price:
+    # 서버 기준 금액으로 검증 (클라이언트 amount 무시)
+    server_amount = product.price
 
+    if int(amount) != server_amount:
+        print(f"[결제 경고] 금액 불일치: client={amount}, server={server_amount}, product={product.id}, user={session.get('user_id')}")
         flash("결제 금액이 일치하지 않습니다.", "error")
 
         return redirect(url_for("store"))
@@ -1765,7 +1919,7 @@ def store_payment_success():
 
         headers={"Authorization": f"Basic {auth_header}", "Content-Type": "application/json"},
 
-        json={"paymentKey": payment_key, "orderId": order_id, "amount": int(amount)}
+        json={"paymentKey": payment_key, "orderId": order_id, "amount": server_amount}
 
     )
 
@@ -1816,6 +1970,9 @@ def store_payment_success():
 def store_payment_fail():
 
     error_msg = request.args.get("message", "결제가 취소되었습니다.")
+    error_code = request.args.get("code", "")
+    order_id = request.args.get("orderId", "")
+    print(f"[결제 실패] code={error_code}, orderId={order_id}, msg={error_msg}, user={session.get('user_id')}")
 
     flash(f"결제 실패: {error_msg}", "error")
 
@@ -1844,16 +2001,51 @@ def gallery():
 
 @app.route("/community")
 def community_page():
-    posts = CommunityPost.query.order_by(CommunityPost.id.desc()).limit(50).all()
-    my_linkreq_count = 0
-    if session.get("user_email"):
-        my_linkreq_count = LinkRequest.query.filter_by(requester_email=session["user_email"]).count()
-    
+    search = request.args.get("q", "").strip()
+    cat = request.args.get("cat", "all").strip()
+    page = request.args.get("page", 1, type=int)
+    per_page = 20
+
+    query = CommunityPost.query.order_by(CommunityPost.id.desc())
+
+    if search:
+        query = query.filter(
+            db.or_(
+                CommunityPost.title.ilike(f"%{search}%"),
+                CommunityPost.content.ilike(f"%{search}%")
+            )
+        )
+    if cat and cat != "all":
+        query = query.filter(CommunityPost.category == cat)
+
+    total = query.count()
+    total_pages = max(1, (total + per_page - 1) // per_page)
+    page = max(1, min(page, total_pages))
+    posts = query.offset((page - 1) * per_page).limit(per_page).all()
+
+    # 인기글 Top 3 (좋아요 기준, 항상 전체에서)
+    popular_sub = db.session.query(
+        CommunityLike.post_id, db.func.count(CommunityLike.id).label("cnt")
+    ).group_by(CommunityLike.post_id).subquery()
+    popular_posts = db.session.query(CommunityPost).join(
+        popular_sub, CommunityPost.id == popular_sub.c.post_id
+    ).order_by(popular_sub.c.cnt.desc()).limit(3).all()
+    if len(popular_posts) < 3:
+        existing_ids = [p.id for p in popular_posts]
+        fill = CommunityPost.query.filter(~CommunityPost.id.in_(existing_ids)).order_by(CommunityPost.id.desc()).limit(3 - len(popular_posts)).all()
+        popular_posts += fill
+
+    # N+1 해결: 좋아요 수 일괄 조회 (게시글 + 인기글 합산)
+    all_ids = list(set([p.id for p in posts] + [p.id for p in popular_posts]))
     post_likes = {}
-    for p in posts:
-        post_likes[p.id] = CommunityLike.query.filter_by(post_id=p.id).count()
-    
-    return render_template("community.html", posts=posts, my_linkreq_count=my_linkreq_count, post_likes=post_likes, now=datetime.utcnow())
+    if all_ids:
+        likes_data = db.session.query(
+            CommunityLike.post_id, db.func.count(CommunityLike.id)
+        ).filter(CommunityLike.post_id.in_(all_ids)).group_by(CommunityLike.post_id).all()
+        post_likes = {pid: cnt for pid, cnt in likes_data}
+
+    return render_template("community.html", posts=posts, popular_posts=popular_posts, post_likes=post_likes, now=datetime.utcnow(),
+                           search=search, cat=cat, page=page, total_pages=total_pages, total=total)
 
 @app.route("/community/<int:post_id>")
 def community_detail(post_id):
@@ -1880,7 +2072,7 @@ def community_delete(post_id):
     if not session.get("user_id"):
         return redirect(url_for("login"))
     post = CommunityPost.query.get_or_404(post_id)
-    if post.author_email != session.get("user_email"):
+    if post.author_email != session.get("user_email") and not is_admin():
         abort(403)
     CommunityComment.query.filter_by(post_id=post_id).delete()
     CommunityLike.query.filter_by(post_id=post_id).delete()
@@ -2096,12 +2288,30 @@ def community_comment_delete(comment_id):
     if not session.get("user_id"):
         return redirect(url_for("login"))
     comment = CommunityComment.query.get_or_404(comment_id)
-    if comment.author_email != session.get("user_email"):
+    if comment.author_email != session.get("user_email") and not is_admin():
         abort(403)
     post_id = comment.post_id
     db.session.delete(comment)
     db.session.commit()
     return redirect(url_for("community_detail", post_id=post_id))
+
+@app.route("/community/comment/<int:comment_id>/edit", methods=["POST"])
+def community_comment_edit(comment_id):
+    if not session.get("user_id"):
+        return jsonify({"error": "login required"}), 401
+    comment = CommunityComment.query.get_or_404(comment_id)
+    if comment.author_email != session.get("user_email") and not is_admin():
+        return jsonify({"error": "forbidden"}), 403
+    content = ""
+    if request.is_json:
+        content = (request.json.get("content") or "").strip()
+    else:
+        content = (request.form.get("content") or "").strip()
+    if not content:
+        return jsonify({"error": "empty"}), 400
+    comment.content = content
+    db.session.commit()
+    return jsonify({"ok": True, "content": content})
 
 @app.route("/my")
 def my_page():
@@ -2117,39 +2327,28 @@ def my_page():
     
     user_subscriptions = get_user_subscriptions(user_id)
     
-    link_request_count = LinkRequest.query.filter_by(requester_email=user_email).count()
-    link_request_done = LinkRequest.query.filter(
-        LinkRequest.requester_email == user_email,
-        LinkRequest.coupang_url != None,
-        LinkRequest.coupang_url != ""
-    ).count()
-    
     monthly_used = get_monthly_link_request_count(user_email)
     monthly_limit = get_link_request_limit(user_id)
-    
+
     trial_expires_at = get_trial_expires_at(user_id)
     can_trial = can_use_free_trial(user_id)
-    
+
     user = User.query.get(user_id)
+    if not user:
+        session.clear()
+        return redirect(url_for("login"))
     user_is_seller = user.is_seller if user else False
     user_seller_status = user.seller_status if user else None
     user_seller_company = user.seller_company if user else None
-    user_seller_category = user.seller_category if user else None
 
-    if not user.referral_code:
-        import random
-        import string
-        user.referral_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-        db.session.commit()
-    
+    ensure_referral_code(user)
+
     invited_count = User.query.filter_by(referred_by=user.id).count()
     my_posts_count = CommunityPost.query.filter_by(author_email=user_email).count()
-    
+
     return render_template("my.html",
         user_email=user_email,
         subscriptions=user_subscriptions,
-        link_request_count=link_request_count,
-        link_request_done=link_request_done,
         monthly_used=monthly_used,
         monthly_limit=monthly_limit,
         trial_expires_at=trial_expires_at,
@@ -2158,8 +2357,7 @@ def my_page():
         user_is_seller=user_is_seller,
         user_seller_status=user_seller_status,
         user_seller_company=user_seller_company,
-        user_seller_category=user_seller_category,
-        referral_code=user.referral_code,
+        referral_code=user.referral_code if user else "",
         invited_count=invited_count,
         my_posts_count=my_posts_count,
         profile_photo=user.profile_photo if user else ""
@@ -2304,19 +2502,12 @@ def community_write():
             deadline = request.form.get("deal_deadline", "").strip()
 
             if deadline:
-
                 try:
-
-                    post.deal_deadline = datetime.strptime(deadline, "%Y-%m-%d")
-
-                except:
-
+                    post.deal_deadline = datetime.strptime(deadline, "%Y-%m-%d %H:%M")
+                except Exception:
                     try:
-
-                        post.deal_deadline = datetime.strptime(deadline, "%Y-%m-%d %H:%M")
-
-                    except:
-
+                        post.deal_deadline = datetime.strptime(deadline, "%Y-%m-%d")
+                    except Exception:
                         post.deal_deadline = None
 
         db.session.add(post)
@@ -2324,8 +2515,6 @@ def community_write():
         db.session.commit()
 
         return redirect(url_for("community_page"))
-
-    return render_template("community_write.html")
 
     return render_template("community_write.html")
 
@@ -2340,36 +2529,66 @@ def link_request_new():
 
     user_id = session.get("user_id")
     user_email = session.get("user_email", "")
-    
+
     update_session_status(user_id)
-    
+
     monthly_used = get_monthly_link_request_count(user_email)
     monthly_limit = get_link_request_limit(user_id)
 
-    if request.method == "POST":
-        if not can_make_link_request(user_id, user_email):
-            flash(f"이번 달 링크요청 한도({monthly_limit}회)를 초과했습니다.", "error")
-            return redirect(url_for("link_requests"))
+    form_data = {}
 
+    if request.method == "POST":
         kakao_nickname = (request.form.get("kakao_nickname") or "").strip()
         kakao_password = (request.form.get("kakao_password") or "").strip()
         title = (request.form.get("title") or "").strip()
         original_url = (request.form.get("original_url") or "").strip()
+        form_data = {"title": title, "original_url": original_url, "kakao_nickname": kakao_nickname}
 
-        OPENROOM_PASSWORD = "머닝화이팅"
+        # 한도 재확인 (race condition 방지)
+        monthly_used = get_monthly_link_request_count(user_email)
+        if monthly_used >= monthly_limit:
+            flash(f"이번 달 링크요청 한도({monthly_limit}회)를 초과했습니다.", "error")
+            return redirect(url_for("link_requests"))
 
         is_sub_or_trial = session.get("subscriber") or session.get("is_trial")
         if not is_sub_or_trial:
             if not kakao_nickname or not kakao_password:
                 flash("오픈방 닉네임과 인증 암호를 입력해주세요.", "error")
-                return redirect(url_for("link_request_new"))
+                items = LinkRequest.query.filter_by(requester_email=user_email).order_by(LinkRequest.id.desc()).limit(10).all()
+                return render_template("link_request_new.html", monthly_used=monthly_used, monthly_limit=monthly_limit, items=items, form_data=form_data)
             if kakao_password != OPENROOM_PASSWORD:
                 flash("오픈방 인증 암호가 틀렸습니다.", "error")
-                return redirect(url_for("link_request_new"))
+                items = LinkRequest.query.filter_by(requester_email=user_email).order_by(LinkRequest.id.desc()).limit(10).all()
+                return render_template("link_request_new.html", monthly_used=monthly_used, monthly_limit=monthly_limit, items=items, form_data=form_data)
 
         if not title or not original_url:
             flash("제목과 원본 링크를 입력해주세요.", "error")
-            return redirect(url_for("link_request_new"))
+            items = LinkRequest.query.filter_by(requester_email=user_email).order_by(LinkRequest.id.desc()).limit(10).all()
+            return render_template("link_request_new.html", monthly_used=monthly_used, monthly_limit=monthly_limit, items=items, form_data=form_data)
+
+        # URL 형식 검증
+        if not original_url.startswith(("http://", "https://")):
+            flash("올바른 URL을 입력해주세요. (http:// 또는 https://로 시작)", "error")
+            items = LinkRequest.query.filter_by(requester_email=user_email).order_by(LinkRequest.id.desc()).limit(10).all()
+            return render_template("link_request_new.html", monthly_used=monthly_used, monthly_limit=monthly_limit, items=items, form_data=form_data)
+
+        if len(original_url) > 2000:
+            flash("URL이 너무 깁니다. (최대 2000자)", "error")
+            items = LinkRequest.query.filter_by(requester_email=user_email).order_by(LinkRequest.id.desc()).limit(10).all()
+            return render_template("link_request_new.html", monthly_used=monthly_used, monthly_limit=monthly_limit, items=items, form_data=form_data)
+
+        # 중복 요청 체크 (같은 URL로 대기중인 요청)
+        existing = LinkRequest.query.filter_by(requester_email=user_email, original_url=original_url).filter(
+            (LinkRequest.coupang_url == None) | (LinkRequest.coupang_url == "")
+        ).first()
+        if existing:
+            flash("이미 같은 URL로 대기중인 요청이 있습니다.", "error")
+            items = LinkRequest.query.filter_by(requester_email=user_email).order_by(LinkRequest.id.desc()).limit(10).all()
+            return render_template("link_request_new.html", monthly_used=monthly_used, monthly_limit=monthly_limit, items=items, form_data=form_data)
+
+        # HTML 태그 제거
+        import re
+        title = re.sub(r"<[^>]+>", "", title).strip()[:200]
 
         db.session.add(LinkRequest(
             title=title, original_url=original_url,
@@ -2378,11 +2597,22 @@ def link_request_new():
         db.session.commit()
         return redirect(url_for("my_link_requests", success=1))
 
-    user_email = session.get("user_email", "")
-
     items = LinkRequest.query.filter_by(requester_email=user_email).order_by(LinkRequest.id.desc()).limit(10).all() if user_email else []
 
-    return render_template("link_request_new.html", monthly_used=monthly_used, monthly_limit=monthly_limit, items=items)
+    return render_template("link_request_new.html", monthly_used=monthly_used, monthly_limit=monthly_limit, items=items, form_data=form_data)
+
+@app.route("/api/verify-access-code", methods=["POST"])
+def verify_access_code():
+    if not session.get("user_id"):
+        return jsonify({"ok": False, "error": "로그인이 필요합니다."}), 401
+    data = request.get_json()
+    code = (data.get("code") or "").strip().upper()
+    if not code:
+        return jsonify({"ok": False, "error": "코드를 입력해주세요."})
+    if code == OPENROOM_PASSWORD.upper():
+        session["openroom_verified"] = True
+        return jsonify({"ok": True})
+    return jsonify({"ok": False, "error": "코드가 일치하지 않습니다.\n오픈채팅방 공지를 확인해주세요!"})
 
 @app.route("/link-requests")
 def link_requests():
@@ -2392,46 +2622,57 @@ def link_requests():
     if user_id:
         update_session_status(user_id)
 
+    page = request.args.get("page", 1, type=int)
+    per_page = 20
+
     if is_admin():
-        items = LinkRequest.query.order_by(LinkRequest.id.desc()).all()
+        pagination = LinkRequest.query.order_by(LinkRequest.id.desc()).paginate(page=page, per_page=per_page, error_out=False)
+        items = pagination.items
         monthly_used, monthly_limit = 0, 999
     elif user_id:
-        items = LinkRequest.query.filter_by(requester_email=user_email).order_by(LinkRequest.id.desc()).all()
+        pagination = LinkRequest.query.filter_by(requester_email=user_email).order_by(LinkRequest.id.desc()).paginate(page=page, per_page=per_page, error_out=False)
+        items = pagination.items
         monthly_used = get_monthly_link_request_count(user_email)
         monthly_limit = get_link_request_limit(user_id)
     else:
         items = []
+        pagination = None
         monthly_used, monthly_limit = 0, 3
 
-    return render_template("link_requests.html", items=items, monthly_used=monthly_used, monthly_limit=monthly_limit)
+    return render_template("link_requests.html", items=items, monthly_used=monthly_used, monthly_limit=monthly_limit, pagination=pagination)
 
 @app.route("/link-requests/<int:request_id>", methods=["GET", "POST"])
 def link_request_detail(request_id):
-    it = LinkRequest.query.get_or_404(request_id)
     if not is_admin():
         if not session.get("user_id"):
             return redirect(url_for("login", next=f"/link-requests/{request_id}"))
+    it = LinkRequest.query.get_or_404(request_id)
+    if not is_admin():
         if it.requester_email != session.get("user_email", ""):
             abort(403)
     if request.method == "POST":
         if not is_admin():
             abort(403)
-        it.coupang_url = (request.form.get("coupang_url") or "").strip()
+        coupang_url = (request.form.get("coupang_url") or "").strip()
+        # URL 검증
+        if coupang_url and not coupang_url.startswith(("http://", "https://")):
+            flash("올바른 URL을 입력해주세요.", "error")
+            return render_template("link_request_detail.html", it=it)
+        it.coupang_url = coupang_url
         db.session.commit()
-        
+
         if it.coupang_url:
             user = User.query.filter_by(email=it.requester_email).first()
             if user:
-                noti = Notification(
+                db.session.add(Notification(
                     user_id=user.id,
                     type="link_completed",
                     title="링크요청 완료",
                     message=f"'{it.title}' 요청의 쿠팡 링크가 등록되었습니다!",
-                    link="/link-requests/new"
-                )
-                db.session.add(noti)
+                    link=f"/link-requests/{it.id}"
+                ))
                 db.session.commit()
-        
+
         return redirect(url_for("admin_link_requests"))
     return render_template("link_request_detail.html", it=it)
 
@@ -2449,10 +2690,10 @@ def register():
         
         if not email or not password:
             flash("이메일/비밀번호를 입력하세요.", "error")
+            return redirect(url_for("register"))
         password_confirm = (request.form.get("password_confirm") or "").strip()
         if password != password_confirm:
             flash("비밀번호가 일치하지 않습니다.", "error")
-            return redirect(url_for("register"))
             return redirect(url_for("register"))
         if User.query.filter_by(email=email).first():
             flash("이미 가입된 이메일입니다.", "error")
@@ -2468,18 +2709,6 @@ def register():
         u = User(email=email, pw_hash=generate_password_hash(password), referred_by=referred_by_id, phone=phone)
         db.session.add(u)
         db.session.commit()
-        
-        if referred_by_id:
-            referrer = User.query.get(referred_by_id)
-            if referrer:
-                active_sub = Subscription.query.filter(
-                    Subscription.user_id == referrer.id,
-                    Subscription.expires_at > datetime.utcnow()
-                ).order_by(Subscription.expires_at.desc()).first()
-                
-                if active_sub:
-                    active_sub.expires_at = active_sub.expires_at + timedelta(days=7)
-                    db.session.commit()
         
         session.clear()
         session["user_id"] = u.id
@@ -2578,9 +2807,25 @@ def kakao_callback():
     new_token = secrets.token_hex(32)
 
 
-    # 카카오 신규가입 알림톡
+    # 카카오 신규가입: 추천인 처리 + 알림톡
 
     if is_new_user:
+
+        # state에서 ref 코드 추출
+        _state = request.args.get("state", "")
+        if _state:
+            try:
+                import base64 as _b64
+                _decoded = _b64.urlsafe_b64decode(_state.encode()).decode()
+                if _decoded.startswith("ref:"):
+                    _ref_code = _decoded[4:].strip().upper()
+                    if _ref_code:
+                        referrer = User.query.filter_by(referral_code=_ref_code).first()
+                        if referrer and referrer.id != user.id:
+                            user.referred_by = referrer.id
+                            db.session.commit()
+            except Exception:
+                pass
 
         try:
 
@@ -2596,7 +2841,7 @@ def kakao_callback():
 
     user.session_token = new_token
     db.session.commit()
-    
+
     session.clear()
 
     session["user_id"] = user.id
@@ -2607,7 +2852,7 @@ def kakao_callback():
 
     update_session_status(user.id)
 
-    
+
 
     state = request.args.get("state", "")
 
@@ -2618,6 +2863,10 @@ def kakao_callback():
             import base64
 
             next_url = base64.urlsafe_b64decode(state.encode()).decode()
+
+            if next_url.startswith("ref:"):
+
+                return redirect(url_for("index"))
 
             if next_url == "profitguard-event-apply":
 
@@ -2720,6 +2969,7 @@ def forgot_password():
         import string
         temp_pw = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
         user.pw_hash = generate_password_hash(temp_pw)
+        user.pg_api_token = None
         db.session.commit()
         
         html_body = f"""
@@ -2767,35 +3017,46 @@ def forgot_password():
 def change_password():
     if not session.get("user_id"):
         return redirect(url_for("login"))
-    
+
     user = User.query.get(session["user_id"])
     if not user:
         return redirect(url_for("login"))
-    
+
+    # 카카오 유저 중 비밀번호 미설정 상태
+    is_kakao_no_pw = bool(user.kakao_id and not user.pg_password_set)
+
     if request.method == "POST":
-        current_pw = (request.form.get("current_password") or "").strip()
         new_pw = (request.form.get("new_password") or "").strip()
         confirm_pw = (request.form.get("confirm_password") or "").strip()
-        
-        if not check_password_hash(user.pw_hash, current_pw):
-            flash("현재 비밀번호가 올바르지 않습니다.", "error")
-            return redirect(url_for("change_password"))
-        
+
+        # 카카오 유저(비번 미설정)는 현재 비밀번호 검증 스킵
+        if not is_kakao_no_pw:
+            current_pw = (request.form.get("current_password") or "").strip()
+            if not check_password_hash(user.pw_hash, current_pw):
+                flash("현재 비밀번호가 올바르지 않습니다.", "error")
+                return redirect(url_for("change_password"))
+
         if len(new_pw) < 6:
             flash("새 비밀번호는 6자 이상이어야 합니다.", "error")
             return redirect(url_for("change_password"))
-        
+
         if new_pw != confirm_pw:
             flash("새 비밀번호가 일치하지 않습니다.", "error")
             return redirect(url_for("change_password"))
-        
+
         user.pw_hash = generate_password_hash(new_pw)
+        user.pg_password_set = True
+        user.pg_api_token = None
+        # 세션 토큰 갱신 (다른 기기 로그아웃)
+        new_token = secrets.token_hex(32)
+        user.session_token = new_token
+        session["session_token"] = new_token
         db.session.commit()
-        
+
         flash("비밀번호가 변경되었습니다.", "success")
         return redirect(url_for("my_page"))
-    
-    return render_template("change_password.html")
+
+    return render_template("change_password.html", is_kakao_no_pw=is_kakao_no_pw)
 
 @app.route("/logout")
 def logout():
@@ -2846,27 +3107,30 @@ def admin_home():
     
     try:
         today_users = User.query.filter(db.func.date(User.created_at) == today).count()
-    except:
+    except Exception as e:
+        app.logger.error(f"admin_home today_users: {e}")
         today_users = 0
-    
+
     try:
         today_links = LinkRequest.query.filter(db.func.date(LinkRequest.created_at) == today).count()
-    except:
+    except Exception as e:
+        app.logger.error(f"admin_home today_links: {e}")
         today_links = 0
-    
+
     pending_links = LinkRequest.query.filter((LinkRequest.coupang_url == None) | (LinkRequest.coupang_url == "")).count()
-    
+
     try:
         pending_sellers = User.query.filter_by(seller_status="pending").count()
-    except:
+    except Exception as e:
+        app.logger.error(f"admin_home pending_sellers: {e}")
         pending_sellers = 0
-    
-    # [FIX #3] RevenueProof → RevenueRewardHistory 수정
+
     try:
         pending_rewards = RevenueRewardHistory.query.filter_by(status="pending").count()
-    except:
+    except Exception as e:
+        app.logger.error(f"admin_home pending_rewards: {e}")
         pending_rewards = 0
-    
+
     pending_posts = Post.query.filter_by(status="pending").count()
 
     # 인라인 액션용 실제 pending 객체
@@ -2886,10 +3150,15 @@ def admin_home():
         pending_reward_items = RevenueRewardHistory.query.filter_by(
             status="pending"
         ).order_by(desc(RevenueRewardHistory.id)).limit(3).all()
+        rw_user_ids = set(p.user_id for p in pending_reward_items if p.user_id)
+        rw_post_ids = set(p.post_id for p in pending_reward_items if p.post_id)
+        rw_users = {u.id: u for u in User.query.filter(User.id.in_(rw_user_ids)).all()} if rw_user_ids else {}
+        rw_posts = {p.id: p for p in CommunityPost.query.filter(CommunityPost.id.in_(rw_post_ids)).all()} if rw_post_ids else {}
         for p in pending_reward_items:
-            p._user = User.query.get(p.user_id)
-            p._post = CommunityPost.query.get(p.post_id)
-    except:
+            p._user = rw_users.get(p.user_id)
+            p._post = rw_posts.get(p.post_id)
+    except Exception as e:
+        app.logger.error(f"admin_home pending_reward_items: {e}")
         pending_reward_items = []
 
     return render_template("admin_home.html",
@@ -2901,7 +3170,6 @@ def admin_home():
         pending_sellers=pending_sellers,
         pending_rewards=pending_rewards,
         pending_posts=pending_posts,
-        pg_event_count=EventTrialApply.query.count() if EventTrialApply else 0,
 
         pending_link_items=pending_link_items,
         pending_seller_items=pending_seller_items,
@@ -2917,24 +3185,15 @@ def admin_home():
         recent_posts=Post.query.order_by(desc(Post.id)).limit(5).all()
     )
 
-@app.route("/admin/pending-posts")
-
-
-
 @app.route("/admin/event-trials")
-
 def admin_event_trials():
-
     if not is_admin():
-
         return redirect(url_for("admin_login"))
-
     trials = EventTrialApply.query.order_by(desc(EventTrialApply.created_at)).all()
-
     return render_template("admin_event_trials.html", trials=trials, total=len(trials))
 
 
-
+@app.route("/admin/pending-posts")
 def admin_pending_posts():
     if not is_admin():
         return redirect(url_for("admin_login"))
@@ -2995,21 +3254,23 @@ def admin_users():
         return redirect(url_for("admin_login"))
     
     users = User.query.order_by(desc(User.id)).all()
-    
+
     now = datetime.utcnow()
     subscriber_count = 0
     trial_count = 0
-    
-    for user in users:
-        active_sub = Subscription.query.filter(
-            Subscription.user_id == user.id,
+
+    # 활성 구독자 user_id 세트를 한 번에 조회 (N+1 방지)
+    active_sub_user_ids = set(
+        uid for (uid,) in db.session.query(Subscription.user_id).filter(
             Subscription.status == "active",
             (Subscription.expires_at == None) | (Subscription.expires_at > now)
-        ).first()
-        user.subscriber = active_sub is not None
-        
+        ).distinct().all()
+    )
+
+    for user in users:
+        user.subscriber = user.id in active_sub_user_ids
         user.is_trial = user.free_trial_expires and user.free_trial_expires > now
-        
+
         if user.subscriber:
             subscriber_count += 1
         elif user.is_trial:
@@ -3047,6 +3308,35 @@ def admin_stats():
         db.func.extract('month', PaymentHistory.paid_at) == today.month
     ).scalar()
     total_payments = PaymentHistory.query.filter_by(status="paid").count()
+
+    # 오늘 매출
+    revenue_today = db.session.query(db.func.coalesce(db.func.sum(PaymentHistory.amount), 0)).filter(
+        PaymentHistory.status == "paid",
+        db.func.date(PaymentHistory.paid_at) == today
+    ).scalar()
+
+    # 전월 매출 (성장률 계산용)
+    last_month_date = today.replace(day=1) - td(days=1)
+    revenue_last_month = db.session.query(db.func.coalesce(db.func.sum(PaymentHistory.amount), 0)).filter(
+        PaymentHistory.status == "paid",
+        db.func.extract('year', PaymentHistory.paid_at) == last_month_date.year,
+        db.func.extract('month', PaymentHistory.paid_at) == last_month_date.month
+    ).scalar()
+    mom_growth = round(((revenue_this_month - revenue_last_month) / revenue_last_month * 100), 1) if revenue_last_month > 0 else 0
+
+    # 이탈률 (최근 30일 내 만료/해지된 구독 / 전체 활성+만료 구독)
+    expired_30d = Subscription.query.filter(
+        Subscription.status != "active",
+        Subscription.expires_at >= now - td(days=30),
+        Subscription.expires_at <= now
+    ).count()
+    expired_active_30d = Subscription.query.filter(
+        (Subscription.expires_at >= now - td(days=30)) | (Subscription.status == "active")
+    ).count()
+    active_expired_30d = Subscription.query.filter(
+        Subscription.status == "active"
+    ).count() + expired_30d
+    churn_rate = round((expired_30d / active_expired_30d * 100), 1) if active_expired_30d > 0 else 0
 
     # 월별 매출 (최근 6개월)
     monthly_revenue = []
@@ -3118,6 +3408,30 @@ def admin_stats():
     # ── 인기 영상 TOP 5 ──
     popular_posts = Post.query.filter(Post.is_deleted != True).order_by(Post.view_count.desc()).limit(5).all()
 
+    # ── 최근 매출내역 (최근 10건) ──
+    recent_payments = PaymentHistory.query.filter_by(status="paid").order_by(desc(PaymentHistory.paid_at)).limit(10).all()
+    for p in recent_payments:
+        p._user = User.query.get(p.user_id)
+
+    # ── 제품별 판매 순위 ──
+    product_sales_raw = db.session.query(
+        PaymentHistory.plan_type,
+        db.func.count(PaymentHistory.id),
+        db.func.coalesce(db.func.sum(PaymentHistory.amount), 0)
+    ).filter_by(status="paid").group_by(PaymentHistory.plan_type).order_by(db.func.count(PaymentHistory.id).desc()).all()
+    product_sales = []
+    max_product_count = 0
+    for ps in product_sales_raw:
+        cnt = ps[1]
+        if cnt > max_product_count:
+            max_product_count = cnt
+        product_sales.append({
+            "plan_type": ps[0] or "기타",
+            "name": PLAN_INFO.get(ps[0], {}).get('name', ps[0] or '기타'),
+            "count": cnt,
+            "total": ps[2]
+        })
+
     return render_template("admin_stats.html",
         today=today,
         total_users=total_users,
@@ -3128,6 +3442,11 @@ def admin_stats():
         trial_users=trial_users,
         total_revenue=total_revenue,
         revenue_this_month=revenue_this_month,
+        revenue_today=revenue_today,
+        revenue_last_month=revenue_last_month,
+        mom_growth=mom_growth,
+        churn_rate=churn_rate,
+        expired_30d=expired_30d,
         total_payments=total_payments,
         monthly_revenue=monthly_revenue,
         max_monthly=max_monthly,
@@ -3148,6 +3467,9 @@ def admin_stats():
         community_comments=community_comments,
         community_likes=community_likes,
         popular_posts=popular_posts,
+        recent_payments=recent_payments,
+        product_sales=product_sales,
+        max_product_count=max_product_count,
     )
 
 @app.route("/admin/stats/download-csv")
@@ -3208,21 +3530,17 @@ def admin_gallery():
         return redirect(url_for("admin_login"))
     posts = Post.query.filter(Post.is_deleted != True).order_by(Post.id.desc()).all()
 
-    uploaders = {}
-
+    # 업로더/판매자 정보를 한 번에 조회 (N+1 방지)
+    uploader_ids = set()
     for p in posts:
-
-        if p.uploaded_by and p.uploaded_by not in uploaders:
-
-            u = db.session.get(User, p.uploaded_by)
-
-            uploaders[p.uploaded_by] = (u.nickname or u.email) if u else None
-
-        if p.seller_id and p.seller_id not in uploaders:
-
-            u = db.session.get(User, p.seller_id)
-
-            uploaders[p.seller_id] = (u.nickname or u.email) if u else None
+        if p.uploaded_by:
+            uploader_ids.add(p.uploaded_by)
+        if p.seller_id:
+            uploader_ids.add(p.seller_id)
+    uploaders = {}
+    if uploader_ids:
+        for u in User.query.filter(User.id.in_(uploader_ids)).all():
+            uploaders[u.id] = u.nickname or u.email
 
     categories = Category.query.filter(
 
@@ -3446,7 +3764,7 @@ def admin_gallery_bulk_delete():
         return jsonify({"error": "삭제할 항목이 없습니다"}), 400
     
     try:
-        count = Post.query.filter(Post.id.in_(ids)).delete(synchronize_session=False)
+        count = Post.query.filter(Post.id.in_(ids)).update({"is_deleted": True}, synchronize_session=False)
         db.session.commit()
         return jsonify({"ok": True, "count": count})
     except Exception as e:
@@ -3483,8 +3801,6 @@ def admin_edit(post_id):
         if not title:
             return jsonify({"ok": False, "error": "title_required"}), 400
         images = parse_json_list_field("images_json")
-        if not images:
-            return jsonify({"ok": False, "error": "images_required"}), 400
         p.title = title
         p.category = (request.form.get("category") or "all").strip()
         p.coupang_link = (request.form.get("coupang_link") or "").strip()
@@ -3492,6 +3808,11 @@ def admin_edit(post_id):
         p.links_json = json.dumps(parse_json_list_field("links_json"), ensure_ascii=False)
         p.tags_json = json.dumps(parse_json_list_field("tags_json"), ensure_ascii=False)
         p.is_free = request.form.get("is_free") == "on"
+        preview_video = (request.form.get("preview_video") or "").strip()
+        if preview_video:
+            p.preview_video = preview_video
+        elif not preview_video:
+            p.preview_video = ""
         db.session.commit()
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return jsonify({"ok": True, "redirect": next_url})
@@ -3516,9 +3837,6 @@ def admin_delete(post_id):
     flash("게시물이 삭제되었습니다. (복원 가능)", "success")
 
     return redirect(request.args.get("next") or url_for("admin_gallery"))
-    db.session.delete(Post.query.get_or_404(post_id))
-    db.session.commit()
-    return redirect(url_for("admin_posts"))
 
 
 # ----------------------------
@@ -3528,7 +3846,23 @@ def admin_delete(post_id):
 def admin_link_requests():
     if not is_admin():
         return redirect(url_for("admin_login"))
-    return render_template("admin_link_requests.html", items=LinkRequest.query.order_by(LinkRequest.id.desc()).all())
+    page = request.args.get("page", 1, type=int)
+    status_filter = request.args.get("status", "all")
+    search = (request.args.get("q") or "").strip()
+
+    query = LinkRequest.query
+    if status_filter == "pending":
+        query = query.filter((LinkRequest.coupang_url == None) | (LinkRequest.coupang_url == ""))
+    elif status_filter == "done":
+        query = query.filter(LinkRequest.coupang_url != None, LinkRequest.coupang_url != "")
+    if search:
+        query = query.filter(
+            (LinkRequest.requester_email.ilike(f"%{search}%")) |
+            (LinkRequest.original_url.ilike(f"%{search}%")) |
+            (LinkRequest.title.ilike(f"%{search}%"))
+        )
+    pagination = query.order_by(LinkRequest.id.desc()).paginate(page=page, per_page=30, error_out=False)
+    return render_template("admin_link_requests.html", items=pagination.items, pagination=pagination, status_filter=status_filter, search=search)
 
 
 @app.route("/api/link-request/<int:request_id>/update-url", methods=["POST"])
@@ -3542,6 +3876,8 @@ def api_link_request_update_url(request_id):
     coupang_url = (data.get("coupang_url") or "").strip()
     if not coupang_url:
         return jsonify({"ok": False, "error": "URL을 입력하세요."})
+    if not coupang_url.startswith(("http://", "https://")):
+        return jsonify({"ok": False, "error": "올바른 URL을 입력하세요."})
     it.coupang_url = coupang_url
     db.session.commit()
     user = User.query.filter_by(email=it.requester_email).first()
@@ -3551,7 +3887,7 @@ def api_link_request_update_url(request_id):
             type="link_completed",
             title="링크요청 완료",
             message=f"'{it.title}' 요청의 쿠팡 링크가 등록되었습니다!",
-            link="/link-requests/new"
+            link=f"/link-requests/{it.id}"
         ))
         db.session.commit()
     return jsonify({"ok": True})
@@ -3657,10 +3993,12 @@ def admin_store_new():
             description=(request.form.get("description") or "").strip(),
             image=(request.form.get("image") or "").strip(),
             file_url=(request.form.get("file_url") or "").strip(),
+            file_url2=(request.form.get("file_url2") or "").strip(),
             badge=(request.form.get("badge") or "").strip(),
             is_active=request.form.get("is_active") in ("on", "1")
         ))
         db.session.commit()
+        cache.delete("view//store")
         return redirect(url_for("admin_store"))
     return render_template("admin_store_new.html")
 
@@ -3677,9 +4015,11 @@ def admin_store_edit(product_id):
         p.description = (request.form.get("description") or "").strip()
         p.image = (request.form.get("image") or "").strip()
         p.file_url = (request.form.get("file_url") or "").strip()
+        p.file_url2 = (request.form.get("file_url2") or "").strip()
         p.badge = (request.form.get("badge") or "").strip()
         p.is_active = request.form.get("is_active") in ("on", "1")
         db.session.commit()
+        cache.delete("view//store")
         return redirect(url_for("admin_store"))
     return render_template("admin_store_edit.html", product=p)
 
@@ -3689,6 +4029,8 @@ def admin_store_delete(product_id):
         return redirect(url_for("admin_login"))
     db.session.delete(StoreProduct.query.get_or_404(product_id))
     db.session.commit()
+    cache.delete("view//store")
+    flash("상품이 삭제되었습니다.", "success")
     return redirect(url_for("admin_store"))
 
 
@@ -3793,9 +4135,9 @@ def api_upload_video():
     try:
         subprocess.run([
             '/usr/bin/ffmpeg', '-i', temp_input,
-            '-vf', 'scale=-2:720',
+            '-vf', 'scale=-2:1080',
             '-t', '60',
-            '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28',
+            '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '23',
             '-c:a', 'aac', '-b:a', '128k',
             '-movflags', '+faststart',
             '-y', temp_output
@@ -4047,9 +4389,16 @@ def admin_revenue_proofs():
         return redirect(url_for("admin_login"))
     
     proofs = RevenueRewardHistory.query.order_by(RevenueRewardHistory.created_at.desc()).all()
+
+    # 유저/게시물 한 번에 조회 (N+1 방지)
+    user_ids = set(p.user_id for p in proofs if p.user_id)
+    post_ids = set(p.post_id for p in proofs if p.post_id)
+    users_map = {u.id: u for u in User.query.filter(User.id.in_(user_ids)).all()} if user_ids else {}
+    posts_map = {p.id: p for p in CommunityPost.query.filter(CommunityPost.id.in_(post_ids)).all()} if post_ids else {}
     for p in proofs:
-        p.user = User.query.get(p.user_id)
-        p.post = CommunityPost.query.get(p.post_id)
+        p.user = users_map.get(p.user_id)
+        p.post = posts_map.get(p.post_id)
+
     return render_template("admin_revenue_proofs.html", proofs=proofs)
 
 # 관리자 - 판매자 신청 목록
@@ -4145,10 +4494,8 @@ def admin_revenue_reject(proof_id):
     ))
 
     post = CommunityPost.query.get(proof.post_id)
-
     if post:
-
-        post.reward_approved = False
+        post.reward_requested = False
 
     db.session.commit()
 
@@ -4567,6 +4914,8 @@ def api_gallery():
     sort = request.args.get("sort", "").strip()
 
     query = Post.query.filter(
+        Post.is_deleted != True
+    ).filter(
         (Post.status == "approved") | (Post.status == None) | (Post.status == "")
     )
 
@@ -4604,6 +4953,7 @@ def api_gallery_by_ids():
     ids = [int(i) for i in ids[:200]]
     posts = Post.query.filter(
         Post.id.in_(ids),
+        Post.is_deleted != True,
         (Post.status == "approved") | (Post.status == None) | (Post.status == "")
     ).all()
     id_to_post = {p.id: p.to_dict() for p in posts}
@@ -4643,13 +4993,12 @@ def my_rewards():
         return redirect(url_for("login"))
     
     user = User.query.get(session["user_id"])
-    
-    if not user.referral_code:
-        import random
-        import string
-        user.referral_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-        db.session.commit()
-    
+    if not user:
+        session.clear()
+        return redirect(url_for("login"))
+
+    ensure_referral_code(user)
+
     invited_users = User.query.filter_by(referred_by=user.id).all()
     
     revenue_posts = CommunityPost.query.filter_by(
@@ -4728,14 +5077,55 @@ def my_nickname():
         return redirect(url_for("login"))
     
     if request.method == "POST":
+        import re
         new_nickname = (request.form.get("nickname") or "").strip()
-        if new_nickname:
-            user.nickname = new_nickname
-            db.session.commit()
-            return redirect(url_for("my_page"))
-        return render_template("my_nickname.html", user=user, error="닉네임을 입력해주세요")
-    
+        # HTML 태그 제거
+        new_nickname = re.sub(r"<[^>]+>", "", new_nickname).strip()
+        if not new_nickname:
+            return render_template("my_nickname.html", user=user, error="닉네임을 입력해주세요")
+        if len(new_nickname) < 2 or len(new_nickname) > 20:
+            return render_template("my_nickname.html", user=user, error="닉네임은 2~20자로 입력해주세요")
+        # 중복 검사
+        exists = User.query.filter(User.nickname == new_nickname, User.id != user.id).first()
+        if exists:
+            return render_template("my_nickname.html", user=user, error="이미 사용 중인 닉네임입니다")
+        user.nickname = new_nickname
+        db.session.commit()
+        # 세션에 닉네임 반영
+        session["nickname"] = new_nickname
+        return redirect(url_for("my_page"))
+
     return render_template("my_nickname.html", user=user)
+
+
+# ----------------------------
+# 계정 탈퇴
+# ----------------------------
+@app.route("/api/account/withdraw", methods=["POST"])
+def account_withdraw():
+    if not session.get("user_id"):
+        return jsonify({"ok": False, "error": "로그인이 필요합니다."})
+
+    user = User.query.get(session["user_id"])
+    if not user:
+        return jsonify({"ok": False, "error": "유저를 찾을 수 없습니다."})
+
+    # 활성 구독이 있으면 탈퇴 불가
+    active_sub = Subscription.query.filter_by(user_id=user.id, status="active").first()
+    if active_sub:
+        return jsonify({"ok": False, "error": "활성 구독을 먼저 해지해주세요."})
+
+    # 소프트 삭제: 이메일 변경 + 비활성화
+    user.email = f"withdrawn_{user.id}_{user.email}"
+    user.pw_hash = ""
+    user.kakao_id = None
+    user.nickname = None
+    user.profile_photo = ""
+    user.session_token = None
+    db.session.commit()
+
+    session.clear()
+    return jsonify({"ok": True})
 
 
 # ----------------------------
@@ -4745,10 +5135,22 @@ def my_nickname():
 def my_payments():
     if not session.get("user_id"):
         return redirect(url_for("login"))
-    
-    payments = []
-    
-    return render_template("my_payments.html", payments=payments)
+
+    payments = PaymentHistory.query.filter_by(
+        user_id=session["user_id"]
+    ).order_by(PaymentHistory.paid_at.desc()).all()
+
+    # 스토어 구매 상품 정보 매핑
+    store_products = {}
+    for p in payments:
+        if p.plan_type and p.plan_type.startswith("store_") and p.status == "paid":
+            pid = p.plan_type.replace("store_", "")
+            if pid.isdigit() and int(pid) not in store_products:
+                product = StoreProduct.query.get(int(pid))
+                if product:
+                    store_products[int(pid)] = product
+
+    return render_template("my_payments.html", payments=payments, store_products=store_products)
 
 
 # ----------------------------
@@ -4842,8 +5244,8 @@ def deal_close(post_id):
     if post.author_email != session.get("user_email") and not session.get("admin"):
         return jsonify({"ok": False, "error": "no_permission"})
     
-    # [FIX #4] deal_closed → is_deal_available 사용
     post.is_deal_available = False
+    post.deal_closed = True
     db.session.commit()
     
     return jsonify({"ok": True})
@@ -5100,7 +5502,7 @@ def profitguard_event_apply():
 
 @app.route("/profitguard-event")
 def profitguard_event():
-    return render_template("profitguard_event.html")
+    return render_template("profitguard_event.html", is_logged_in=bool(session.get("user_id")))
 
 # --- onboarding quest ---
 @app.route("/api/onboarding/status")

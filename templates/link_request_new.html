@@ -7,11 +7,19 @@
 
   <!-- 헤더 -->
 
-  <a href="javascript:history.back()" class="text-zinc-500 hover:text-white transition text-sm mb-4 inline-block">← 뒤로가기</a>
+  <a href="/link-requests" class="text-zinc-500 hover:text-white transition text-sm mb-4 inline-block">← 뒤로가기</a>
 
   <h1 class="text-2xl font-black mb-1">링크요청 하기</h1>
 
   <p class="text-zinc-400 text-sm mb-6">오픈방 인증 후 원본 링크를 남겨주세요.</p>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-4 text-sm">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
 
   </div>
 
@@ -83,6 +91,7 @@
           <div>
             <label class="block text-sm text-yellow-200/70 font-bold mb-2">오픈방 닉네임 *</label>
             <input type="text" name="kakao_nickname" required
+                   value="{{ form_data.get('kakao_nickname', '') if form_data else '' }}"
                    placeholder="오픈채팅방에서 사용하는 닉네임"
                    class="w-full p-3 rounded-lg bg-black/50 border border-yellow-500/30 text-white focus:border-yellow-400 focus:outline-none transition"/>
           </div>
@@ -100,7 +109,8 @@
       <!-- 요청 정보 -->
       <div>
         <label class="block text-sm text-zinc-400 font-bold mb-2">요청 제목 *</label>
-        <input type="text" name="title" required
+        <input type="text" name="title" required maxlength="200"
+               value="{{ form_data.get('title', '') if form_data else '' }}"
                placeholder="예: 미국 주방용품 리뷰 영상"
                class="w-full p-4 rounded-lg bg-black border border-zinc-700 text-white focus:border-[#a3e635] focus:outline-none transition"/>
         <p class="text-zinc-500 text-xs mt-2">어떤 영상/상품인지 간단히 적어주세요.</p>
@@ -108,7 +118,8 @@
 
       <div>
         <label class="block text-sm text-zinc-400 font-bold mb-2">원본 링크 *</label>
-        <input type="url" name="original_url" required
+        <input type="url" name="original_url" required maxlength="2000"
+               value="{{ form_data.get('original_url', '') if form_data else '' }}"
                placeholder="https://..."
                class="w-full p-4 rounded-lg bg-black border border-zinc-700 text-white focus:border-[#a3e635] focus:outline-none transition"/>
         <p class="text-zinc-500 text-xs mt-2">해외 영상 링크, 상품 링크 등을 입력해주세요.</p>
@@ -134,7 +145,7 @@
 
       <!-- 버튼 -->
       <div class="flex gap-3 pt-2">
-        <button type="submit"
+        <button type="submit" id="submitBtn"
                 class="flex-1 bg-[#a3e635] text-black font-black py-4 rounded-lg hover:bg-white transition">
           요청하기 ({{ (monthly_limit or 3) - (monthly_used or 0) }}회 남음)
         </button>
@@ -145,6 +156,14 @@
       </div>
 
     </form>
+    <script>
+    document.querySelector('form').addEventListener('submit', function() {
+      var btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = '요청 중...';
+      btn.classList.add('opacity-50', 'cursor-not-allowed');
+    });
+    </script>
   {% endif %}
 
 </div>
@@ -167,7 +186,7 @@
           {% if it.coupang_url %}
             <span class="bg-[#c4ff00]/10 text-[#c4ff00] text-xs font-bold px-3 py-1 rounded-full shrink-0 ml-3">완료</span>
           {% else %}
-            <span class="bg-yellow-500/10 text-yellow-400 text-xs font-bold px-3 py-1 rounded-full shrink-0 ml-3">대기중</span>
+            <span class="bg-yellow-500/10 text-yellow-400 text-xs font-bold px-3 py-1 rounded-full shrink-0 ml-3 whitespace-nowrap">대기중</span>
           {% endif %}
         </div>
       </a>

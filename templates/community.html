@@ -5,27 +5,29 @@
 
 {% block head_extra %}
 <style>
-    .filter-btn { 
-      background: rgba(39, 39, 42, 0.5); 
+    .filter-btn {
+      background: rgba(39, 39, 42, 0.5);
       backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.1); 
-      color: #a1a1aa; 
-      transition: all .2s ease; 
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #a1a1aa;
+      transition: all .2s ease;
+      text-decoration: none;
+      display: inline-block;
     }
-    .filter-btn:hover { 
-      background: rgba(63, 63, 70, 0.6); 
+    .filter-btn:hover {
+      background: rgba(63, 63, 70, 0.6);
       border-color: rgba(255,255,255,0.2);
       color: #fff;
     }
-    .filter-btn.active { 
-      background: #fff; 
-      border-color: #fff; 
-      color: #000; 
+    .filter-btn.active {
+      background: #fff;
+      border-color: #fff;
+      color: #000;
       font-weight: 700;
     }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    
+
     .post-card {
       background: rgba(39, 39, 42, 0.5);
       border: 1px solid rgba(255,255,255,0.08);
@@ -35,7 +37,7 @@
       border-color: rgba(255,255,255,0.15);
       background: rgba(50, 50, 55, 0.6);
     }
-    
+
     .popular-card {
       background: rgba(39, 39, 42, 0.5);
       border: 1px solid rgba(255,255,255,0.08);
@@ -44,18 +46,32 @@
     .popular-card:hover {
       border-color: rgba(255,255,255,0.2);
     }
-    
-    /* 카테고리 색상 텍스트 */
+
     .cat-notice { color: #60a5fa; }
     .cat-deal { color: #fbbf24; }
     .cat-revenue { color: #34d399; }
     .cat-tips { color: #facc15; }
     .cat-qna { color: #a78bfa; }
     .cat-free { color: #9ca3af; }
+
+    .page-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 36px; height: 36px; padding: 0 10px;
+      border-radius: 8px; font-size: 14px; font-weight: 600;
+      background: rgba(39,39,42,0.5); border: 1px solid rgba(255,255,255,0.1);
+      color: #a1a1aa; transition: all .2s;
+      text-decoration: none;
+    }
+    .page-btn:hover { background: rgba(63,63,70,0.6); color: #fff; }
+    .page-btn.active { background: #c4ff00; border-color: #c4ff00; color: #000; }
+    .page-btn.disabled { opacity: 0.3; pointer-events: none; }
 </style>
 {% endblock %}
 
 {% block content %}
+
+{# URL 빌더: 카테고리/검색/페이지 조합 #}
+{% set _q = search or '' %}
 
 <!-- 헤더 -->
 <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
@@ -64,13 +80,11 @@
     <p class="text-zinc-400 mt-2 text-sm md:text-base">함께 성장하는 숏폼 수익화 커뮤니티</p>
   </div>
   <div class="flex items-center gap-2 shrink-0">
-    <!-- 카톡 오픈방 -->
     <a href="https://open.kakao.com/o/p5qEFCfi" target="_blank"
        class="bg-[#FEE500] text-[#3C1E1E] font-bold px-4 py-2.5 rounded-md hover:bg-[#FDD800] transition flex items-center gap-2 text-sm">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.83 1.89 5.29 4.68 6.68-.15.53-.53 1.94-.61 2.24-.1.37.14.37.29.27.12-.08 1.87-1.23 2.63-1.73.65.09 1.32.14 2.01.14 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/></svg>
       <span class="hidden md:inline">오픈방 입장</span><span class="md:hidden">오픈방</span>
     </a>
-    <!-- 글쓰기 -->
     <a href="/community/write"
        class="bg-[#c4ff00] text-black font-bold px-4 py-2.5 rounded-md hover:bg-white transition flex items-center gap-2 text-sm">
       <i class="fas fa-pen"></i> 글쓰기
@@ -79,13 +93,13 @@
 </div>
 
 <!-- 실시간 인기글 -->
-{% if posts|length > 0 %}
+{% if popular_posts|length > 0 %}
 <div class="mb-8">
   <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
     <span class="text-xl">🔥</span> 실시간 인기글
   </h2>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-    {% for p in posts[:3] %}
+    {% for p in popular_posts %}
     <a href="/community/{{ p.id }}" class="popular-card rounded-xl p-4 block">
       <span class="text-xs font-bold {% if p.category == 'notice' %}cat-notice{% elif p.category == 'deal' %}cat-deal{% elif p.category == 'revenue' %}cat-revenue{% elif p.category == 'tips' %}cat-tips{% elif p.category == 'qna' %}cat-qna{% else %}cat-free{% endif %}">
         {% if p.category == 'notice' %}📢 공지사항{% elif p.category == 'deal' %}🛍️ 공구/협찬{% elif p.category == 'revenue' %}💸 수익인증{% elif p.category == 'tips' %}💡 꿀팁공유{% elif p.category == 'qna' %}❓ 질문답변{% else %}💬 자유게시판{% endif %}
@@ -109,25 +123,25 @@
 <!-- 검색 결과 표시 -->
 {% if search %}
 <div class="mb-4 text-sm text-zinc-400">
-  "<span class="text-white">{{ search }}</span>" 검색 결과 <span class="text-[#c4ff00] font-bold">{{ posts|length }}</span>건
-  <a href="/community" class="text-zinc-500 hover:text-white ml-2 text-xs">[초기화]</a>
+  "<span class="text-white">{{ search }}</span>" 검색 결과 <span class="text-[#c4ff00] font-bold">{{ total }}</span>건
 </div>
 {% endif %}
 
 <!-- 카테고리 필터 + 검색 -->
 <div class="flex items-center gap-3 mb-6">
   <div class="flex gap-2 overflow-x-auto no-scrollbar flex-1">
-    <button class="filter-btn active px-4 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('all', this)">전체</button>
-    <button class="filter-btn px-4 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('notice', this)">공지사항</button>
-    <button class="filter-btn px-4 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('deal', this)">공구/협찬</button>
-    <button class="filter-btn px-4 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('revenue', this)">수익인증</button>
-    <button class="filter-btn px-4 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('tips', this)">꿀팁공유</button>
-    <button class="filter-btn px-4 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('qna', this)">질문답변</button>
-    <button class="filter-btn px-4 py-2 rounded-full text-sm whitespace-nowrap" onclick="filterPosts('free', this)">자유게시판</button>
+    <a href="/community" class="filter-btn {% if cat == 'all' %}active{% endif %} px-4 py-2 rounded-full text-sm whitespace-nowrap">전체</a>
+    <a href="/community?cat=notice" class="filter-btn {% if cat == 'notice' %}active{% endif %} px-4 py-2 rounded-full text-sm whitespace-nowrap">공지사항</a>
+    <a href="/community?cat=deal" class="filter-btn {% if cat == 'deal' %}active{% endif %} px-4 py-2 rounded-full text-sm whitespace-nowrap">공구/협찬</a>
+    <a href="/community?cat=revenue" class="filter-btn {% if cat == 'revenue' %}active{% endif %} px-4 py-2 rounded-full text-sm whitespace-nowrap">수익인증</a>
+    <a href="/community?cat=tips" class="filter-btn {% if cat == 'tips' %}active{% endif %} px-4 py-2 rounded-full text-sm whitespace-nowrap">꿀팁공유</a>
+    <a href="/community?cat=qna" class="filter-btn {% if cat == 'qna' %}active{% endif %} px-4 py-2 rounded-full text-sm whitespace-nowrap">질문답변</a>
+    <a href="/community?cat=free" class="filter-btn {% if cat == 'free' %}active{% endif %} px-4 py-2 rounded-full text-sm whitespace-nowrap">자유게시판</a>
   </div>
-  
-  <!-- 검색 -->
+
+  <!-- 데스크탑 검색 -->
   <form method="GET" action="/community" class="relative shrink-0 hidden md:block">
+    {% if cat and cat != 'all' %}<input type="hidden" name="cat" value="{{ cat }}">{% endif %}
     <input type="text" name="q" value="{{ search or '' }}" placeholder="검색"
            class="w-32 focus:w-48 bg-zinc-900 border border-zinc-700 rounded-full px-4 py-2 pr-9 text-white text-sm placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none transition-all duration-300">
     <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white">
@@ -138,6 +152,7 @@
 
 <!-- 모바일 검색 -->
 <form method="GET" action="/community" class="relative mb-6 md:hidden">
+  {% if cat and cat != 'all' %}<input type="hidden" name="cat" value="{{ cat }}">{% endif %}
   <input type="text" name="q" value="{{ search or '' }}" placeholder="검색어 입력"
          class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2.5 pr-10 text-white text-sm placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none">
   <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white">
@@ -148,20 +163,20 @@
 <!-- 게시글 리스트 -->
 <div id="postListSection" class="space-y-3">
   {% for p in posts %}
-  <a href="/community/{{ p.id }}" 
+  <a href="/community/{{ p.id }}"
      class="post-card post-item block rounded-xl p-4"
      data-category="{{ p.category }}">
-    
+
     <div class="flex items-start gap-3">
       <div class="flex-1 min-w-0">
         <span class="text-xs font-bold {% if p.category == 'notice' %}cat-notice{% elif p.category == 'deal' %}cat-deal{% elif p.category == 'revenue' %}cat-revenue{% elif p.category == 'tips' %}cat-tips{% elif p.category == 'qna' %}cat-qna{% else %}cat-free{% endif %}">
           {% if p.category == 'notice' %}📢 공지사항{% elif p.category == 'deal' %}🛍️ 공구/협찬{% elif p.category == 'revenue' %}💸 수익인증{% elif p.category == 'tips' %}💡 꿀팁공유{% elif p.category == 'qna' %}❓ 질문답변{% else %}💬 자유게시판{% endif %}
         </span>
-        
+
         {% if p.category == 'deal' %}{% if p.deal_closed or not p.is_deal_available %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">마감</span>{% elif p.deal_deadline and p.deal_deadline < now %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">기간마감</span>{% elif p.deal_max_people and p.applications|selectattr('status','equalto','approved')|list|length >= p.deal_max_people %}<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold ml-1">인원마감</span>{% else %}<span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded font-bold ml-1">진행중</span>{% endif %}{% endif %}
         <h3 class="text-white font-bold mt-2 mb-1 line-clamp-1">{{ p.title }}</h3>
         <p class="text-zinc-400 text-sm line-clamp-1">{{ p.content[:100] }}{% if p.content|length > 100 %}...{% endif %}</p>
-        
+
         <div class="flex items-center gap-3 mt-3 text-xs text-zinc-500">
           <span class="text-[#c4ff00]">♡ {{ post_likes.get(p.id, 0) }}</span>
           {% if p.comments and p.comments|length > 0 %}
@@ -171,7 +186,7 @@
           <span>{{ p.created_at.strftime('%m/%d') }}</span>
         </div>
       </div>
-      
+
       {% if p.images()|length > 0 %}
       <div class="shrink-0">
         <img src="{{ p.images()[0] }}" class="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg" alt="">
@@ -183,23 +198,40 @@
 
   {% if posts|length == 0 %}
   <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-10 text-center">
-    <div class="text-zinc-500 font-bold">{% if search %}검색 결과가 없습니다.{% else %}아직 글이 없어요. 첫 글을 써보세요!{% endif %}</div>
+    <div class="text-zinc-500 font-bold">{% if search %}"{{ search }}" 검색 결과가 없습니다.{% else %}아직 글이 없어요. 첫 글을 써보세요!{% endif %}</div>
   </div>
   {% endif %}
 </div>
 
-<script>
-function filterPosts(category, btn) {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+<!-- 페이지네이션 -->
+{% if total_pages > 1 %}
+{% set page_qs = ('cat=' + cat if cat != 'all' else '') + ('&q=' + search if search else '') %}
+{% set page_base = '/community?' + page_qs + ('&' if page_qs else '') %}
+<div class="flex justify-center items-center gap-2 mt-8">
+  {% if page > 1 %}
+  <a href="{{ page_base }}page={{ page - 1 }}" class="page-btn">
+    <i class="fas fa-chevron-left text-xs"></i>
+  </a>
+  {% else %}
+  <span class="page-btn disabled"><i class="fas fa-chevron-left text-xs"></i></span>
+  {% endif %}
 
-  document.querySelectorAll('#postListSection .post-item').forEach(card => {
-    if (category === 'all') {
-      card.style.display = 'block';
-    } else {
-      card.style.display = card.dataset.category === category ? 'block' : 'none';
-    }
-  });
-}
-</script>
+  {% set start_page = [1, page - 2]|max %}
+  {% set end_page = [total_pages, start_page + 4]|min %}
+  {% if end_page - start_page < 4 %}{% set start_page = [1, end_page - 4]|max %}{% endif %}
+
+  {% for pg in range(start_page, end_page + 1) %}
+  <a href="{{ page_base }}page={{ pg }}" class="page-btn {% if pg == page %}active{% endif %}">{{ pg }}</a>
+  {% endfor %}
+
+  {% if page < total_pages %}
+  <a href="{{ page_base }}page={{ page + 1 }}" class="page-btn">
+    <i class="fas fa-chevron-right text-xs"></i>
+  </a>
+  {% else %}
+  <span class="page-btn disabled"><i class="fas fa-chevron-right text-xs"></i></span>
+  {% endif %}
+</div>
+{% endif %}
+
 {% endblock %}

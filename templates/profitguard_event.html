@@ -141,53 +141,87 @@
   </section>
 
 
-  <!-- ====== 손실 시각화 섹션 ====== -->
+  <!-- ====== 손실 비교 섹션 ====== -->
   <section class="px-4 py-20 fade-in">
-    <div class="max-w-3xl mx-auto">
-
+    <div class="max-w-4xl mx-auto">
       <div class="text-center mb-12">
         <h2 class="text-3xl md:text-4xl font-black mb-4">
-          품절 링크 <span class="text-red-400">1개</span>가<br>
-          한 달에 얼마를 잃게 할까요?
+          지금 내 링크가 품절인지,<br>
+          <span class="text-red-400">알 수 있는 방법이 없습니다</span>
         </h2>
+        <p class="text-zinc-400 max-w-2xl mx-auto leading-relaxed">직접 인포크링크에 들어가서 하나씩 눌러보거나,<br>시청자가 "품절이에요" 댓글을 달아야 알 수 있습니다.<br><span class="text-zinc-500">그 사이 수익은 계속 새고 있어요.</span></p>
       </div>
-
-      <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 md:p-8">
-        <!-- 시뮬레이션 -->
-        <div class="space-y-6">
-          <div class="flex items-center justify-between py-3 border-b border-zinc-800">
-            <span class="text-zinc-400">하루 평균 클릭수</span>
-            <span class="text-white font-bold">약 50회</span>
+      <div class="grid md:grid-cols-2 gap-5">
+        <div class="bg-red-500/5 border border-red-500/20 rounded-2xl p-6 md:p-8">
+          <div class="flex items-center gap-2 mb-6">
+            <div class="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-400"><i class="fas fa-times"></i></div>
+            <h3 class="text-red-400 font-black">프로핏가드 없이</h3>
           </div>
-          <div class="flex items-center justify-between py-3 border-b border-zinc-800">
-            <span class="text-zinc-400">평균 전환율</span>
-            <span class="text-white font-bold">3~5%</span>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between py-2 border-b border-red-500/10">
+              <span class="text-zinc-400 text-sm">품절 확인 방법</span>
+              <span class="text-red-400 font-bold text-sm">직접 클릭 or 댓글</span>
+            </div>
+            <div class="flex items-center justify-between py-2 border-b border-red-500/10">
+              <span class="text-zinc-400 text-sm">발견까지 걸리는 시간</span>
+              <span class="text-red-400 font-bold">보통 며칠~몇 주</span>
+            </div>
+            <div class="flex items-center justify-between py-2 border-b border-red-500/10">
+              <span class="text-zinc-400 text-sm">링크 수십 개 관리</span>
+              <span class="text-red-400 font-bold">사실상 불가능</span>
+            </div>
+            <div class="flex items-center justify-between py-3 bg-red-500/10 rounded-xl px-4 -mx-1">
+              <span class="text-white font-bold text-sm">결과</span>
+              <span class="text-red-400 font-black">모르는 사이 수익 증발</span>
+            </div>
           </div>
-          <div class="flex items-center justify-between py-3 border-b border-zinc-800">
-            <span class="text-zinc-400">건당 수익</span>
-            <span class="text-white font-bold">약 500~1,500원</span>
-          </div>
-          <div class="flex items-center justify-between py-3 border-b border-zinc-800">
-            <span class="text-zinc-400">품절 방치 기간</span>
-            <span class="text-red-400 font-bold">평균 3~7일 (모르고 지나감)</span>
-          </div>
-          <div class="flex items-center justify-between py-4 bg-red-500/10 rounded-xl px-4 -mx-1">
-            <span class="text-zinc-300 font-bold">링크 1개 월 손실</span>
-            <span class="text-red-400 text-xl md:text-2xl font-black">₩30,000 ~ 150,000</span>
-          </div>
-          <div class="flex items-center justify-between py-4 bg-red-500/20 rounded-xl px-4 -mx-1 mt-3">
-            <span class="text-white font-bold">링크 10개면?</span>
-            <span class="text-red-400 text-2xl md:text-3xl font-black loss-counter">월 30만 ~ 150만원+</span>
-          </div>
-
-
-
-
         </div>
-
-        <p class="text-zinc-500 text-sm mt-6 text-center">
-          대부분 품절된 걸 모르고 며칠씩 방치합니다. 그 사이 수익은 계속 새고 있어요.
-        </p>
+        <div class="bg-[#c4ff00]/5 border border-[#c4ff00]/20 rounded-2xl p-6 md:p-8">
+          <div class="flex items-center gap-2 mb-6">
+            <div class="w-8 h-8 rounded-full bg-[#c4ff00]/10 flex items-center justify-center text-[#c4ff00]"><i class="fas fa-shield-alt"></i></div>
+            <h3 class="text-[#c4ff00] font-black">프로핏가드 사용</h3>
+          </div>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between py-2 border-b border-[#c4ff00]/10">
+              <span class="text-zinc-400 text-sm">품절 확인 방법</span>
+              <span class="text-[#c4ff00] font-bold text-sm">자동 감지 + 텔레그램 알림</span>
+            </div>
+            <div class="flex items-center justify-between py-2 border-b border-[#c4ff00]/10">
+              <span class="text-zinc-400 text-sm">발견까지 걸리는 시간</span>
+              <span class="text-[#c4ff00] font-bold">즉시</span>
+            </div>
+            <div class="flex items-center justify-between py-2 border-b border-[#c4ff00]/10">
+              <span class="text-zinc-400 text-sm">링크 수십 개 관리</span>
+              <span class="text-[#c4ff00] font-bold">자동으로 전부 체크</span>
+            </div>
+            <div class="flex items-center justify-between py-3 bg-[#c4ff00]/10 rounded-xl px-4 -mx-1">
+              <span class="text-white font-bold text-sm">결과</span>
+              <span class="text-[#c4ff00] font-black">바로 대체 상품 교체</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 금액 임팩트 -->
+      <div class="mt-8 bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 md:p-8">
+        <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-5 text-center">품절 방치 시 예상 손실</p>
+        <div class="grid grid-cols-3 gap-3 md:gap-6 text-center mb-5">
+          <div>
+            <p class="text-zinc-500 text-xs mb-1">하루 손실</p>
+            <p class="text-red-400 text-xl md:text-2xl font-black">~2,500원</p>
+            <p class="text-zinc-600 text-[10px]">링크 1개 기준</p>
+          </div>
+          <div>
+            <p class="text-zinc-500 text-xs mb-1">월 손실</p>
+            <p class="text-red-400 text-xl md:text-2xl font-black">~75,000원</p>
+            <p class="text-zinc-600 text-[10px]">링크 1개 기준</p>
+          </div>
+          <div>
+            <p class="text-zinc-500 text-xs mb-1">링크 10개면</p>
+            <p class="text-red-400 text-2xl md:text-3xl font-black">75만원+</p>
+            <p class="text-zinc-600 text-[10px]">매달 손실</p>
+          </div>
+        </div>
+        <p class="text-zinc-600 text-xs text-center">* 하루 클릭 50회, 전환율 3%, 건당 수익 1,500원 기준 추정치</p>
       </div>
     </div>
   </section>
@@ -381,7 +415,7 @@
         <div id="formArea">
           <div class="space-y-4">
             <div>
-              <div id="kakaoArea"><a href="/auth/kakao?next=profitguard-event-apply" class="w-full text-lg font-black py-4 rounded-xl mt-2 flex items-center justify-center gap-3" style="text-decoration:none;display:flex;background:#FEE500;color:#191919;border-radius:12px;"><svg width="22" height="22" viewBox="0 0 256 256"><path d="M128 36C70.6 36 24 72.7 24 118c0 29.3 19.5 55 48.8 69.5l-10 36.8c-.8 2.9 2.5 5.3 5 3.6l42.8-28.5c5.7.7 11.5 1.1 17.4 1.1 57.4 0 104-36.7 104-82.5S185.4 36 128 36z" fill="#191919"/></svg>카카오로 무료체험 시작하기</a></div><div id="loggedInArea" class="hidden"><button id="applyBtn" onclick="applyLoggedIn()" class="cta-btn w-full text-lg font-black py-4 rounded-xl mt-2">무료체험 신청하기</button></div>
+              <div id="kakaoArea" {% if is_logged_in %}class="hidden"{% endif %}><a href="/auth/kakao?next=profitguard-event-apply" class="w-full text-lg font-black py-4 rounded-xl mt-2 flex items-center justify-center gap-3" style="text-decoration:none;display:flex;background:#FEE500;color:#191919;border-radius:12px;"><svg width="22" height="22" viewBox="0 0 256 256"><path d="M128 36C70.6 36 24 72.7 24 118c0 29.3 19.5 55 48.8 69.5l-10 36.8c-.8 2.9 2.5 5.3 5 3.6l42.8-28.5c5.7.7 11.5 1.1 17.4 1.1 57.4 0 104-36.7 104-82.5S185.4 36 128 36z" fill="#191919"/></svg>카카오로 무료체험 시작하기</a></div><div id="loggedInArea" {% if not is_logged_in %}class="hidden"{% endif %}><button id="applyBtn" onclick="applyLoggedIn()" class="cta-btn w-full text-lg font-black py-4 rounded-xl mt-2">무료체험 신청하기</button></div>
 
           <p class="text-zinc-600 text-xs text-center mt-4">
             신청 완료 시 카카오톡으로 안내가 발송됩니다.
@@ -390,6 +424,30 @@
 
         <!-- 성공 메시지 (숨김) -->
         <div id="successArea" class="hidden text-center py-8"><div class="text-5xl mb-4">🎉</div><h3 class="text-2xl font-black text-[#c4ff00] mb-4">신청 완료!</h3><div class="bg-zinc-800/50 rounded-xl p-5 mb-5 text-left"><div class="flex items-center gap-2 mb-3"><span class="text-lg">📩</span><p class="text-zinc-300 text-sm font-medium">카카오톡으로 로그인 정보가 발송되었습니다</p></div><div class="flex items-center gap-2 mb-3"><span class="text-lg">⬇️</span><p class="text-zinc-300 text-sm font-medium">아래 버튼을 눌러 프로핏가드를 다운로드하세요</p></div><div class="flex items-center gap-2"><span class="text-lg">🔑</span><p class="text-zinc-300 text-sm font-medium">카톡으로 받은 이메일/비밀번호로 로그인</p></div></div><a href="/profitguard" class="cta-btn inline-block text-lg font-black px-10 py-4 rounded-xl" style="text-decoration:none;">프로핏가드 다운로드 →</a><div class="bg-zinc-800/50 rounded-xl p-4 mt-5"><p class="text-zinc-500 text-sm">문의사항은 인스타그램 DM으로 연락주세요</p></div></div>
+
+        <!-- 마감 후 유료 구독 안내 (숨김) -->
+        <div id="closedArea" class="hidden text-center py-8">
+          <div class="text-5xl mb-4">🔥</div>
+          <h3 class="text-2xl font-black text-white mb-3">무료체험 100명 마감!</h3>
+          <p class="text-zinc-400 text-sm mb-6 leading-relaxed">선착순 무료체험은 마감되었지만,<br>프로핏가드는 유료 구독으로 바로 시작할 수 있습니다.</p>
+          <div class="bg-zinc-800/50 rounded-xl p-5 mb-6 text-left space-y-3">
+            <div class="flex items-center gap-3">
+              <span class="text-[#c4ff00] text-lg shrink-0">✓</span>
+              <p class="text-zinc-300 text-sm"><span class="text-white font-bold">Lite 19,000원/월</span> — 1회 즉시 검사 + 엑셀 관리</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-[#c4ff00] text-lg shrink-0">✓</span>
+              <p class="text-zinc-300 text-sm"><span class="text-white font-bold">Pro 39,000원/월</span> — 24시간 실시간 감시 + 텔레그램 알림</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-purple-400 text-lg shrink-0">✓</span>
+              <p class="text-zinc-300 text-sm"><span class="text-white font-bold">평생 이용권 200,000원</span> — 1회 결제로 영구 사용</p>
+            </div>
+          </div>
+          <a href="/profitguard#pricing" class="cta-btn inline-block text-lg font-black px-10 py-4 rounded-xl" style="text-decoration:none;">구독 플랜 보러가기 →</a>
+          <p class="text-zinc-600 text-xs mt-4">프로핏가드 페이지에서 상세 기능과 가격을 확인하세요</p>
+        </div>
+      </div>
   </section>
 
 
@@ -445,12 +503,13 @@
         document.getElementById('progressText').className = 'text-zinc-600 text-xs mt-2';
       }
 
-      // 마감 시
+      // 마감 시 — 유료 구독 안내로 전환
       if (remain <= 0) {
         document.getElementById('formArea').classList.add('hidden');
         document.getElementById('closedArea').classList.remove('hidden');
-        document.getElementById('ctaHero').disabled = true;
-        document.getElementById('ctaHero').textContent = '무료체험 마감';
+        var ctaBtn = document.getElementById('ctaHero');
+        ctaBtn.textContent = '유료 구독 알아보기 →';
+        ctaBtn.onclick = function() { window.location.href = '/profitguard#pricing'; };
       }
     }
 
@@ -522,7 +581,7 @@
     // ============ 초기 로드 ============
     if(new URLSearchParams(window.location.search).get("applied")==="1"){setTimeout(()=>{const f=document.getElementById("formArea");const s=document.getElementById("successArea");document.getElementById("kakaoArea").style.display="none";document.getElementById("loggedInArea").style.display="none";if(s)s.classList.remove("hidden");loadCount();},300);}
 
-    (async function(){try{const r=await fetch("/api/me");const d=await r.json();if(d.ok&&d.user_id){const ka=document.getElementById("kakaoArea");const la=document.getElementById("loggedInArea");if(ka)ka.classList.add("hidden");if(la)la.classList.remove("hidden");}}catch(e){}})();
+    // 로그인 상태는 서버사이드 Jinja로 처리 (깜빡임 없음)
 
     function showModal(t,m,e){const o=document.createElement('div');o.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;';const b=document.createElement('div');b.style.cssText='background:#18181b;border:1px solid #333;border-radius:16px;padding:32px;max-width:380px;width:90%;text-align:center;';b.innerHTML='<div style="font-size:40px;margin-bottom:12px;">'+(e?'\u26a0\ufe0f':'\u2705')+'</div><div style="font-size:18px;font-weight:800;color:'+(e?'#ef4444':'#c4ff00')+';margin-bottom:8px;">'+t+'</div><div style="color:#a1a1aa;font-size:14px;line-height:1.6;margin-bottom:20px;">'+m+'</div><button style="background:#c4ff00;color:#000;font-weight:700;padding:10px 32px;border-radius:10px;border:none;cursor:pointer;font-size:15px;" onclick="this.closest(\'div[style]\').parentElement.remove()">\ud655\uc778</button>';o.appendChild(b);o.onclick=function(ev){if(ev.target===o)o.remove();};document.body.appendChild(o);}
 

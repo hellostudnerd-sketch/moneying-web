@@ -1,434 +1,487 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ADMIN - {{ "수정" if post else "새 글" }}</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-[#050505] text-white">
-  <div class="max-w-4xl mx-auto px-4 py-10">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-black">갤러리 글 {{ "수정" if post else "등록" }}</h1>
-      <div class="flex gap-2">
-        <a href="{{ next_url or request.args.get('next', '/admin/gallery') }}" class="bg-zinc-800 px-4 py-2 rounded-lg font-black">목록</a>
+{% extends "admin_base.html" %}
+{% block title %}게시물 수정 - MONEYING Admin{% endblock %}
+{% block page_title %}게시물 수정{% endblock %}
+{% block page_desc %}#{{ post.id }} {{ post.title }}{% endblock %}
+
+{% block page_actions %}
+<a href="{{ next_url or '/admin/gallery' }}" class="px-4 py-2 rounded-xl bg-zinc-800 text-gray-200 hover:bg-zinc-700 transition font-bold">
+  ← 뒤로가기
+</a>
+{% endblock %}
+
+{% block head_extra %}
+<style>
+  .dropzone.dragover { border-color:#a3e635; box-shadow:0 0 0 3px rgba(163,230,53,0.15); }
+</style>
+{% endblock %}
+
+{% block content_admin %}
+<div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 md:p-8">
+  <div class="grid md:grid-cols-2 gap-6">
+
+    <div>
+      <label class="text-xs font-black tracking-widest text-zinc-500 uppercase">카테고리</label>
+      <div class="flex gap-2 mt-2">
+        <select id="category" class="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white font-bold focus:border-[#a3e635] focus:outline-none">
+          <option value="all">전체</option>
+          {% for cat in categories %}
+            <option value="{{ cat.key }}" {{ "selected" if post.category == cat.key else "" }}>{{ cat.name }}</option>
+          {% endfor %}
+        </select>
+        <button type="button" onclick="openCategoryModal()" class="px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white hover:bg-zinc-700 transition" title="카테고리 추가">
+          +
+        </button>
       </div>
+
+      <label class="block mt-6 text-xs font-black tracking-widest text-zinc-500 uppercase">제목</label>
+      <input id="title" type="text" value="{{ post.title or '' }}" placeholder="예: 머리카락 잘 빠지는 빗"
+             class="mt-2 w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white font-black focus:border-[#a3e635] focus:outline-none"/>
+
+      <label class="block mt-6 text-xs font-black tracking-widest text-zinc-500 uppercase">쿠팡 링크(선택)</label>
+      <input id="coupang" type="text" value="{{ post.coupang_link or '' }}" placeholder="link.coupang.com/a/..."
+             class="mt-2 w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white font-bold focus:border-[#a3e635] focus:outline-none"/>
+
+      <label class="block mt-6 text-xs font-black tracking-widest text-zinc-500 uppercase">참고 링크 최대 3개</label>
+      <p class="text-zinc-500 text-xs mt-1 mb-2">틱톡, 도우인, 인스타, 유튜브, 샤오홍슈, 네이버 MYBOX 등 모든 링크 지원</p>
+      <input id="link1" type="text" placeholder="링크 1"
+             value="{{ (post_data['links'][0]) if post_data and (post_data['links']|length>0) else '' }}"
+             class="mt-2 w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none"/>
+      <input id="link2" type="text" placeholder="링크 2"
+             value="{{ (post_data['links'][1]) if post_data and (post_data['links']|length>1) else '' }}"
+             class="mt-2 w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none"/>
+      <input id="link3" type="text" placeholder="링크 3"
+             value="{{ (post_data['links'][2]) if post_data and (post_data['links']|length>2) else '' }}"
+             class="mt-2 w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none"/>
+
+      <div class="mt-6 p-4 bg-zinc-900/50 border border-zinc-700 rounded-xl">
+        <label class="flex items-center gap-3 cursor-pointer">
+          <input id="isFree" type="checkbox" class="w-5 h-5 accent-[#a3e635]" {{ "checked" if post.is_free else "" }}/>
+          <div>
+            <span class="font-black text-white">무료 공개</span>
+            <p class="text-xs text-zinc-500 mt-1">체크하면 비구독자도 볼 수 있어요</p>
+          </div>
+        </label>
+      </div>
+
+      <div id="tagBox" class="hidden"></div>
     </div>
 
-    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
-      <form id="postForm">
-        <input type="hidden" name="post_id" value="{{ post.id if post else '' }}"/>
-        <input type="hidden" name="images_json" id="images_json"/>
-        <input type="hidden" name="links_json" id="links_json"/>
-        <input type="hidden" name="tags_json" id="tags_json"/>
-        <input type="hidden" name="preview_video" id="preview_video" value="{{ post.preview_video if post else '' }}"/>
+    <div>
+      <div class="flex flex-col h-full">
+      <label class="text-xs font-black tracking-widest text-zinc-500 uppercase">미리보기 영상 업로드</label>
+      <p class="text-zinc-500 text-xs mt-1 mb-3">1080p로 자동 압축, 최대 60초</p>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="text-sm font-black text-zinc-300">카테고리</label>
-            <select name="category" class="mt-2 w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-3">
-              {% set cat = post.category if post else "all" %}
-              {% for c in categories %}
-              <option value="{{ c.key }}" {{ "selected" if cat == c.key else "" }}>{{ c.name }}</option>
-              {% endfor %}
-            </select>
+      <div class="grid grid-cols-2 gap-3 items-stretch">
+        <!-- 영상 -->
+        <div id="videoDropzone" class="border-2 border-dashed border-zinc-700 rounded-2xl p-4 bg-zinc-950/40 flex flex-col min-h-[400px]">
+          <p class="text-sm font-black text-zinc-300 mb-2">영상</p>
+
+          <div id="videoUploadArea" class="flex-1 flex flex-col items-center justify-center text-center cursor-pointer {{ 'hidden' if post.preview_video else '' }}">
+            <i class="fas fa-video text-2xl text-[#a3e635] mb-2"></i>
+            <p class="font-black text-sm">드래그앤드롭으로 영상 올리기</p>
+            <p class="text-xs text-zinc-500 mt-1">또는 클릭해서 선택</p>
+            <input id="videoInput" type="file" accept="video/*" class="hidden"/>
           </div>
 
-          <div>
-            <label class="text-sm font-black text-zinc-300">쿠팡 링크</label>
-            <input name="coupang_link" value="{{ post.coupang_link if post else '' }}"
-              class="mt-2 w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-3"
-              placeholder="https://link.coupang.com/a/..." />
-          </div>
-        </div>
-
-        <div class="mt-4">
-          <label class="text-sm font-black text-zinc-300">제목</label>
-          <input id="title" name="title" value="{{ post.title if post else '' }}"
-            class="mt-2 w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-3"
-            placeholder="예: 머리카락 잘 빠지는 빗" />
-          
-        </div>
-
-        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label class="text-sm font-black text-zinc-300">참고 링크 1</label>
-            <input id="link1" name="link1"
-              value="{{ (post_data['links'][0]) if post_data and (post_data['links']|length>0) else '' }}"
-              class="mt-2 w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-3" placeholder="https://..."/>
-          </div>
-          <div>
-            <label class="text-sm font-black text-zinc-300">참고 링크 2</label>
-            <input id="link2" name="link2"
-              value="{{ (post_data['links'][1]) if post_data and (post_data['links']|length>1) else '' }}"
-              class="mt-2 w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-3" placeholder="https://..."/>
-          </div>
-          <div>
-            <label class="text-sm font-black text-zinc-300">참고 링크 3</label>
-            <input id="link3" name="link3"
-              value="{{ (post_data['links'][2]) if post_data and (post_data['links']|length>2) else '' }}"
-              class="mt-2 w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-3" placeholder="https://..."/>
-          </div>
-        </div>
-
-        <!-- ✅ 무료 공개 체크박스 -->
-        <div class="mt-6 p-4 bg-zinc-950/60 border border-zinc-800 rounded-lg">
-          <label class="flex items-center gap-3 cursor-pointer">
-            <input id="isFree" name="is_free" type="checkbox" class="w-5 h-5 accent-[#a3e635]"
-                   {{ "checked" if post and post.is_free else "" }}/>
-            <div>
-              <span class="font-black text-white">무료 공개</span>
-              <p class="text-xs text-zinc-500 mt-1">체크하면 비구독자도 볼 수 있어요</p>
+          <div id="videoPreviewArea" class="flex-1 flex flex-col {{ '' if post.preview_video else 'hidden' }}">
+            <video id="previewVideo" src="{{ post.preview_video or '' }}" class="w-full flex-1 bg-black rounded-lg object-contain" controls controlsList="nodownload"></video>
+            <div class="mt-2 flex gap-2">
+              <button type="button" id="captureThumbBtn" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white px-2 py-1.5 rounded-lg text-xs font-bold">📸 썸네일로</button>
+              <button type="button" id="removeVideo" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded-lg text-xs font-bold">삭제</button>
             </div>
+          </div>
+          <canvas id="captureCanvas" class="hidden"></canvas>
+        </div>
+
+        <!-- 썸네일 -->
+        <div id="thumbSection" class="border-2 border-dashed border-zinc-700 rounded-2xl p-4 bg-zinc-950/40 flex flex-col min-h-[400px] {{ '' if post.preview_video else 'opacity-50' }}">
+          <p class="text-sm font-black text-zinc-300 mb-2">썸네일</p>
+
+          <div class="flex-1 flex items-center justify-center">
+            {% set current_thumb = post_data['images'][0] if post_data and post_data['images'] and post_data['images']|length > 0 else '' %}
+            <img id="thumbImg" src="{{ current_thumb }}" class="max-h-full max-w-full object-contain rounded-lg border border-zinc-700 {{ '' if current_thumb else 'hidden' }}" />
+            <div id="thumbPlaceholder" class="text-center text-zinc-500 {{ 'hidden' if current_thumb else '' }}">
+              <div class="text-2xl mb-2">🖼️</div>
+              <div class="text-xs">영상 업로드 시<br>자동 생성됩니다</div>
+            </div>
+          </div>
+
+          <label id="thumbChangeBtn" class="mt-2 bg-zinc-700 hover:bg-zinc-600 text-white px-2 py-1.5 rounded-lg text-xs font-bold text-center cursor-pointer {{ '' if post.preview_video else 'hidden' }}">
+            🖼️ 변경
+            <input type="file" id="thumbInput" accept="image/*" class="hidden" />
           </label>
         </div>
+      </div>
 
-        <!-- 미리보기 영상 & 썸네일 -->
-        <div class="mt-8">
-          <label class="text-sm font-black text-zinc-300">미리보기 영상 업로드</label>
-          <p class="text-xs text-zinc-500 mt-1">720p로 자동 압축, 최대 60초</p>
-          
-          <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-            <!-- 왼쪽: 영상 업로드 -->
-            <div id="videoDropzone" class="border-2 border-dashed border-zinc-700 rounded-2xl p-6 bg-zinc-950/40 flex flex-col">
-              <p class="text-sm font-black text-zinc-300 mb-3">영상</p>
-              
-              <div id="videoUploadArea" class="flex-1 flex flex-col items-center justify-center {{ 'hidden' if post and post.preview_video else '' }}">
-                <div class="text-sm font-black">영상을 드래그&드롭</div>
-                <div class="text-[11px] text-zinc-500 mt-2">또는 클릭해서 선택 (mp4/mov/webm)</div>
-                <input id="videoInput" type="file" accept="video/*" class="hidden"/>
-                <button type="button" id="videoPickBtn" class="mt-4 bg-purple-500 text-white font-black px-4 py-2 rounded-lg">
-                  영상 선택
-                </button>
-              </div>
-              
-              <!-- 업로드 진행 -->
-              <div id="videoProgress" class="hidden flex-1 flex flex-col items-center justify-center">
-                <div class="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-                <span class="text-sm text-zinc-400 mt-3">영상 압축 및 업로드 중...</span>
-              </div>
-              
-              <!-- 업로드된 영상 미리보기 -->
-              <div id="videoPreviewArea" class="flex-1 flex flex-col {{ '' if post and post.preview_video else 'hidden' }}">
-                <video id="videoPreview" src="{{ post.preview_video if post and post.preview_video else '' }}" 
-                  class="w-full aspect-[9/16] bg-black rounded-lg object-contain" controls></video>
-                <div class="mt-3 flex gap-2">
-                  <button type="button" id="captureThumbBtn" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-bold">📸 이 장면을 썸네일로</button>
-                  <button type="button" id="videoDeleteBtn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-bold">삭제</button>
-                </div>
-              </div>
-              <canvas id="captureCanvas" class="hidden"></canvas>
-            </div>
-            
-            <!-- 오른쪽: 썸네일 -->
-            <div id="thumbSection" class="border-2 border-dashed border-zinc-700 rounded-2xl p-6 bg-zinc-950/40 flex flex-col {{ '' if post and post.preview_video else 'opacity-50' }}">
-              <p class="text-sm font-black text-zinc-300 mb-3">썸네일</p>
-              
-              <div class="flex-1 flex items-center justify-center">
-                <img id="thumbPreview" src="{{ post_data['images'][0] if post_data and post_data['images'] and post_data['images']|length > 0 else (post.preview_video.replace('.mp4', '_thumb.webp') if post and post.preview_video else '') }}" 
-                  class="max-h-full aspect-[9/16] object-cover rounded-lg border border-zinc-700 {{ '' if post and post.preview_video else 'hidden' }}" />
-                <div id="thumbPlaceholder" class="text-center text-zinc-500 {{ 'hidden' if post and post.preview_video else '' }}">
-                  <div class="text-3xl mb-2">🖼️</div>
-                  <div class="text-xs">영상 업로드 시<br>자동 생성됩니다</div>
-                </div>
-              </div>
-              
-              <label id="thumbChangeBtn" class="mt-3 bg-zinc-700 hover:bg-zinc-600 text-white px-3 py-2 rounded-lg text-sm font-bold text-center cursor-pointer {{ '' if post and post.preview_video else 'hidden' }}">
-                🖼️ 다른 이미지로 변경
-                <input type="file" id="thumbInput" accept="image/*" class="hidden" />
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-3 text-sm font-bold text-zinc-400" id="msg"></div>
-
-        <div class="mt-8 flex gap-3">
-          <button type="submit" class="flex-1 bg-lime-400 text-black font-black py-3 rounded-xl">
-            저장하기
-          </button>
-          <a href="{{ next_url }}" class="flex-1 bg-zinc-800 font-black py-3 rounded-xl text-center">
-            취소
-          </a>
-        </div>
-      </form>
+      <button id="saveBtn" class="mt-4 w-full bg-[#a3e635] text-black py-4 rounded-xl font-black text-lg hover:bg-white transition">
+        수정하기
+      </button>
+      <div id="msg" class="mt-2 text-sm font-bold text-zinc-400"></div>
     </div>
+
+      <!-- 업로드 진행 상태 -->
+      <div id="uploadProgress" class="mt-4 hidden">
+        <div class="flex items-center gap-3">
+          <div class="w-full bg-zinc-800 rounded-full h-2">
+            <div id="progressBar" class="bg-[#a3e635] h-2 rounded-full transition-all" style="width: 0%"></div>
+          </div>
+          <span id="progressText" class="text-xs text-zinc-400">0%</span>
+        </div>
+        <p id="uploadStatus" class="text-xs text-zinc-500 mt-2">영상 압축 중...</p>
+      </div>
+
+    </div>
+
   </div>
+</div>
 
-  <script>
-    const existing = {{ (post_data["images"] if post_data else []) | tojson }};
-    let images = [...existing];
-    let uploading = false;
+<!-- 카테고리 추가 모달 -->
+<div id="categoryModal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4">
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-md">
+    <h3 class="text-xl font-black mb-4">카테고리 추가</h3>
+    <form id="categoryForm">
+      <div class="mb-4">
+        <label class="block text-sm font-bold text-zinc-400 mb-2">카테고리 이름</label>
+        <input type="text" id="catName" required placeholder="예: 패션, Food, 리빙용품"
+               class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none">
+        <p class="text-xs text-zinc-500 mt-2">한글/영문 모두 가능</p>
+      </div>
 
-    const imagesJsonInput = document.getElementById("images_json");
-    const linksJsonInput  = document.getElementById("links_json");
-    const tagsJsonInput   = document.getElementById("tags_json");
-    const previewVideoInput = document.getElementById("preview_video");
-    const msg = document.getElementById("msg");
+      <div class="flex gap-3">
+        <button type="button" onclick="closeCategoryModal()" class="flex-1 py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition">
+          취소
+        </button>
+        <button type="submit" class="flex-1 py-3 bg-[#a3e635] text-black font-black rounded-xl hover:bg-white transition">
+          추가
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 
-    // 영상 업로드 관련
-    const videoDropzone = document.getElementById("videoDropzone");
-    const videoInput = document.getElementById("videoInput");
-    const videoPickBtn = document.getElementById("videoPickBtn");
-    const videoProgress = document.getElementById("videoProgress");
-    const videoUploadArea = document.getElementById("videoUploadArea");
-    const videoPreviewArea = document.getElementById("videoPreviewArea");
-    const videoPreview = document.getElementById("videoPreview");
-    const videoDeleteBtn = document.getElementById("videoDeleteBtn");
-    const thumbSection = document.getElementById("thumbSection");
-    const thumbPreview = document.getElementById("thumbPreview");
-    const thumbInput = document.getElementById("thumbInput");
-    const thumbPlaceholder = document.getElementById("thumbPlaceholder");
-    const thumbChangeBtn = document.getElementById("thumbChangeBtn");
-    const captureThumbBtn = document.getElementById("captureThumbBtn");
-    const captureCanvas = document.getElementById("captureCanvas");
+<script>
+  const videoDropzone = document.getElementById("videoDropzone");
+  const videoInput = document.getElementById("videoInput");
+  const videoUploadArea = document.getElementById("videoUploadArea");
+  const videoPreviewArea = document.getElementById("videoPreviewArea");
+  const previewVideo = document.getElementById("previewVideo");
+  const removeVideoBtn = document.getElementById("removeVideo");
+  const thumbSection = document.getElementById("thumbSection");
+  const thumbImg = document.getElementById("thumbImg");
+  const thumbInput = document.getElementById("thumbInput");
+  const thumbChangeBtn = document.getElementById("thumbChangeBtn");
+  const thumbPlaceholder = document.getElementById("thumbPlaceholder");
+  const captureThumbBtn = document.getElementById("captureThumbBtn");
+  const captureCanvas = document.getElementById("captureCanvas");
+  const uploadProgress = document.getElementById("uploadProgress");
+  const progressBar = document.getElementById("progressBar");
+  const progressText = document.getElementById("progressText");
+  const uploadStatus = document.getElementById("uploadStatus");
+  const msg = document.getElementById("msg");
+  const saveBtn = document.getElementById("saveBtn");
+  const titleEl = document.getElementById("title");
+  const tagBox = document.getElementById("tagBox");
 
-    function normalizeUrl(u) {
-      if (!u) return "";
-      let s = (u || "").trim();
-      if (!s) return "";
-      if (!/^https?:\/\//i.test(s)) s = "https://" + s.replace(/^\/+/, "");
-      return s;
+  let uploadedVideoUrl = "{{ post.preview_video or '' }}";
+  let uploadedThumbUrl = "{{ (post_data['images'][0]) if post_data and post_data['images'] and post_data['images']|length > 0 else '' }}";
+
+  // 카테고리 모달
+  function openCategoryModal() {
+    document.getElementById('categoryModal').classList.remove('hidden');
+    document.getElementById('categoryModal').classList.add('flex');
+  }
+  function closeCategoryModal() {
+    document.getElementById('categoryModal').classList.add('hidden');
+    document.getElementById('categoryModal').classList.remove('flex');
+    document.getElementById('catName').value = '';
+  }
+
+  document.getElementById('categoryForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('catName').value.trim();
+    const key = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_가-힣]/g, '');
+
+    const fd = new FormData();
+    fd.append('key', key);
+    fd.append('name', name);
+
+    const res = await fetch('/admin/categories/add', { method: 'POST', body: fd });
+    if (res.ok) {
+      const select = document.getElementById('category');
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = name;
+      select.appendChild(opt);
+      select.value = key;
+      closeCategoryModal();
+    } else {
+      alert('카테고리 추가 실패');
     }
+  });
 
-    function autoTagsFromTitle(t) {
-      if (!t) return [];
-      t = t.trim();
-      const stop = new Set(["the","a","an","and","or","to","of","in","on","for","with","is","are"]);
-      const eng = (t.match(/[A-Za-z0-9]{2,}/g) || [])
-        .map(x => x.toUpperCase())
-        .filter(x => !stop.has(x.toLowerCase()));
-      const kor = (t.match(/[가-힣]{2,}/g) || []);
-      const merged = [];
-      for (const w of [...eng, ...kor]) {
-        if (!merged.includes(w)) merged.push(w);
-        if (merged.length >= 5) break;
-      }
-      return merged;
+  function normalizeUrl(u) {
+    if (!u) return "";
+    let s = (u || "").trim();
+    if (!s) return "";
+    if (!/^https?:\/\//i.test(s)) s = "https://" + s.replace(/^\/+/, "");
+    return s;
+  }
+
+  function autoTagsFromTitle(t) {
+    if (!t) return [];
+    t = t.trim();
+    const stop = new Set(["the","a","an","and","or","to","of","in","on","for","with","is","are"]);
+    const eng = (t.match(/[A-Za-z0-9]{2,}/g) || []).map(x => x.toUpperCase()).filter(x => !stop.has(x.toLowerCase()));
+    const kor = (t.match(/[가-힣]{2,}/g) || []);
+    const merged = [];
+    for (const w of [...eng, ...kor]) {
+      if (!merged.includes(w)) merged.push(w);
+      if (merged.length >= 5) break;
     }
+    return merged;
+  }
 
-    // 영상 업로드
-    videoPickBtn.addEventListener("click", () => videoInput.click());
-    
-    videoInput.addEventListener("change", (e) => {
-      if (e.target.files.length > 0) uploadVideo(e.target.files[0]);
+  function renderTags(tags) {
+    tagBox.innerHTML = "";
+    tags.forEach(t => {
+      const s = document.createElement("span");
+      s.className = "text-[11px] font-black text-[#a3e635] border border-[#a3e635]/30 px-2 py-1 rounded bg-[#a3e635]/10 uppercase tracking-wider";
+      s.innerText = "#" + t;
+      tagBox.appendChild(s);
     });
+  }
 
-    videoDropzone.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      videoDropzone.classList.add("border-purple-500");
-    });
-    
-    videoDropzone.addEventListener("dragleave", () => {
-      videoDropzone.classList.remove("border-purple-500");
-    });
-    
-    videoDropzone.addEventListener("drop", (e) => {
-      e.preventDefault();
-      videoDropzone.classList.remove("border-purple-500");
-      const files = e.dataTransfer.files;
-      if (files.length > 0 && files[0].type.startsWith("video/")) {
-        uploadVideo(files[0]);
+  titleEl.addEventListener("input", () => renderTags(autoTagsFromTitle(titleEl.value)));
+
+  // 영상 업로드
+  async function uploadVideo(file) {
+    uploadProgress.classList.remove("hidden");
+    progressBar.style.width = "0%";
+    progressText.innerText = "0%";
+    uploadStatus.innerText = "영상 업로드 및 압축 중... (최대 1분 소요)";
+
+    const fd = new FormData();
+    fd.append("file", file);
+
+    try {
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        if (progress < 90) {
+          progress += Math.random() * 10;
+          progressBar.style.width = Math.min(progress, 90) + "%";
+          progressText.innerText = Math.round(Math.min(progress, 90)) + "%";
+        }
+      }, 500);
+
+      const res = await fetch("/api/upload_video", { method: "POST", body: fd });
+      clearInterval(progressInterval);
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "업로드 실패");
       }
-    });
 
-    async function uploadVideo(file) {
-      if (uploading) return;
-      uploading = true;
-      
+      progressBar.style.width = "100%";
+      progressText.innerText = "100%";
+      uploadStatus.innerText = "업로드 완료!";
+
+      uploadedVideoUrl = data.video_url;
+      uploadedThumbUrl = data.thumb_url;
+
+      previewVideo.src = uploadedVideoUrl;
       videoUploadArea.classList.add("hidden");
-      videoProgress.classList.remove("hidden");
-      
-      const fd = new FormData();
-      fd.append("video", file);
-      
-      try {
-        const res = await fetch("/api/upload_video", { method: "POST", body: fd });
-        const data = await res.json();
-        
-        if (!res.ok) throw new Error(data.error || "업로드 실패");
-        
-        previewVideoInput.value = data.video_url;
-        videoPreview.src = data.video_url;
-        thumbPreview.src = data.thumb_url;
-        
-        // 썸네일을 images에 추가
-        images = [data.thumb_url];
-        imagesJsonInput.value = JSON.stringify(images);
-        
-        videoPreviewArea.classList.remove("hidden");
-        thumbSection.classList.remove("opacity-50");
-        thumbPreview.classList.remove("hidden");
-        thumbPlaceholder.classList.add("hidden");
-        thumbChangeBtn.classList.remove("hidden");
-        videoProgress.classList.add("hidden");
-        
-        msg.innerText = "✅ 영상 업로드 완료!";
-      } catch (e) {
-        alert("영상 업로드 실패: " + e.message);
-        videoUploadArea.classList.remove("hidden");
-        videoProgress.classList.add("hidden");
-      } finally {
-        uploading = false;
-      }
+      videoPreviewArea.classList.remove("hidden");
+      thumbImg.src = uploadedThumbUrl;
+      thumbImg.classList.remove("hidden");
+      thumbPlaceholder.classList.add("hidden");
+      thumbSection.classList.remove("opacity-50");
+      thumbChangeBtn.classList.remove("hidden");
+
+      setTimeout(() => {
+        uploadProgress.classList.add("hidden");
+      }, 1000);
+
+    } catch (e) {
+      uploadProgress.classList.add("hidden");
+      msg.innerText = "영상 업로드 실패: " + e.message;
+    }
+  }
+
+  // 영상 삭제
+  removeVideoBtn.addEventListener("click", () => {
+    uploadedVideoUrl = "";
+    uploadedThumbUrl = "";
+    previewVideo.src = "";
+    thumbImg.src = "";
+    videoPreviewArea.classList.add("hidden");
+    videoUploadArea.classList.remove("hidden");
+    thumbImg.classList.add("hidden");
+    thumbPlaceholder.classList.remove("hidden");
+    thumbSection.classList.add("opacity-50");
+    thumbChangeBtn.classList.add("hidden");
+  });
+
+  // 현재 장면 캡처해서 썸네일로
+  captureThumbBtn.addEventListener("click", async () => {
+    const video = previewVideo;
+    if (!video.src || video.readyState < 2) {
+      alert("영상을 먼저 로드해주세요.");
+      return;
     }
 
-    
-    // 영상 삭제
-    videoDeleteBtn.addEventListener("click", () => {
-      previewVideoInput.value = "";
-      videoPreview.src = "";
-      thumbPreview.src = "";
-      images = [];
-      imagesJsonInput.value = "[]";
-      
-      videoPreviewArea.classList.add("hidden");
-      videoUploadArea.classList.remove("hidden");
-      thumbSection.classList.add("opacity-50");
-      thumbPreview.classList.add("hidden");
-      thumbPlaceholder.classList.remove("hidden");
-      thumbChangeBtn.classList.add("hidden");
-    });
+    const canvas = captureCanvas;
+    canvas.width = 720;
+    canvas.height = 1280;
+    const ctx = canvas.getContext("2d");
 
-    // 현재 장면 캡처해서 썸네일로
-    captureThumbBtn.addEventListener("click", async () => {
-      const video = videoPreview;
-      if (!video.src || video.readyState < 2) {
-        alert("영상을 먼저 로드해주세요.");
+    const videoRatio = video.videoWidth / video.videoHeight;
+    const canvasRatio = 720 / 1280;
+    let drawWidth, drawHeight, drawX, drawY;
+
+    if (videoRatio > canvasRatio) {
+      drawHeight = 1280;
+      drawWidth = drawHeight * videoRatio;
+      drawX = (720 - drawWidth) / 2;
+      drawY = 0;
+    } else {
+      drawWidth = 720;
+      drawHeight = drawWidth / videoRatio;
+      drawX = 0;
+      drawY = (1280 - drawHeight) / 2;
+    }
+
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, 720, 1280);
+    ctx.drawImage(video, drawX, drawY, drawWidth, drawHeight);
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        alert("캡처 실패");
         return;
       }
-      
-      // 캔버스에 현재 프레임 그리기
-      const canvas = captureCanvas;
-      canvas.width = 720;
-      canvas.height = 1280;
-      const ctx = canvas.getContext("2d");
-      
-      // 영상 비율 계산해서 중앙 정렬
-      const videoRatio = video.videoWidth / video.videoHeight;
-      const canvasRatio = 720 / 1280;
-      let drawWidth, drawHeight, drawX, drawY;
-      
-      if (videoRatio > canvasRatio) {
-        drawHeight = 1280;
-        drawWidth = drawHeight * videoRatio;
-        drawX = (720 - drawWidth) / 2;
-        drawY = 0;
-      } else {
-        drawWidth = 720;
-        drawHeight = drawWidth / videoRatio;
-        drawX = 0;
-        drawY = (1280 - drawHeight) / 2;
-      }
-      
-      ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, 720, 1280);
-      ctx.drawImage(video, drawX, drawY, drawWidth, drawHeight);
-      
-      // Blob으로 변환
-      canvas.toBlob(async (blob) => {
-        if (!blob) {
-          alert("캡처 실패");
-          return;
-        }
-        
-        const fd = new FormData();
-        fd.append("file", blob, "thumb_capture.webp");
-        
-        captureThumbBtn.innerText = "업로드 중...";
-        captureThumbBtn.disabled = true;
-        
-        try {
-          const res = await fetch("/api/upload_file", { method: "POST", body: fd });
-          const data = await res.json();
-          
-          if (!res.ok) throw new Error(data.error || "업로드 실패");
-          
-          const thumbUrl = data.filename.startsWith("/") ? data.filename : "/static/uploads/" + data.filename;
-          thumbPreview.src = thumbUrl;
-          thumbPreview.classList.remove("hidden");
-          thumbPlaceholder.classList.add("hidden");
-          images = [thumbUrl];
-          imagesJsonInput.value = JSON.stringify(images);
-          
-          msg.innerText = "✅ 썸네일 캡처 완료!";
-        } catch (e) {
-          alert("썸네일 업로드 실패: " + e.message);
-        } finally {
-          captureThumbBtn.innerText = "📸 이 장면을 썸네일로";
-          captureThumbBtn.disabled = false;
-        }
-      }, "image/webp", 0.9);
-    });
-    
-    // 썸네일 변경
-    thumbInput.addEventListener("change", async (e) => {
-      if (e.target.files.length === 0) return;
-      
-      const file = e.target.files[0];
+
       const fd = new FormData();
-      fd.append("file", file);
-      
+      fd.append("file", blob, "thumb_capture.webp");
+
+      captureThumbBtn.innerText = "업로드 중...";
+      captureThumbBtn.disabled = true;
+
       try {
         const res = await fetch("/api/upload_file", { method: "POST", body: fd });
         const data = await res.json();
-        
-        if (!res.ok) throw new Error(data.error || "썸네일 업로드 실패");
-        
-        const thumbUrl = data.filename.startsWith("/") ? data.filename : "/static/uploads/" + data.filename;
-        thumbPreview.src = thumbUrl;
-        images = [thumbUrl];
-        imagesJsonInput.value = JSON.stringify(images);
-        
-        msg.innerText = "✅ 썸네일 변경 완료!";
+
+        if (!res.ok) throw new Error(data.error || "업로드 실패");
+
+        const thumbUrl = data.filename.startsWith("/") ? data.filename : "/r2/" + data.filename;
+        thumbImg.src = thumbUrl;
+        uploadedThumbUrl = thumbUrl;
+
+        msg.innerText = "✅ 썸네일 캡처 완료!";
       } catch (e) {
         alert("썸네일 업로드 실패: " + e.message);
+      } finally {
+        captureThumbBtn.innerText = "📸 썸네일로";
+        captureThumbBtn.disabled = false;
       }
+    }, "image/webp", 0.9);
+  });
+
+  // 썸네일 변경
+  thumbChangeBtn.addEventListener("click", () => thumbInput.click());
+  thumbInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const fd = new FormData();
+    fd.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload_file", { method: "POST", body: fd });
+      const data = await res.json();
+      if (res.ok) {
+        uploadedThumbUrl = data.url;
+        thumbImg.src = uploadedThumbUrl;
+      }
+    } catch (e) {
+      msg.innerText = "썸네일 업로드 실패";
+    }
+    thumbInput.value = "";
+  });
+
+  // 드래그앤드롭
+  videoUploadArea.addEventListener("click", () => videoInput.click());
+  videoInput.addEventListener("change", (e) => {
+    if (e.target.files[0]) uploadVideo(e.target.files[0]);
+    videoInput.value = "";
+  });
+  videoDropzone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    videoDropzone.classList.add("border-[#a3e635]");
+  });
+  videoDropzone.addEventListener("dragleave", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    videoDropzone.classList.remove("border-[#a3e635]");
+  });
+  videoDropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    videoDropzone.classList.remove("border-[#a3e635]");
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0 && files[0].type.startsWith("video/")) {
+      uploadVideo(files[0]);
+    }
+  });
+
+  // 저장 (수정)
+  saveBtn.addEventListener("click", async () => {
+    const category = document.getElementById("category").value;
+    const title = document.getElementById("title").value.trim();
+    const coupang = normalizeUrl(document.getElementById("coupang").value);
+    const link1 = normalizeUrl(document.getElementById("link1").value);
+    const link2 = normalizeUrl(document.getElementById("link2").value);
+    const link3 = normalizeUrl(document.getElementById("link3").value);
+    const isFree = document.getElementById("isFree").checked;
+
+    if (!title) return msg.innerText = "제목을 입력하세요.";
+
+    const links = [link1, link2, link3].filter(x => x);
+    const tags = autoTagsFromTitle(title);
+
+    const fd = new FormData();
+    fd.append("category", category);
+    fd.append("title", title);
+    fd.append("coupang_link", coupang);
+    fd.append("links_json", JSON.stringify(links));
+    fd.append("images_json", JSON.stringify([uploadedThumbUrl].filter(x => x)));
+    fd.append("tags_json", JSON.stringify(tags));
+    fd.append("is_free", isFree ? "on" : "");
+    fd.append("preview_video", uploadedVideoUrl);
+
+    msg.innerText = "저장 중...";
+
+    const res = await fetch("/admin/posts/{{ post.id }}/edit?next={{ next_url }}", {
+      method: "POST",
+      body: fd,
+      headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" }
     });
 
-    // 폼 제출
-    document.getElementById("postForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      if (uploading) return alert("업로드가 끝난 뒤 저장하세요.");
+    const ct = (res.headers.get("content-type") || "").toLowerCase();
+    const data = ct.includes("application/json") ? await res.json() : null;
 
-      const title = document.getElementById("title").value.trim();
-      const link1 = normalizeUrl(document.getElementById("link1").value);
-      const link2 = normalizeUrl(document.getElementById("link2").value);
-      const link3 = normalizeUrl(document.getElementById("link3").value);
+    if (!res.ok) {
+      msg.innerText = (data && data.error) ? data.error : "수정 실패";
+      return;
+    }
 
-      if (!title) return alert("제목은 필수입니다.");
+    msg.innerText = "✅ 수정 완료! 이동합니다...";
+    setTimeout(() => window.location.href = (data?.redirect || "{{ next_url }}" || "/admin/gallery"), 400);
+  });
 
-      linksJsonInput.value  = JSON.stringify([link1, link2, link3].filter(Boolean));
-      tagsJsonInput.value   = JSON.stringify(autoTagsFromTitle(title));
-
-      const form = e.target;
-      const fd = new FormData(form);
-
-      msg.innerText = "저장 중...";
-      const res = await fetch(`/admin/posts/{{ post.id }}/edit?next={{ next_url }}`, {
-        method:"POST",
-        body: fd,
-        headers: {
-          "X-Requested-With": "XMLHttpRequest",
-          "Accept": "application/json"
-        }
-      });
-
-      const ct = (res.headers.get("content-type") || "").toLowerCase();
-      const data = ct.includes("application/json") ? await res.json() : null;
-
-      if (!res.ok) {
-        alert((data && data.error) ? data.error : "수정 실패");
-        msg.innerText = "";
-        return;
-      }
-
-      msg.innerText = "✅ 수정 완료! 이동합니다...";
-      setTimeout(() => window.location.href = (data?.redirect || "{{ next_url }}" || "/admin/posts"), 400);
-    });
-    
-    // 초기화
-    imagesJsonInput.value = JSON.stringify(images);
-  </script>
-</body>
-</html>
+// 페이지 전체에서 드래그앤드롭 기본 동작 막기
+document.addEventListener("dragover", (e) => e.preventDefault());
+document.addEventListener("drop", (e) => e.preventDefault());
+</script>
+{% endblock %}

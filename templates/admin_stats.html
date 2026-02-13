@@ -50,6 +50,28 @@
     </div>
   </div>
 
+  <!-- ── 매출 상세 KPI ── -->
+  <div class="grid grid-cols-3 gap-2 md:gap-3">
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-5">
+      <div class="text-zinc-500 text-[11px] md:text-xs font-bold mb-1">오늘 매출</div>
+      <div class="text-xl md:text-2xl font-black text-[#c4ff00]">{{ "{:,}".format(revenue_today) }}<span class="text-sm text-zinc-500 ml-0.5">원</span></div>
+    </div>
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-5">
+      <div class="text-zinc-500 text-[11px] md:text-xs font-bold mb-1">전월 대비</div>
+      <div class="text-xl md:text-2xl font-black {% if mom_growth > 0 %}text-green-400{% elif mom_growth < 0 %}text-red-400{% else %}text-zinc-400{% endif %}">
+        {% if mom_growth > 0 %}+{% endif %}{{ mom_growth }}%
+      </div>
+      <div class="text-zinc-500 text-[11px] mt-1">전월 {{ "{:,}".format(revenue_last_month) }}원</div>
+    </div>
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-5">
+      <div class="text-zinc-500 text-[11px] md:text-xs font-bold mb-1">이탈률 <span class="font-normal">(30일)</span></div>
+      <div class="text-xl md:text-2xl font-black {% if churn_rate > 10 %}text-red-400{% elif churn_rate > 5 %}text-yellow-400{% else %}text-green-400{% endif %}">
+        {{ churn_rate }}%
+      </div>
+      <div class="text-zinc-500 text-[11px] mt-1">{{ expired_30d }}명 이탈</div>
+    </div>
+  </div>
+
   <!-- ── 차트 영역 ── -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5">
 
@@ -126,6 +148,75 @@
           </div>
         {% endfor %}
       </div>
+    </div>
+
+  </div>
+
+  <!-- ── 매출내역 & 제품별 판매 순위 ── -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5">
+
+    <!-- 상세 매출내역 -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-4 md:px-5 py-3 border-b border-zinc-800">
+        <h3 class="font-bold text-sm md:text-base">최근 매출내역</h3>
+        <span class="text-zinc-500 text-xs">최근 10건</span>
+      </div>
+      {% if recent_payments %}
+        <div class="divide-y divide-zinc-800/50">
+          {% for p in recent_payments %}
+          <div class="px-4 md:px-5 py-3 flex items-center justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <div class="text-white text-sm font-medium truncate">{{ p._user.email if p._user else '탈퇴유저' }}</div>
+              <div class="flex items-center gap-2 mt-0.5">
+                {{ plan_badge(p.plan_type) }}
+                <span class="text-zinc-600 text-[11px]">{{ p.paid_at.strftime('%m/%d %H:%M') if p.paid_at else '' }}</span>
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <span class="font-black text-blue-400 text-sm">{{ "{:,}".format(p.amount) }}</span>
+              <span class="text-zinc-500 text-[11px]">원</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="px-4 py-8 text-center text-zinc-600 text-sm">결제 내역이 없습니다</div>
+      {% endif %}
+    </div>
+
+    <!-- 제품별 판매 순위 -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-4 md:px-5 py-3 border-b border-zinc-800">
+        <h3 class="font-bold text-sm md:text-base">제품별 판매 순위</h3>
+        <span class="text-zinc-500 text-xs">전체 기간</span>
+      </div>
+      {% if product_sales %}
+        <div class="p-4 md:p-5 space-y-4">
+          {% for ps in product_sales %}
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-black w-5 text-center
+                    {% if loop.index == 1 %}text-[#c4ff00]{% elif loop.index == 2 %}text-zinc-300{% elif loop.index == 3 %}text-orange-400{% else %}text-zinc-600{% endif %}">
+                    {{ loop.index }}
+                  </span>
+                  {{ plan_badge(ps.plan_type) }}
+                </div>
+                <div class="text-right">
+                  <span class="text-white font-bold text-sm">{{ ps.count }}건</span>
+                  <span class="text-zinc-500 text-xs ml-1">{{ "{:,}".format(ps.total) }}원</span>
+                </div>
+              </div>
+              <div class="w-full bg-zinc-800 rounded-full h-2">
+                <div class="{{ plan_bar_color(ps.plan_type) }} h-2 rounded-full transition-all"
+                  style="width: {{ (ps.count / max_product_count * 100) if max_product_count > 0 else 0 }}%"></div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="px-4 py-8 text-center text-zinc-600 text-sm">판매 데이터가 없습니다</div>
+      {% endif %}
     </div>
 
   </div>

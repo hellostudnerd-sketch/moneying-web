@@ -3,7 +3,7 @@
 
 {% block content %}
 
-<div class="max-w-3xl mx-auto">
+<div class="max-w-7xl mx-auto">
 
   <div class="mb-6"><a href="/community" class="text-zinc-500 hover:text-white transition">← 목록으로</a></div>
 
@@ -31,7 +31,7 @@
 
     {% if post.images() and post.images()|length > 0 %}
       <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-        {% for img in post.images() %}<a href="{{ img }}" target="_blank"><img src="{{ img }}" class="rounded-lg border border-zinc-700 hover:border-zinc-500 transition w-full aspect-square object-cover"></a>{% endfor %}
+        {% for img in post.images() %}<img src="{{ img }}" onclick="openImageModal('{{ img }}')" class="rounded-lg border border-zinc-700 hover:border-zinc-500 transition w-full aspect-square object-cover cursor-pointer">{% endfor %}
       </div>
     {% endif %}
 
@@ -223,17 +223,26 @@
 
     <div class="space-y-4">
       {% for c in comments %}
-        <div class="bg-zinc-900/40 border border-zinc-800/50 rounded-xl p-4">
+        <div class="bg-zinc-900/40 border border-zinc-800/50 rounded-xl p-4" id="comment-{{ c.id }}">
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm font-bold text-zinc-300">{{ get_nickname(c.author_email) }}</span>
             <div class="flex items-center gap-3">
               <span class="text-xs text-zinc-600">{{ c.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
               {% if c.author_email == session.get('user_email') or session.get('admin') %}
-                <form method="POST" action="/community/comment/{{ c.id }}/delete" class="inline"><button type="submit" class="text-zinc-600 hover:text-red-500 text-xs">삭제</button></form>
+                <button onclick="startEditComment({{ c.id }})" class="text-zinc-600 hover:text-[#c4ff00] text-xs comment-edit-btn-{{ c.id }}">수정</button>
+                <form method="POST" action="/community/comment/{{ c.id }}/delete" class="inline" onsubmit="return confirm('댓글을 삭제하시겠습니까?')"><button type="submit" class="text-zinc-600 hover:text-red-500 text-xs">삭제</button></form>
               {% endif %}
             </div>
           </div>
-          <p class="text-zinc-400 text-sm">{{ c.content }}</p>
+          <p class="text-zinc-400 text-sm comment-text-{{ c.id }}">{{ c.content }}</p>
+          <!-- 수정 폼 (숨김) -->
+          <div class="comment-edit-{{ c.id }} hidden mt-2">
+            <div class="flex gap-2">
+              <input type="text" id="commentInput-{{ c.id }}" value="{{ c.content }}" class="flex-1 p-2 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm focus:border-[#a3e635] focus:outline-none">
+              <button onclick="saveEditComment({{ c.id }})" class="px-3 py-2 bg-[#a3e635] text-black font-bold rounded-lg text-xs hover:bg-white transition">저장</button>
+              <button onclick="cancelEditComment({{ c.id }})" class="px-3 py-2 bg-zinc-700 text-white font-bold rounded-lg text-xs hover:bg-zinc-600 transition">취소</button>
+            </div>
+          </div>
         </div>
       {% endfor %}
       {% if comments|length == 0 %}<div class="text-center text-zinc-600 py-8">아직 댓글이 없습니다.</div>{% endif %}
@@ -408,6 +417,38 @@ function cancelClose() {
 
   document.getElementById("closeModal").classList.add("hidden");
 }
+
+// 댓글 수정
+function startEditComment(id) {
+  document.querySelector('.comment-text-' + id).classList.add('hidden');
+  document.querySelector('.comment-edit-' + id).classList.remove('hidden');
+  document.querySelector('.comment-edit-btn-' + id).classList.add('hidden');
+  document.getElementById('commentInput-' + id).focus();
+}
+
+function cancelEditComment(id) {
+  document.querySelector('.comment-text-' + id).classList.remove('hidden');
+  document.querySelector('.comment-edit-' + id).classList.add('hidden');
+  document.querySelector('.comment-edit-btn-' + id).classList.remove('hidden');
+}
+
+function saveEditComment(id) {
+  var content = document.getElementById('commentInput-' + id).value.trim();
+  if (!content) return;
+  fetch('/community/comment/' + id + '/edit', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({content: content})
+  }).then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.ok) {
+      document.querySelector('.comment-text-' + id).textContent = data.content;
+      cancelEditComment(id);
+    } else {
+      alert(data.error || '수정 실패');
+    }
+  }).catch(function() { alert('오류가 발생했습니다.'); });
+}
 </script>
 
 
@@ -465,5 +506,24 @@ function cancelClose() {
 
 </div>
 
+<!-- 이미지 확대 모달 -->
+<div id="imageModal" class="fixed inset-0 bg-black/90 z-50 hidden items-center justify-center cursor-pointer" onclick="closeImageModal()">
+  <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white/70 hover:text-white text-3xl z-10">&times;</button>
+  <img id="imageModalImg" src="" class="max-w-[90vw] max-h-[90vh] object-contain rounded-lg" onclick="event.stopPropagation()">
+</div>
+<script>
+function openImageModal(src) {
+  document.getElementById('imageModalImg').src = src;
+  var m = document.getElementById('imageModal');
+  m.classList.remove('hidden');
+  m.classList.add('flex');
+}
+function closeImageModal() {
+  var m = document.getElementById('imageModal');
+  m.classList.add('hidden');
+  m.classList.remove('flex');
+  document.getElementById('imageModalImg').src = '';
+}
+</script>
 
 {% endblock %}

@@ -59,7 +59,7 @@
       
       <div>
         <label class="block text-sm font-bold text-zinc-400 mb-2">마감일 (선택)</label>
-        <input type="text" name="deal_deadline" id="deadlinePicker" value="{% if post.deal_deadline %}{{ post.deal_deadline.strftime('%Y-%m-%d') }}{% endif %}" class="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white focus:border-purple-400 focus:outline-none cursor-pointer" placeholder="📅 클릭하여 마감일 선택" readonly>
+        <input type="text" name="deal_deadline" id="deadlinePicker" value="{% if post.deal_deadline %}{{ post.deal_deadline.strftime('%Y-%m-%d %H:%M') }}{% endif %}" class="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white focus:border-purple-400 focus:outline-none cursor-pointer" placeholder="📅 클릭하여 마감일 선택" readonly>
       </div>
       
       <div>

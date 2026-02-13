@@ -102,28 +102,34 @@
     <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
       <h2 class="font-bold text-lg mb-4">이미지 & 파일</h2>
       
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-bold text-zinc-300 mb-2">썸네일 이미지</label>
-          <div class="flex gap-2 items-end">
-            <input type="text" name="image" id="thumb-url"
-                   class="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none text-sm"
-                   placeholder="URL 직접 입력 또는 파일 업로드">
-            <label class="cursor-pointer bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold px-4 py-3 rounded-xl transition whitespace-nowrap">
-              파일 선택
-              <input type="file" accept="image/*" class="hidden" onchange="uploadThumb(this)">
-            </label>
-          </div>
-          <div id="thumb-preview" class="mt-2 hidden">
-            <img id="thumb-img" class="h-24 rounded-lg object-cover">
-          </div>
+      <div>
+        <label class="block text-sm font-bold text-zinc-300 mb-2">썸네일 이미지</label>
+        <div class="flex gap-2 items-end">
+          <input type="text" name="image" id="thumb-url"
+                 class="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none text-sm"
+                 placeholder="URL 직접 입력 또는 파일 업로드">
+          <label class="cursor-pointer bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold px-4 py-3 rounded-xl transition whitespace-nowrap">
+            파일 선택
+            <input type="file" accept="image/*" class="hidden" onchange="uploadThumb(this)">
+          </label>
         </div>
-        
+        <div id="thumb-preview" class="mt-2 hidden">
+          <img id="thumb-img" class="h-24 rounded-lg object-cover">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         <div>
-          <label class="block text-sm font-bold text-zinc-300 mb-2">상품 파일/링크 URL</label>
+          <label class="block text-sm font-bold text-zinc-300 mb-2">링크 URL 1 (노션 등)</label>
           <input type="text" name="file_url"
                  class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none"
-                 placeholder="구매 후 제공될 링크">
+                 placeholder="노션 링크, 웹 페이지 URL 등">
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-zinc-300 mb-2">링크 URL 2 (PDF 등)</label>
+          <input type="text" name="file_url2"
+                 class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-[#a3e635] focus:outline-none"
+                 placeholder="PDF 다운로드 링크, 추가 파일 URL 등">
         </div>
       </div>
     </div>
@@ -170,21 +176,6 @@
       상품 등록하기
     </button>
   </form>
-
-<script>
-   else {
-      codePanel.classList.add('hidden');
-      previewPanel.classList.remove('hidden');
-      previewTab.classList.remove('bg-zinc-700', 'text-white');
-      previewTab.classList.add('bg-[#a3e635]', 'text-black');
-      codeTab.classList.remove('bg-[#a3e635]', 'text-black');
-      codeTab.classList.add('bg-zinc-700', 'text-white');
-      
-      // 미리보기 업데이트
-      document.getElementById('previewArea').innerHTML = document.getElementById('htmlCode').value;
-    }
-  }
-</script>
 
 
 <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>

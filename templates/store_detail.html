@@ -2,7 +2,7 @@
 
 {% block title %}{{ product.title }} - MONEYING{% endblock %}
 
-{% block main_class %}max-w-5xl mx-auto px-4 md:px-6 pt-24 md:pt-28 pb-20{% endblock %}
+{% block main_class %}max-w-5xl mx-auto px-4 md:px-6 pt-24 md:pt-28 pb-28 lg:pb-20{% endblock %}
 
 {% block head_extra %}
 
@@ -106,7 +106,7 @@
 
         {% else %}
 
-        <div class="text-3xl font-black text-white mb-2">{{ "{:,}".format(product.price) }}<span class="text-lg font-normal text-zinc-400">원</span></div>
+        <div class="text-3xl font-black text-white mb-2">{{ "{:,}".format(product.price) }}원</div>
 
         {% endif %}
 
@@ -190,13 +190,40 @@
 
             {% else %}
 
+            {% if has_purchased %}
+            <!-- 구매 완료 상태 -->
+            <div class="space-y-3">
+              {% if product.file_url or product.file_url2 %}
+                {% if product.file_url %}
+                <a href="{{ product.file_url }}" target="_blank"
+                   class="block w-full bg-[#c4ff00] text-black font-black py-4 rounded-xl text-center hover:bg-white transition text-lg">
+                  <i class="fas fa-{% if 'notion' in (product.file_url|lower) %}link{% else %}download{% endif %} mr-2"></i>{% if product.file_url2 %}{% if 'notion' in (product.file_url|lower) %}노션 열기{% else %}링크 열기{% endif %}{% else %}콘텐츠 열기{% endif %}
+                </a>
+                {% endif %}
+                {% if product.file_url2 %}
+                <a href="{{ product.file_url2 }}" target="_blank"
+                   class="block w-full bg-white text-black font-black py-4 rounded-xl text-center hover:bg-zinc-200 transition text-lg">
+                  <i class="fas fa-{% if 'pdf' in (product.file_url2|lower) %}file-pdf{% else %}download{% endif %} mr-2"></i>{% if 'pdf' in (product.file_url2|lower) %}PDF 다운로드{% else %}파일 다운로드{% endif %}
+                </a>
+                {% endif %}
+              {% else %}
+                <button disabled class="block w-full bg-zinc-700 text-zinc-400 font-black py-4 rounded-xl text-center text-lg cursor-not-allowed">
+                  콘텐츠 준비 중
+                </button>
+              {% endif %}
+              <div class="text-center text-green-400 text-sm font-bold">✅ 구매 완료</div>
+            </div>
+            {% elif session.get('user_id') %}
             <button onclick="location.href='/store/checkout/{{ product.id }}'"
-
                class="block w-full bg-[#c4ff00] text-black font-black py-4 rounded-xl text-center hover:bg-white transition text-lg">
-
               구매하기
-
             </button>
+            {% else %}
+            <a href="/login?next=/store/{{ product.id }}"
+               class="block w-full bg-[#c4ff00] text-black font-black py-4 rounded-xl text-center hover:bg-white transition text-lg">
+              로그인 후 구매
+            </a>
+            {% endif %}
 
             {% endif %}
 
@@ -210,7 +237,7 @@
 
           <div class="flex items-center gap-2"><span>✓</span><span>평생 소장</span></div>
 
-          <div class="flex items-center gap-2"><span>✓</span><span>환불 정책 적용</span></div>
+          <div class="flex items-center gap-2"><span>✓</span><span>디지털 상품 특성상 환불 불가</span></div>
 
         </div>
 
@@ -277,5 +304,46 @@ function setStorePgPw() {
 </script>
 
 {% endif %}
+
+<!-- 모바일 하단 고정 구매바 -->
+<div class="fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-md border-t border-zinc-800 p-4 lg:hidden z-40">
+  <div class="max-w-lg mx-auto flex items-center justify-between gap-4">
+    <div>
+      {% if product.price == 0 %}
+      <span class="text-xl font-black text-[#c4ff00]">무료</span>
+      {% else %}
+      <span class="text-xl font-black text-white">{{ "{:,}".format(product.price) }}원</span>
+      {% endif %}
+    </div>
+    {% if product.price == 0 and product.file_url %}
+    <a href="{{ product.file_url }}" target="_blank" class="flex-1 bg-[#c4ff00] text-black font-black py-3 rounded-xl text-center hover:bg-white transition">무료 다운로드</a>
+    {% elif product.price == 0 %}
+    <button disabled class="flex-1 bg-zinc-700 text-zinc-400 font-black py-3 rounded-xl text-center cursor-not-allowed">준비 중</button>
+    {% elif product.id == 2 %}
+      {% if can_download_pg %}
+      <a href="/api/profitguard/download" class="flex-1 bg-[#c4ff00] text-black font-black py-3 rounded-xl text-center hover:bg-white transition">다운로드</a>
+      {% else %}
+      <a href="/profitguard" class="flex-1 bg-[#c4ff00] text-black font-black py-3 rounded-xl text-center hover:bg-white transition">구독하기</a>
+      {% endif %}
+    {% else %}
+      {% if has_purchased and (product.file_url or product.file_url2) %}
+      <div class="flex-1 flex gap-2">
+        {% if product.file_url %}
+        <a href="{{ product.file_url }}" target="_blank" class="flex-1 bg-[#c4ff00] text-black font-black py-3 rounded-xl text-center hover:bg-white transition text-sm">{% if product.file_url2 %}{% if 'notion' in (product.file_url|lower) %}노션{% else %}링크{% endif %}{% else %}콘텐츠 열기{% endif %}</a>
+        {% endif %}
+        {% if product.file_url2 %}
+        <a href="{{ product.file_url2 }}" target="_blank" class="flex-1 bg-white text-black font-black py-3 rounded-xl text-center hover:bg-zinc-200 transition text-sm">{% if 'pdf' in (product.file_url2|lower) %}PDF{% else %}다운로드{% endif %}</a>
+        {% endif %}
+      </div>
+      {% elif has_purchased %}
+      <span class="flex-1 text-center text-green-400 font-bold py-3">✅ 구매 완료 (준비 중)</span>
+      {% elif session.get('user_id') %}
+      <button onclick="location.href='/store/checkout/{{ product.id }}'" class="flex-1 bg-[#c4ff00] text-black font-black py-3 rounded-xl text-center hover:bg-white transition">구매하기</button>
+      {% else %}
+      <a href="/login?next=/store/{{ product.id }}" class="flex-1 bg-[#c4ff00] text-black font-black py-3 rounded-xl text-center hover:bg-white transition">로그인 후 구매</a>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
 
 {% endblock %}

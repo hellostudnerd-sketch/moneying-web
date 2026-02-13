@@ -8,26 +8,16 @@
 
 {% block content %}
 
-<div class="flex items-center justify-between mb-4">
-
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
   <a href="/admin/gallery" class="text-zinc-500 hover:text-white text-sm">&larr; 갤러리로 돌아가기</a>
-
   {% if posts %}
-
   <div class="flex gap-2">
-
-    <button onclick="restoreSelected()" id="restoreSelectedBtn" class="hidden px-4 py-2 bg-[#c4ff00] text-black font-bold rounded-lg hover:bg-white transition text-sm">선택 복원</button>
-
+    <button onclick="restoreSelected()" id="restoreSelectedBtn" class="hidden px-3 py-2 bg-[#c4ff00] text-black font-bold rounded-lg hover:bg-white transition text-xs sm:text-sm">선택 복원</button>
     <form method="POST" action="/admin/gallery/restore-all" onsubmit="return confirm('전체 복원하시겠습니까?');">
-
-      <button type="submit" class="px-4 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-500 transition text-sm">전체 복원 ({{ posts|length }}개)</button>
-
+      <button type="submit" class="px-3 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-500 transition text-xs sm:text-sm">전체 복원 ({{ posts|length }}개)</button>
     </form>
-
   </div>
-
   {% endif %}
-
 </div>
 
 {% if posts %}
@@ -36,24 +26,15 @@
 
   {% for p in posts %}
 
-  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 flex items-center gap-3 hover:border-zinc-700 transition">
-
-    <input type="checkbox" class="trash-checkbox w-4 h-4 rounded accent-[#c4ff00]" value="{{ p.id }}" onchange="updateTrashSelection()">
-
+  <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl px-3 py-3 sm:p-4 flex items-center gap-2 sm:gap-3 hover:border-zinc-700 transition">
+    <input type="checkbox" class="trash-checkbox w-4 h-4 rounded accent-[#c4ff00] shrink-0" value="{{ p.id }}" onchange="updateTrashSelection()">
     <div class="flex-1 min-w-0">
-
-      <span class="font-bold text-white">{{ p.title }}</span>
-
-      <span class="text-zinc-500 text-xs ml-2">{{ (p.created_at|string)[:10] }}</span>
-
+      <div class="font-bold text-white text-sm truncate">{{ p.title }}</div>
+      <div class="text-zinc-500 text-xs">{{ (p.created_at|string)[:10] }}</div>
     </div>
-
-    <form method="POST" action="/admin/gallery/restore/{{ p.id }}">
-
+    <form method="POST" action="/admin/gallery/restore/{{ p.id }}" class="shrink-0">
       <button type="submit" class="px-3 py-1.5 bg-zinc-800 text-white font-bold rounded-lg hover:bg-zinc-700 transition text-xs">복원</button>
-
     </form>
-
   </div>
 
   {% endfor %}

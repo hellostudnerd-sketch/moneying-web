@@ -178,10 +178,10 @@
             <div class="flex items-center justify-between gap-4">
               <div class="min-w-0 flex-1">
                 <div class="font-bold truncate mb-1">{{ it.title }}</div>
-                <div class="text-zinc-500 text-sm truncate">{{ it.original_url[:50] }}...</div>
+                <div class="text-zinc-500 text-sm truncate" title="{{ it.original_url }}">{{ it.original_url[:50] }}{% if it.original_url|length > 50 %}...{% endif %}</div>
               </div>
               <div class="shrink-0 flex items-center gap-4">
-                <span class="text-zinc-600 text-xs hidden sm:block">{{ (it.created_at|string)[:10] }}</span>
+                <span class="text-zinc-600 text-xs hidden sm:block">{{ it.created_at.strftime('%Y-%m-%d') }}</span>
                 {% if it.coupang_url %}
                   <span class="px-3 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 text-xs font-bold">완료</span>
                 {% else %}
@@ -194,6 +194,18 @@
       </div>
     {% endif %}
   </div>
+
+  {% if pagination and pagination.pages > 1 %}
+  <div class="flex justify-center gap-2 mt-6">
+    {% if pagination.has_prev %}
+    <a href="?page={{ pagination.prev_num }}" class="px-4 py-2 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 transition text-sm">← 이전</a>
+    {% endif %}
+    <span class="px-4 py-2 text-zinc-500 text-sm">{{ pagination.page }} / {{ pagination.pages }}</span>
+    {% if pagination.has_next %}
+    <a href="?page={{ pagination.next_num }}" class="px-4 py-2 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 transition text-sm">다음 →</a>
+    {% endif %}
+  </div>
+  {% endif %}
 </section>
 
 <!-- 모달 스크립트 -->
@@ -306,20 +318,26 @@
   }
 
   function verifyAccessCode() {
-    const code = document.getElementById('accessCodeInput').value.trim().toUpperCase();
+    const code = document.getElementById('accessCodeInput').value.trim();
     if (!code) {
       alert('코드를 입력해주세요');
       return;
     }
-    
-    const validCode = 'MONEYING';  // 임시 코드
-    
-    if (code === validCode) {
-      closeLinkModal();
-      location.href = '/link-requests/new';
-    } else {
-      alert('코드가 일치하지 않습니다.\n오픈채팅방 공지를 확인해주세요!');
-    }
+    fetch('/api/verify-access-code', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({code: code})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) {
+        closeLinkModal();
+        location.href = '/link-requests/new';
+      } else {
+        alert(data.error || '코드가 일치하지 않습니다.');
+      }
+    })
+    .catch(function() { alert('오류가 발생했습니다.'); });
   }
 </script>
 

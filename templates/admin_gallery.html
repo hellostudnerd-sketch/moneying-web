@@ -155,14 +155,22 @@ function toggleSelectAll() {
   var selectAll = document.getElementById('selectAll');
   var selectAllMobile = document.getElementById('selectAllMobile');
   var checked = (selectAll && selectAll === document.activeElement) ? selectAll.checked : (selectAllMobile ? selectAllMobile.checked : false);
-  document.querySelectorAll('.post-checkbox').forEach(function(cb) { cb.checked = checked; });
+  getVisibleCheckboxes(false).forEach(function(cb) { cb.checked = checked; });
   if (selectAll) selectAll.checked = checked;
   if (selectAllMobile) selectAllMobile.checked = checked;
   updateSelectedCount();
 }
 
+function getVisibleCheckboxes(onlyChecked) {
+  var isMobile = window.innerWidth < 768;
+  var container = isMobile ? document.querySelector('.md\\:hidden') : document.querySelector('.hidden.md\\:block');
+  if (!container) container = document.body;
+  var selector = onlyChecked ? '.post-checkbox:checked' : '.post-checkbox';
+  return container.querySelectorAll(selector);
+}
+
 function updateSelectedCount() {
-  var checkboxes = document.querySelectorAll('.post-checkbox:checked');
+  var checkboxes = getVisibleCheckboxes(true);
   var count = checkboxes.length;
   var btn = document.getElementById('bulkDeleteBtn');
   var countSpan = document.getElementById('selectedCount');
@@ -174,8 +182,8 @@ function updateSelectedCount() {
     btn.classList.add('hidden');
   }
 
-  var allCheckboxes = document.querySelectorAll('.post-checkbox');
-  var allChecked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+  var allCheckboxes = getVisibleCheckboxes(false);
+  var allChecked = allCheckboxes.length > 0 && count === allCheckboxes.length;
   var selectAll = document.getElementById('selectAll');
   var selectAllMobile = document.getElementById('selectAllMobile');
   if (selectAll) selectAll.checked = allChecked;
@@ -183,7 +191,7 @@ function updateSelectedCount() {
 }
 
 function bulkDelete() {
-  var checkboxes = document.querySelectorAll('.post-checkbox:checked');
+  var checkboxes = getVisibleCheckboxes(true);
   document.getElementById('deleteCountText').textContent = checkboxes.length;
   document.getElementById('bulkDeleteModal').classList.remove('hidden');
   document.getElementById('bulkDeleteModal').classList.add('flex');
@@ -195,8 +203,9 @@ function closeBulkDeleteModal() {
 }
 
 async function confirmBulkDelete() {
-  var checkboxes = document.querySelectorAll('.post-checkbox:checked');
+  var checkboxes = getVisibleCheckboxes(true);
   var ids = Array.from(checkboxes).map(function(cb) { return parseInt(cb.value); });
+  ids = [...new Set(ids)];
   closeBulkDeleteModal();
   try {
     var res = await fetch('/admin/gallery/bulk-delete', {

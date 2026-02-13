@@ -133,7 +133,23 @@
 const productData = { {% for p in products %}{{ p.id }}: { title: "{{ p.title|e }}", category: "{{ p.category }}", price: {{ p.price }}, priceText: "{{ '{:,}'.format(p.price) }}원", description: `{{ p.description|e|replace('\n', '\\n') }}`, {% if p.image %}{% if p.image.startswith('http') %}image: "{{ p.image }}",{% elif p.image.startswith('/r2/') %}image: "{{ p.image }}",{% else %}image: "/static/uploads/{{ p.image }}",{% endif %}{% else %}image: "",{% endif %} fileUrl: "{{ p.file_url or '' }}" },{% endfor %} };
 let currentFilters = { type: 'all', topic: 'all' };
 function setFilter(key, value, btn) { currentFilters[key] = value; const g = btn.parentElement; if (key === 'type') { g.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); } else { g.querySelectorAll('.topic-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); } applyFilters(); }
-function applyFilters() { document.querySelectorAll('.product-card').forEach(item => { item.style.display = (currentFilters.type === 'all' || item.dataset.type === currentFilters.type) && (currentFilters.topic === 'all' || item.dataset.topic === currentFilters.topic) ? 'flex' : 'none'; }); }
+function applyFilters() {
+  var visible = 0;
+  document.querySelectorAll('.product-card').forEach(function(item) {
+    var show = (currentFilters.type === 'all' || item.dataset.type === currentFilters.type) && (currentFilters.topic === 'all' || item.dataset.topic === currentFilters.topic);
+    item.style.display = show ? 'flex' : 'none';
+    if (show) visible++;
+  });
+  var empty = document.getElementById('filter-empty');
+  if (!empty) {
+    empty = document.createElement('div');
+    empty.id = 'filter-empty';
+    empty.className = 'col-span-full text-center py-16';
+    empty.innerHTML = '<div class="text-zinc-500 font-bold">해당 조건의 상품이 없습니다.</div>';
+    document.getElementById('product-grid').appendChild(empty);
+  }
+  empty.style.display = visible === 0 ? 'block' : 'none';
+}
 function getCategoryLabel(c) { return {'ebook':'전자책','vod':'VOD 강의','program':'프로그램','template':'템플릿'}[c] || '기타'; }
 function openProductModal(id) { const d = productData[id]; if (!d) return; document.getElementById('modalImg').src = d.image || ''; document.getElementById('modalType').innerText = getCategoryLabel(d.category); document.getElementById('modalTitle').innerText = d.title; document.getElementById('modalPrice').innerText = d.priceText; document.getElementById('modalDesc').innerText = d.description || ''; const btn = document.getElementById('modalBuyBtn'); if (d.fileUrl) { btn.href = d.fileUrl; btn.target = '_blank'; } else { btn.href = '#'; btn.onclick = () => alert('구매 링크가 아직 등록되지 않았습니다.'); } document.getElementById('productModal').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
 function closeProductModal() { document.getElementById('productModal').classList.add('hidden'); document.body.style.overflow = ''; }
